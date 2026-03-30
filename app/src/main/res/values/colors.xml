@@ -2,4 +2,41 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Material Design 3 - Travel-inspired palette -->
+    <color name="md_theme_primary">#006A6A</color>
+    <color name="md_theme_onPrimary">#FFFFFF</color>
+    <color name="md_theme_primaryContainer">#6FF7F6</color>
+    <color name="md_theme_onPrimaryContainer">#002020</color>
+    <color name="md_theme_secondary">#4A6363</color>
+    <color name="md_theme_onSecondary">#FFFFFF</color>
+    <color name="md_theme_secondaryContainer">#CCE8E7</color>
+    <color name="md_theme_onSecondaryContainer">#051F1F</color>
+    <color name="md_theme_tertiary">#4B607C</color>
+    <color name="md_theme_onTertiary">#FFFFFF</color>
+    <color name="md_theme_tertiaryContainer">#D3E3FD</color>
+    <color name="md_theme_onTertiaryContainer">#041C35</color>
+    <color name="md_theme_error">#BA1A1A</color>
+    <color name="md_theme_onError">#FFFFFF</color>
+    <color name="md_theme_errorContainer">#FFDAD6</color>
+    <color name="md_theme_onErrorContainer">#410002</color>
+    <color name="md_theme_background">#FAFDFC</color>
+    <color name="md_theme_onBackground">#191C1C</color>
+    <color name="md_theme_surface">#FAFDFC</color>
+    <color name="md_theme_onSurface">#191C1C</color>
+    <color name="md_theme_surfaceVariant">#DAE5E4</color>
+    <color name="md_theme_onSurfaceVariant">#3F4948</color>
+    <color name="md_theme_outline">#6F7978</color>
+    <color name="md_theme_outlineVariant">#BEC9C8</color>
+
+    <!-- Additional UI colors -->
+    <color name="price_color">#006A6A</color>
+    <color name="spots_color">#4A6363</color>
+    <color name="overlay_dark">#80000000</color>
+    <color name="placeholder_1">#FFCCBC</color>
+    <color name="placeholder_2">#B2DFDB</color>
+    <color name="placeholder_3">#C5CAE9</color>
+    <color name="placeholder_4">#F0F4C3</color>
+    <color name="placeholder_5">#D1C4E9</color>
+    <color name="logout_red">#C62828</color>
 </resources>
