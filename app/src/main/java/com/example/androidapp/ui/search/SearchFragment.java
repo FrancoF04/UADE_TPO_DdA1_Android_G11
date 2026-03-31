@@ -75,6 +75,7 @@ public class SearchFragment extends Fragment implements ActivityAdapter.OnActivi
         chipGroupCategories = view.findViewById(R.id.chip_group_categories);
         btnDate = view.findViewById(R.id.btn_date);
         rangeSliderPrice = view.findViewById(R.id.range_slider_price);
+        rangeSliderPrice.setValues(0f, 50000f);
         rvResults = view.findViewById(R.id.rv_results);
         progressBar = view.findViewById(R.id.progress_bar);
         tvEmpty = view.findViewById(R.id.tv_empty);
