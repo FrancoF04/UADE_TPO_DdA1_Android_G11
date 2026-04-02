@@ -15,11 +15,6 @@ public class OtpVerify {
         this.code = code;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public String getCode() {
-        return code;
-    }
+    public String getEmail() { return email; }
+    public String getCode() { return code; }
 }

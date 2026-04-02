@@ -16,34 +16,15 @@ public class User {
     @SerializedName("fullName")
     private final String fullName;
 
-    @SerializedName("preferences")
-    private final UserPreferences preferences;
-
-    public User(String id, String email, String username, String fullName, UserPreferences preferences) {
+    public User(String id, String email, String username, String fullName) {
         this.id = id;
         this.email = email;
         this.username = username;
         this.fullName = fullName;
-        this.preferences = preferences;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public UserPreferences getPreferences() {
-        return preferences;
-    }
+    public String getId() { return id; }
+    public String getEmail() { return email; }
+    public String getUsername() { return username; }
+    public String getFullName() { return fullName; }
 }

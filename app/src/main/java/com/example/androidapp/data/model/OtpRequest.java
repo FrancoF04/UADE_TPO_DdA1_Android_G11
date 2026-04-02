@@ -11,7 +11,5 @@ public class OtpRequest {
         this.email = email;
     }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getEmail() { return email; }
 }

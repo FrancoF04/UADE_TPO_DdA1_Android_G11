@@ -1,33 +1,28 @@
 package com.example.androidapp.ui.auth;
 
 import android.os.Bundle;
-import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
-import com.example.androidapp.data.local.SessionManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.AuthResponse;
 import com.example.androidapp.data.model.OtpRequest;
 import com.example.androidapp.data.model.OtpVerify;
+import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.RetrofitClient;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
-import com.google.android.material.textview.MaterialTextView;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
-import java.io.IOException;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -36,39 +31,16 @@ import retrofit2.Response;
 
 public class OtpVerifyFragment extends Fragment {
 
-    private static final String ARG_EMAIL = "email";
-    private static final long COUNTDOWN_MILLIS = 30000;
-    private static final long COUNTDOWN_INTERVAL = 1000;
-    private static final int OTP_CODE_LENGTH = 6;
-
-    private String email;
-    private TextInputLayout tilCode;
-    private TextInputEditText etCode;
-    private MaterialButton btnVerify;
-    private MaterialButton btnResend;
+    private EditText etCode;
+    private Button btnVerify;
+    private Button btnResend;
     private ProgressBar progressBar;
-    private CountDownTimer countDownTimer;
-
-    public static OtpVerifyFragment newInstance(String email) {
-        OtpVerifyFragment fragment = new OtpVerifyFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_EMAIL, email);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private TextView tvError;
+    private String email;
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            email = getArguments().getString(ARG_EMAIL, "");
-        }
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_otp_verify, container, false);
     }
 
@@ -76,145 +48,112 @@ public class OtpVerifyFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        MaterialTextView tvSubtitle = view.findViewById(R.id.tv_subtitle);
-        tilCode = view.findViewById(R.id.til_code);
-        etCode = view.findViewById(R.id.et_code);
-        btnVerify = view.findViewById(R.id.btn_verify);
-        btnResend = view.findViewById(R.id.btn_resend);
-        progressBar = view.findViewById(R.id.progress_bar);
+        etCode = view.findViewById(R.id.etCode);
+        btnVerify = view.findViewById(R.id.btnVerify);
+        btnResend = view.findViewById(R.id.btnResend);
+        progressBar = view.findViewById(R.id.progressBar);
+        tvError = view.findViewById(R.id.tvError);
+        TextView tvSubtitle = view.findViewById(R.id.tvSubtitle);
+
+        // Leer el email que viene del OtpRequestFragment via Bundle
+        email = getArguments() != null
+                ? getArguments().getString("email", "")
+                : "";
 
         tvSubtitle.setText(getString(R.string.otp_verify_subtitle, email));
 
-        btnVerify.setOnClickListener(v -> verifyOtp());
+        btnVerify.setOnClickListener(v -> verifyOtp(view));
         btnResend.setOnClickListener(v -> resendOtp());
-
-        startCountdown();
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-        }
-    }
+    private void verifyOtp(View view) {
+        String code = etCode.getText().toString().trim();
 
-    private void verifyOtp() {
-        String code = etCode.getText() != null ? etCode.getText().toString().trim() : "";
-
-        tilCode.setError(null);
-
-        if (code.isEmpty()) {
-            tilCode.setError(getString(R.string.error_field_required));
-            return;
-        }
-        if (code.length() != OTP_CODE_LENGTH) {
-            tilCode.setError(getString(R.string.error_field_required));
+        if (code.isEmpty() || code.length() != 6) {
+            tvError.setText(R.string.error_otp_invalid);
+            tvError.setVisibility(View.VISIBLE);
             return;
         }
 
-        setLoading(true);
+        tvError.setVisibility(View.GONE);
+        progressBar.setVisibility(View.VISIBLE);
+        btnVerify.setEnabled(false);
 
         OtpVerify request = new OtpVerify(email, code);
-        RetrofitClient.getInstance().getAuthApi().verifyOtp(request).enqueue(new Callback<>() {
+        AuthApi authApi = RetrofitClient.getInstance().create(AuthApi.class);
+
+        authApi.verifyOtp(request).enqueue(new Callback<ApiResponse<AuthResponse>>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<AuthResponse>> call,
-                                   @NonNull Response<ApiResponse<AuthResponse>> response) {
+            public void onResponse(Call<ApiResponse<AuthResponse>> call,
+                                   Response<ApiResponse<AuthResponse>> response) {
                 if (!isAdded()) return;
-                setLoading(false);
+                progressBar.setVisibility(View.GONE);
+                btnVerify.setEnabled(true);
 
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    AuthResponse authResponse = response.body().getData();
-                    SessionManager sessionManager = new SessionManager(requireContext());
-                    sessionManager.saveSession(authResponse.getToken(), authResponse.getUser());
-
-                    if (getActivity() instanceof LoginActivity) {
-                        ((LoginActivity) getActivity()).navigateToHome();
+                if (response.isSuccessful() && response.body() != null
+                        && response.body().isSuccess()) {
+                    // Obtener username del AuthResponse
+                    AuthResponse auth = response.body().getData();
+                    String username = "";
+                    if (auth != null && auth.getUser() != null) {
+                        username = auth.getUser().getUsername();
                     }
+
+                    // Navegar al home pasando el username via Bundle
+                    Bundle args = new Bundle();
+                    args.putString("username", username);
+                    Navigation.findNavController(view)
+                            .navigate(R.id.action_otp_verify_to_home, args);
                 } else {
-                    showError(parseError(response));
+                    tvError.setText(R.string.error_generic);
+                    tvError.setVisibility(View.VISIBLE);
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<AuthResponse>> call,
-                                  @NonNull Throwable t) {
+            public void onFailure(Call<ApiResponse<AuthResponse>> call, Throwable t) {
                 if (!isAdded()) return;
-                setLoading(false);
-                showError(getString(R.string.error_network));
+                progressBar.setVisibility(View.GONE);
+                btnVerify.setEnabled(true);
+                tvError.setText(R.string.error_network);
+                tvError.setVisibility(View.VISIBLE);
+                Log.e("OtpVerifyFragment", "OTP verify failed", t);
             }
         });
-    }
-
-    private String parseError(Response<?> response) {
-        try {
-            if (response.errorBody() != null) {
-                String json = response.errorBody().string();
-                JsonObject obj = new Gson().fromJson(json, JsonObject.class);
-                if (obj.has("error") && !obj.get("error").isJsonNull()) {
-                    return obj.get("error").getAsString();
-                }
-            }
-        } catch (IOException ignored) { }
-        return getString(R.string.error_generic);
     }
 
     private void resendOtp() {
+        tvError.setVisibility(View.GONE);
         btnResend.setEnabled(false);
 
         OtpRequest request = new OtpRequest(email);
-        RetrofitClient.getInstance().getAuthApi().resendOtp(request).enqueue(new Callback<>() {
+        AuthApi authApi = RetrofitClient.getInstance().create(AuthApi.class);
+
+        authApi.resendOtp(request).enqueue(new Callback<ApiResponse<Map<String, String>>>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<Map<String, String>>> call,
-                                   @NonNull Response<ApiResponse<Map<String, String>>> response) {
+            public void onResponse(Call<ApiResponse<Map<String, String>>> call,
+                                   Response<ApiResponse<Map<String, String>>> response) {
                 if (!isAdded()) return;
-                startCountdown();
+                btnResend.setEnabled(true);
+
+                if (response.isSuccessful() && response.body() != null
+                        && response.body().isSuccess()) {
+                    tvError.setText(R.string.otp_resent_success);
+                    tvError.setVisibility(View.VISIBLE);
+                } else {
+                    tvError.setText(R.string.error_generic);
+                    tvError.setVisibility(View.VISIBLE);
+                }
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<Map<String, String>>> call,
-                                  @NonNull Throwable t) {
+            public void onFailure(Call<ApiResponse<Map<String, String>>> call, Throwable t) {
                 if (!isAdded()) return;
-                showError(getString(R.string.error_network));
                 btnResend.setEnabled(true);
+                tvError.setText(R.string.error_network);
+                tvError.setVisibility(View.VISIBLE);
+                Log.e("OtpVerifyFragment", "OTP resend failed", t);
             }
         });
-    }
-
-    private void startCountdown() {
-        btnResend.setEnabled(false);
-
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-        }
-
-        countDownTimer = new CountDownTimer(COUNTDOWN_MILLIS, COUNTDOWN_INTERVAL) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                if (isAdded()) {
-                    long seconds = millisUntilFinished / 1000;
-                    btnResend.setText(getString(R.string.otp_verify_resend_countdown, seconds));
-                }
-            }
-
-            @Override
-            public void onFinish() {
-                if (isAdded()) {
-                    btnResend.setText(R.string.otp_verify_resend);
-                    btnResend.setEnabled(true);
-                }
-            }
-        }.start();
-    }
-
-    private void setLoading(boolean loading) {
-        progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
-        btnVerify.setEnabled(!loading);
-    }
-
-    private void showError(String message) {
-        if (getView() != null) {
-            Snackbar.make(getView(), message, Snackbar.LENGTH_LONG).show();
-        }
     }
 }

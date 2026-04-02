@@ -1,29 +1,26 @@
 package com.example.androidapp.ui.auth;
 
 import android.os.Bundle;
-import android.util.Patterns;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.OtpRequest;
+import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.RetrofitClient;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
-import com.google.android.material.textview.MaterialTextView;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
-import java.io.IOException;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -32,15 +29,14 @@ import retrofit2.Response;
 
 public class OtpRequestFragment extends Fragment {
 
-    private TextInputLayout tilEmail;
-    private TextInputEditText etEmail;
-    private MaterialButton btnSend;
+    private EditText etEmail;
+    private Button btnSendOtp;
     private ProgressBar progressBar;
+    private TextView tvError;
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_otp_request, container, false);
     }
 
@@ -48,85 +44,66 @@ public class OtpRequestFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        tilEmail = view.findViewById(R.id.til_email);
-        etEmail = view.findViewById(R.id.et_email);
-        btnSend = view.findViewById(R.id.btn_send_otp);
-        progressBar = view.findViewById(R.id.progress_bar);
-        MaterialTextView tvLoginLink = view.findViewById(R.id.tv_login_link);
+        etEmail = view.findViewById(R.id.etEmail);
+        btnSendOtp = view.findViewById(R.id.btnSendOtp);
+        progressBar = view.findViewById(R.id.progressBar);
+        tvError = view.findViewById(R.id.tvError);
 
-        btnSend.setOnClickListener(v -> requestOtp());
+        TextView tvLoginLink = view.findViewById(R.id.tvLoginLink);
 
-        tvLoginLink.setOnClickListener(v -> {
-            if (getActivity() instanceof LoginActivity) {
-                ((LoginActivity) getActivity()).showLogin();
-            }
-        });
+        btnSendOtp.setOnClickListener(v -> sendOtp(view));
+
+        // Volver al login
+        tvLoginLink.setOnClickListener(v ->
+                Navigation.findNavController(view).navigateUp());
     }
 
-    private void requestOtp() {
-        String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
-
-        tilEmail.setError(null);
+    private void sendOtp(View view) {
+        String email = etEmail.getText().toString().trim();
 
         if (email.isEmpty()) {
-            tilEmail.setError(getString(R.string.error_field_required));
-            return;
-        }
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            tilEmail.setError(getString(R.string.error_invalid_email));
+            tvError.setText(R.string.error_field_required);
+            tvError.setVisibility(View.VISIBLE);
             return;
         }
 
-        setLoading(true);
+        tvError.setVisibility(View.GONE);
+        progressBar.setVisibility(View.VISIBLE);
+        btnSendOtp.setEnabled(false);
 
         OtpRequest request = new OtpRequest(email);
-        RetrofitClient.getInstance().getAuthApi().requestOtp(request).enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<ApiResponse<Map<String, String>>> call,
-                                   @NonNull Response<ApiResponse<Map<String, String>>> response) {
-                if (!isAdded()) return;
-                setLoading(false);
+        AuthApi authApi = RetrofitClient.getInstance().create(AuthApi.class);
 
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    if (getActivity() instanceof LoginActivity) {
-                        ((LoginActivity) getActivity()).showOtpVerify(email);
-                    }
+        authApi.requestOtp(request).enqueue(new Callback<ApiResponse<Map<String, String>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Map<String, String>>> call,
+                                   Response<ApiResponse<Map<String, String>>> response) {
+                if (!isAdded()) return;
+                progressBar.setVisibility(View.GONE);
+                btnSendOtp.setEnabled(true);
+
+                if (response.isSuccessful() && response.body() != null
+                        && response.body().isSuccess()) {
+                    // Navegar al fragment de verificacion, pasando el email via Bundle
+                    Bundle args = new Bundle();
+                    args.putString("email", email);
+                    Navigation.findNavController(view)
+                            .navigate(R.id.action_otp_request_to_verify, args);
                 } else {
-                    showError(parseError(response));
+                    tvError.setText(R.string.error_generic);
+                    tvError.setVisibility(View.VISIBLE);
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<Map<String, String>>> call,
-                                  @NonNull Throwable t) {
+            public void onFailure(Call<ApiResponse<Map<String, String>>> call, Throwable t) {
                 if (!isAdded()) return;
-                setLoading(false);
-                showError(getString(R.string.error_network));
+                progressBar.setVisibility(View.GONE);
+                btnSendOtp.setEnabled(true);
+                tvError.setText(R.string.error_network);
+                tvError.setVisibility(View.VISIBLE);
+                Log.e("OtpRequestFragment", "OTP request failed", t);
             }
         });
-    }
-
-    private String parseError(Response<?> response) {
-        try {
-            if (response.errorBody() != null) {
-                String json = response.errorBody().string();
-                JsonObject obj = new Gson().fromJson(json, JsonObject.class);
-                if (obj.has("error") && !obj.get("error").isJsonNull()) {
-                    return obj.get("error").getAsString();
-                }
-            }
-        } catch (IOException ignored) { }
-        return getString(R.string.error_generic);
-    }
-
-    private void setLoading(boolean loading) {
-        progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
-        btnSend.setEnabled(!loading);
-    }
-
-    private void showError(String message) {
-        if (getView() != null) {
-            Snackbar.make(getView(), message, Snackbar.LENGTH_LONG).show();
-        }
     }
 }

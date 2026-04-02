@@ -5,7 +5,7 @@
     <string name="login_title">Iniciar Sesion</string>
     <string name="login_username">Usuario</string>
     <string name="login_password">Contrasena</string>
-    <string name="login_button">Iniciar Sesion</string>
+    <string name="login_button">Ingresar</string>
     <string name="login_otp_link">Ingresar con codigo OTP</string>
     <string name="login_register_link">No tenes cuenta? Registrate</string>
 
@@ -17,9 +17,8 @@
     <string name="register_password">Contrasena</string>
     <string name="register_button">Registrarse</string>
     <string name="register_login_link">Ya tenes cuenta? Inicia sesion</string>
-    <string name="register_success">Cuenta creada exitosamente</string>
-    <string name="register_success_title">¡Registro exitoso!</string>
-    <string name="register_success_message">Tu cuenta fue creada correctamente. Podés iniciar sesión con tu usuario y contraseña.</string>
+    <string name="register_success_title">Registro exitoso</string>
+    <string name="register_success_message">Tu cuenta fue creada. Podes iniciar sesion.</string>
     <string name="register_success_button">Iniciar sesion</string>
 
     <!-- OTP -->
@@ -29,61 +28,44 @@
     <string name="otp_request_button">Enviar Codigo</string>
     <string name="otp_back_to_login">Volver al inicio de sesion</string>
     <string name="otp_verify_title">Verificar Codigo</string>
-    <string name="otp_verify_subtitle">Ingresa el codigo de 6 digitos enviado a %1$s</string>
+    <string name="otp_verify_subtitle">Ingresa el codigo enviado a %1$s</string>
     <string name="otp_verify_code">Codigo OTP</string>
     <string name="otp_verify_button">Verificar</string>
     <string name="otp_verify_resend">Reenviar codigo</string>
-    <string name="otp_verify_resend_countdown">Reenviar en %1$ds</string>
+    <string name="otp_resent_success">Codigo reenviado</string>
+    <string name="error_otp_invalid">Ingresa un codigo de 6 digitos</string>
+    <string name="error_password_short">La contrasena debe tener al menos 6 caracteres</string>
 
     <!-- Home -->
-    <string name="home_featured_title">Actividades Destacadas</string>
-    <string name="home_recommended_title">Recomendadas para vos</string>
+    <string name="home_activities_title">Actividades</string>
     <string name="home_empty">No hay actividades disponibles</string>
+    <string name="home_search_button">Buscar</string>
 
     <!-- Search -->
     <string name="search_title">Buscar Actividades</string>
     <string name="search_destination">Destino</string>
-    <string name="search_all_destinations">Todos los destinos</string>
     <string name="search_category">Categoria</string>
-    <string name="search_price_range">Rango de precio</string>
-    <string name="search_clear_filters">Limpiar filtros</string>
-    <string name="search_date">Fecha</string>
+    <string name="search_button">Buscar</string>
     <string name="search_empty">No se encontraron actividades</string>
 
-    <!-- Profile -->
-    <string name="profile_title">Mi Perfil</string>
-    <string name="profile_preferences">Mis Preferencias</string>
-    <string name="profile_fav_categories">Categorias favoritas</string>
-    <string name="profile_fav_destinations">Destinos favoritos</string>
-    <string name="profile_save">Guardar preferencias</string>
-    <string name="profile_logout">Cerrar Sesion</string>
-    <string name="profile_saved">Preferencias guardadas</string>
-
     <!-- Detail -->
+    <string name="detail_description">Descripcion</string>
     <string name="detail_included">Que incluye</string>
     <string name="detail_meeting_point">Punto de encuentro</string>
     <string name="detail_guide">Guia</string>
-    <string name="detail_language">Idioma</string>
     <string name="detail_cancellation">Politica de cancelacion</string>
-    <string name="detail_spots">%1$d disponibles</string>
+    <string name="detail_spots">%1$d lugares disponibles</string>
     <string name="detail_duration">Duracion: %1$s</string>
-    <string name="detail_book">Reservar</string>
-    <string name="detail_rating">%1$.1f</string>
-
-    <!-- Navigation -->
-    <string name="nav_home">Inicio</string>
-    <string name="nav_search">Buscar</string>
-    <string name="nav_profile">Perfil</string>
+    <string name="detail_rating">%1$.1f ★</string>
+    <string name="detail_language_value">Idioma: %1$s</string>
+    <string name="back">Volver</string>
 
     <!-- Errors -->
     <string name="error_generic">Ocurrio un error. Intenta de nuevo.</string>
-    <string name="error_network">Error de conexion. Verifica tu conexion a internet.</string>
-    <string name="error_field_required">Este campo es obligatorio</string>
-    <string name="error_invalid_email">Ingresa un email valido</string>
-    <string name="error_password_short">La contrasena debe tener al menos 6 caracteres</string>
+    <string name="error_network">Error de conexion. Verifica tu internet.</string>
+    <string name="error_field_required">Completa todos los campos</string>
 
     <!-- Misc -->
     <string name="free_label">Gratis</string>
     <string name="price_format">$%1$,.0f</string>
-    <string name="loading">Cargando...</string>
 </resources>

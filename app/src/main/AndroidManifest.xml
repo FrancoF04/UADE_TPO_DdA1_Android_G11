@@ -16,7 +16,7 @@
         android:usesCleartextTraffic="false">
 
         <activity
-            android:name=".ui.auth.LoginActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,9 +24,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ui.home.HomeActivity" />
-        <activity android:name=".ui.detail.ActivityDetailActivity" />
-        <activity android:name=".MainActivity" />
     </application>
 
 </manifest>
