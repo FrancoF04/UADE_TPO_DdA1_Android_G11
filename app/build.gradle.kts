@@ -10,6 +10,10 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.example.androidapp"
         minSdk = 30
@@ -18,9 +22,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "API_BASE_URL", "\"https://uadetpodda1backend-production.up.railway.app/api/\"")
     }
 
     buildTypes {
+        debug {
+            // Uncomment the line below to use local emulator instead of Railway:
+            // buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -40,6 +49,11 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.navigation.fragment)
+    implementation(libs.navigation.ui)
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.gson)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

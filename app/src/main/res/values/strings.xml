@@ -1,3 +1,71 @@
 <resources>
-    <string name="app_name">android-app</string>
+    <string name="app_name">DesApp Turismo</string>
+
+    <!-- Login -->
+    <string name="login_title">Iniciar Sesion</string>
+    <string name="login_username">Usuario</string>
+    <string name="login_password">Contrasena</string>
+    <string name="login_button">Ingresar</string>
+    <string name="login_otp_link">Ingresar con codigo OTP</string>
+    <string name="login_register_link">No tenes cuenta? Registrate</string>
+
+    <!-- Register -->
+    <string name="register_title">Crear Cuenta</string>
+    <string name="register_fullname">Nombre Completo</string>
+    <string name="register_email">Email</string>
+    <string name="register_username">Usuario</string>
+    <string name="register_password">Contrasena</string>
+    <string name="register_button">Registrarse</string>
+    <string name="register_login_link">Ya tenes cuenta? Inicia sesion</string>
+    <string name="register_success_title">Registro exitoso</string>
+    <string name="register_success_message">Tu cuenta fue creada. Podes iniciar sesion.</string>
+    <string name="register_success_button">Iniciar sesion</string>
+
+    <!-- OTP -->
+    <string name="otp_request_title">Ingresa con OTP</string>
+    <string name="otp_request_subtitle">Te enviaremos un codigo de 6 digitos a tu email</string>
+    <string name="otp_request_email">Email</string>
+    <string name="otp_request_button">Enviar Codigo</string>
+    <string name="otp_back_to_login">Volver al inicio de sesion</string>
+    <string name="otp_verify_title">Verificar Codigo</string>
+    <string name="otp_verify_subtitle">Ingresa el codigo enviado a %1$s</string>
+    <string name="otp_verify_code">Codigo OTP</string>
+    <string name="otp_verify_button">Verificar</string>
+    <string name="otp_verify_resend">Reenviar codigo</string>
+    <string name="otp_resent_success">Codigo reenviado</string>
+    <string name="error_otp_invalid">Ingresa un codigo de 6 digitos</string>
+    <string name="error_password_short">La contrasena debe tener al menos 6 caracteres</string>
+
+    <!-- Home -->
+    <string name="home_activities_title">Actividades</string>
+    <string name="home_empty">No hay actividades disponibles</string>
+    <string name="home_search_button">Buscar</string>
+
+    <!-- Search -->
+    <string name="search_title">Buscar Actividades</string>
+    <string name="search_destination">Destino</string>
+    <string name="search_category">Categoria</string>
+    <string name="search_button">Buscar</string>
+    <string name="search_empty">No se encontraron actividades</string>
+
+    <!-- Detail -->
+    <string name="detail_description">Descripcion</string>
+    <string name="detail_included">Que incluye</string>
+    <string name="detail_meeting_point">Punto de encuentro</string>
+    <string name="detail_guide">Guia</string>
+    <string name="detail_cancellation">Politica de cancelacion</string>
+    <string name="detail_spots">%1$d lugares disponibles</string>
+    <string name="detail_duration">Duracion: %1$s</string>
+    <string name="detail_rating">%1$.1f ★</string>
+    <string name="detail_language_value">Idioma: %1$s</string>
+    <string name="back">Volver</string>
+
+    <!-- Errors -->
+    <string name="error_generic">Ocurrio un error. Intenta de nuevo.</string>
+    <string name="error_network">Error de conexion. Verifica tu internet.</string>
+    <string name="error_field_required">Completa todos los campos</string>
+
+    <!-- Misc -->
+    <string name="free_label">Gratis</string>
+    <string name="price_format">$%1$,.0f</string>
 </resources>
