@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/auth_nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.androidapp.ui.auth.LoginFragment"
+        android:label="Login">
+
+        <action
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/home_nav_graph"
+            app:popUpTo="@id/auth_nav_graph"
+            app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/action_login_to_register"
+            app:destination="@id/registerFragment" />
+
+        <action
+            android:id="@+id/action_login_to_otp_request"
+            app:destination="@id/otpRequestFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.example.androidapp.ui.auth.RegisterFragment"
+        android:label="Registro" />
+
+    <fragment
+        android:id="@+id/otpRequestFragment"
+        android:name="com.example.androidapp.ui.auth.OtpRequestFragment"
+        android:label="Solicitar OTP">
+
+        <action
+            android:id="@+id/action_otp_request_to_verify"
+            app:destination="@id/otpVerifyFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/otpVerifyFragment"
+        android:name="com.example.androidapp.ui.auth.OtpVerifyFragment"
+        android:label="Verificar OTP">
+
+        <argument
+            android:name="email"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <action
+            android:id="@+id/action_otp_verify_to_home"
+            app:destination="@id/home_nav_graph"
+            app:popUpTo="@id/auth_nav_graph"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+</navigation>

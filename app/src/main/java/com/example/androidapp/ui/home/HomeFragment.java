@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -13,8 +14,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Activity;
@@ -28,11 +27,11 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class HomeFragment extends Fragment implements ActivityAdapter.OnActivityClickListener {
+public class HomeFragment extends Fragment {
 
     private TextView tvWelcome;
     private TextView tvEmpty;
-    private RecyclerView recyclerView;
+    private ListView listView;
     private ProgressBar progressBar;
     private ActivityAdapter adapter;
 
@@ -48,24 +47,27 @@ public class HomeFragment extends Fragment implements ActivityAdapter.OnActivity
 
         tvWelcome = view.findViewById(R.id.tvWelcome);
         tvEmpty = view.findViewById(R.id.tvEmpty);
-        recyclerView = view.findViewById(R.id.recyclerView);
+        listView = view.findViewById(R.id.listView);
         progressBar = view.findViewById(R.id.progressBar);
 
-        // Leer el username que viene del LoginFragment via Bundle
         String username = getArguments() != null
                 ? getArguments().getString("username", "")
                 : "";
         tvWelcome.setText("Bienvenido, " + username + "!");
 
-        // Boton de busqueda navega al SearchFragment
         Button btnSearch = view.findViewById(R.id.btnSearch);
         btnSearch.setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.action_home_to_search));
 
-        // Configurar RecyclerView con su Adapter
-        adapter = new ActivityAdapter(this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(adapter);
+        adapter = new ActivityAdapter(requireContext());
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener((parent, v, position, id) -> {
+            Activity activity = adapter.getItem(position);
+            Bundle args = new Bundle();
+            args.putString("activityId", activity.getId());
+            Navigation.findNavController(requireView())
+                    .navigate(R.id.action_home_to_detail, args);
+        });
 
         loadActivities();
     }
@@ -106,14 +108,5 @@ public class HomeFragment extends Fragment implements ActivityAdapter.OnActivity
                 Log.e("HomeFragment", "Failed to load activities", t);
             }
         });
-    }
-
-    @Override
-    public void onActivityClick(Activity activity) {
-        Bundle args = new Bundle();
-        args.putString("activityId", activity.getId());
-
-        Navigation.findNavController(requireView())
-                .navigate(R.id.action_home_to_detail, args);
     }
 }
