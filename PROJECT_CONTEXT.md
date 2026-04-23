@@ -123,3 +123,147 @@ public class NetworkModule {
     }
 }
 ```
+
+---
+
+## Clase 6 — Persistencia de Datos & Galería
+
+### Herramientas de persistencia habilitadas
+
+| Herramienta | Casos de uso |
+|---|---|
+| **DataStore** | Configuraciones simples: modo oscuro, idioma, flags de onboarding, último usuario logueado |
+| **Room (SQLite)** | Datos estructurados: notas, tareas, productos; apps offline |
+| **Files internos** | Datos privados y caché; solo accesible por la app; se elimina al desinstalar |
+| **Files externos** | Imágenes, PDFs, descargas; accesible por otras apps/usuario; requiere permisos |
+| **EncryptedSharedPreferences** | Tokens JWT, credenciales temporales, claves API; cifra automáticamente los datos |
+| **Glide** | Carga y display de imágenes con cache automático, resize inteligente y placeholders |
+
+> **SharedPreferences** legado — no usar para código nuevo.
+
+### Implementación
+
+**DataStore**
+```java
+// Guardar
+dataStore.edit(prefs -> prefs.set(KEY, value));
+
+// Leer (Flow)
+dataStore.data().map(prefs -> prefs.get(KEY));
+```
+
+**Room**
+```java
+@Entity
+public class Nota { ... }
+
+@Dao
+public interface NotaDao {
+    @Insert void insert(Nota nota);
+    @Query("SELECT * FROM nota") List<Nota> getAll();
+}
+```
+
+**Files internos**
+```java
+FileOutputStream fos = openFileOutput("datos.txt", Context.MODE_PRIVATE);
+// getFilesDir() para la ruta base
+```
+
+**EncryptedSharedPreferences**
+```java
+SharedPreferences sp = EncryptedSharedPreferences.create(
+    "prefs_seguras", masterKey, context,
+    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+);
+sp.edit().putString("token", jwt).apply();
+sp.getString("token", null);
+```
+
+**Glide**
+```java
+Glide.with(this)
+    .load(new File(path))
+    .placeholder(R.drawable.ic_default_avatar)
+    .circleCrop()
+    .into(imageView);
+```
+
+### Galería e imágenes
+
+- **Permisos runtime**: Android ≤ 12 → `READ_EXTERNAL_STORAGE`; Android ≥ 13 → `READ_MEDIA_IMAGES`; pedir con `requestPermissions()`
+- **Abrir galería**: `Intent.ACTION_PICK` con `MediaStore.Images.Media.EXTERNAL_CONTENT_URI`; resultado en `onActivityResult()` devuelve `Uri`
+- **Guardar imagen**: convertir `Bitmap` a JPEG con `compress()` → guardar en `getFilesDir()` → persistir ruta en DataStore
+- **El `Uri` devuelto por la galería es una referencia, no la imagen** — siempre convertir/guardar antes de usar
+
+---
+
+## Clase 7 — Biometría y Seguridad en el Dispositivo
+
+### Herramientas habilitadas
+
+| Herramienta | Descripción |
+|---|---|
+| **ActivityResultLauncher** | Patrón moderno para lanzar acciones del sistema y recibir resultados tipados |
+| **BiometricManager** | Consulta disponibilidad de hardware biométrico y credenciales enroladas |
+| **PromptInfo** | Configura el diálogo de autenticación (título, subtítulo, autenticadores permitidos) |
+| **BiometricPrompt** | Dispara la autenticación y recibe callbacks de resultado |
+
+**Contratos disponibles para `ActivityResultLauncher`:**
+- `GetContent` → elegir archivo (imagen, PDF, etc.), devuelve `Uri`
+- `RequestPermission` → pedir un permiso en runtime, devuelve `boolean`
+- `RequestMultiplePermissions` → pedir varios permisos juntos, devuelve `Map<String, Boolean>`
+- `StartActivityForResult` → genérico, cuando no hay contrato específico
+
+**Clasificación de biometría en Android:**
+- **Class 3 (STRONG)** → permite operaciones criptográficas
+- **Class 2 (WEAK)** → solo desbloqueo de pantalla
+- **Class 1** → no usar en apps
+
+### Implementación
+
+**ActivityResultLauncher**
+```java
+// Registrar antes de STARTED (en onCreate)
+private ActivityResultLauncher<String> pickImageLauncher =
+    registerForActivityResult(new ActivityResultContracts.GetContent(),
+        uri -> { if (uri != null) imageView.setImageURI(uri); });
+
+pickImageLauncher.launch("image/*");
+```
+
+**BiometricManager**
+```java
+BiometricManager manager = BiometricManager.from(context);
+int canAuth = manager.canAuthenticate(
+    Authenticators.BIOMETRIC_STRONG | Authenticators.DEVICE_CREDENTIAL);
+```
+
+**PromptInfo**
+```java
+PromptInfo info = new PromptInfo.Builder()
+    .setTitle("Login")
+    .setSubtitle("Ingresa con tu huella")
+    .setAllowedAuthenticators(
+        Authenticators.BIOMETRIC_STRONG | Authenticators.DEVICE_CREDENTIAL)
+    .build();
+```
+
+**BiometricPrompt**
+```java
+Executor exec = ContextCompat.getMainExecutor(this);
+BiometricPrompt prompt = new BiometricPrompt(this, exec,
+    new AuthenticationCallback() {
+        @Override public void onAuthenticationSucceeded(result) { irAHome(); }
+        @Override public void onAuthenticationError(code, msg) { ... }
+        @Override public void onAuthenticationFailed() { ... }
+    });
+prompt.authenticate(info);
+```
+
+### Limitaciones / Consideraciones
+
+- El launcher **debe registrarse antes de `STARTED`** (en `onCreate`); su callback es asíncrono
+- Si el usuario no tiene ningún método biométrico enrolado, la app no puede usar biometría — opciones: deshabilitar el botón, o redirigir con `Settings.ACTION_BIOMETRIC_ENROLL`
+- Si `PromptInfo` usa `DEVICE_CREDENTIAL`, **no se puede llamar a `setNegativeButtonText()`**
