@@ -71,7 +71,9 @@
 
         <action
             android:id="@+id/action_editProfile_to_profile"
-            app:destination="@+id/profileFragment" />
+            app:destination="@+id/profileFragment"
+            app:popUpTo="@id/profileFragment"
+            app:popUpToInclusive="true"/>
 
     </fragment>
 

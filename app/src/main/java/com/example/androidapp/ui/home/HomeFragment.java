@@ -35,6 +35,8 @@ public class HomeFragment extends Fragment {
     private ProgressBar progressBar;
     private ActivityAdapter adapter;
 
+    private Button btnPerfil;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -58,6 +60,12 @@ public class HomeFragment extends Fragment {
         Button btnSearch = view.findViewById(R.id.btnSearch);
         btnSearch.setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.action_home_to_search));
+
+        // boton a perfil
+        btnPerfil = view.findViewById(R.id.btnPerfil);
+        btnPerfil.setOnClickListener(v -> {
+            Navigation.findNavController(view).navigate(R.id.action_home_to_profile);
+        });
 
         adapter = new ActivityAdapter(requireContext());
         listView.setAdapter(adapter);
