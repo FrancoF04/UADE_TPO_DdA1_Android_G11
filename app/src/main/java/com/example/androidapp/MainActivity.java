@@ -1,10 +1,14 @@
 package com.example.androidapp;
 
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +23,16 @@ public class MainActivity extends AppCompatActivity {
                 .findFragmentById(R.id.nav_host_fragment);
 
         navController = navHostFragment.getNavController();
+
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        NavigationUI.setupWithNavController(bottomNav, navController);
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            if (destination.getId() == R.id.homeFragment) { //ir agregando mas destinos en funcion de los fragments creados
+                bottomNav.setVisibility(View.VISIBLE);
+            } else {
+                bottomNav.setVisibility(View.GONE);
+            }
+        });
     }
 
     @Override
