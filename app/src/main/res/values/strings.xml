@@ -36,6 +36,12 @@
     <string name="error_otp_invalid">Ingresa un codigo de 6 digitos</string>
     <string name="error_password_short">La contrasena debe tener al menos 6 caracteres</string>
 
+    <!-- nav bottom bar -->
+    <string name="bottom_nav_home">Home</string>
+    <string name="bottom_nav_reservas">Mis Reservas</string>
+    <string name="bottom_nav_favoritos">Favoritos</string>
+    <string name="bottom_nav_perfil">Perfil</string>
+
     <!-- Home -->
     <string name="home_activities_title">Actividades</string>
     <string name="home_empty">No hay actividades disponibles</string>
