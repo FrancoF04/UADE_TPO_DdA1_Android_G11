@@ -2,7 +2,6 @@ package com.example.androidapp.ui.auth;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +29,7 @@ import retrofit2.Response;
 public class RegisterFragment extends Fragment {
 
     private EditText etFullName;
+    private EditText etPhone;
     private EditText etEmail;
     private EditText etUsername;
     private EditText etPassword;
@@ -48,6 +48,7 @@ public class RegisterFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         etFullName = view.findViewById(R.id.etFullName);
+        etPhone = view.findViewById(R.id.etPhone);
         etEmail = view.findViewById(R.id.etEmail);
         etUsername = view.findViewById(R.id.etUsername);
         etPassword = view.findViewById(R.id.etPassword);
@@ -66,11 +67,12 @@ public class RegisterFragment extends Fragment {
 
     private void attemptRegister(View view) {
         String fullName = etFullName.getText().toString().trim();
+        String phone = etPhone.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String username = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        if (fullName.isEmpty() || email.isEmpty() || username.isEmpty() || password.isEmpty()) {
+        if (fullName.isEmpty() || phone.isEmpty() || email.isEmpty() || username.isEmpty() || password.isEmpty()) {
             tvError.setText(R.string.error_field_required);
             tvError.setVisibility(View.VISIBLE);
             return;
@@ -86,13 +88,13 @@ public class RegisterFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         btnRegister.setEnabled(false);
 
-        RegisterRequest request = new RegisterRequest(email, username, password, fullName);
+        RegisterRequest request = new RegisterRequest(email, username, password, fullName, phone);
         AuthApi authApi = RetrofitClient.getInstance().create(AuthApi.class);
 
-        authApi.register(request).enqueue(new Callback<ApiResponse<User>>() {
+        authApi.register(request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override
-            public void onResponse(Call<ApiResponse<User>> call,
-                                   Response<ApiResponse<User>> response) {
+            public void onResponse(Call<ApiResponse<User.UserResponse>> call,
+                                   Response<ApiResponse<User.UserResponse>> response) {
                 if (!isAdded()) return;
                 progressBar.setVisibility(View.GONE);
                 btnRegister.setEnabled(true);
@@ -108,19 +110,22 @@ public class RegisterFragment extends Fragment {
                             .setCancelable(false)
                             .show();
                 } else {
-                    tvError.setText(R.string.error_generic);
+                    String errorMsg = "Error desconocido";
+                    if (response.body() != null && response.body().getError() != null) {
+                        errorMsg = response.body().getError();
+                    }
+                    tvError.setText(errorMsg);
                     tvError.setVisibility(View.VISIBLE);
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<User>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<User.UserResponse>> call, Throwable t) {
                 if (!isAdded()) return;
                 progressBar.setVisibility(View.GONE);
                 btnRegister.setEnabled(true);
                 tvError.setText(R.string.error_network);
                 tvError.setVisibility(View.VISIBLE);
-                Log.e("RegisterFragment", "Register failed", t);
             }
         });
     }

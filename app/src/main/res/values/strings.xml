@@ -12,6 +12,7 @@
     <!-- Register -->
     <string name="register_title">Crear Cuenta</string>
     <string name="register_fullname">Nombre Completo</string>
+    <string name="register_phone">Teléfono</string>
     <string name="register_email">Email</string>
     <string name="register_username">Usuario</string>
     <string name="register_password">Contrasena</string>

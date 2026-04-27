@@ -90,6 +90,12 @@ public class LoginFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null
                         && response.body().isSuccess()) {
+                    //obtener token y guardarlo en sharedPreferences
+                    String token = response.body().getData().getToken();
+                    android.content.SharedPreferences prefs = requireContext()
+                            .getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE);
+                    prefs.edit().putString("auth_token", token).apply();
+
                     navigateToHome(view, username);
                 } else {
                     tvError.setText(R.string.error_generic);

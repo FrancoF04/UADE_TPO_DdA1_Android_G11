@@ -82,6 +82,15 @@
                 android:inputType="phone"
                 android:layout_marginBottom="24dp" />
 
+            <TextView
+                android:id="@+id/tvError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/holo_red_dark"
+                android:layout_marginBottom="16dp"
+                android:gravity="center"
+                android:visibility="gone" />
+
             <Button
                 android:id="@+id/btnGuardar"
                 android:layout_width="match_parent"
