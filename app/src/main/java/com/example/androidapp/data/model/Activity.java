@@ -43,7 +43,7 @@ public class Activity {
     private final int totalSpots;
 
     @SerializedName("date")
-    private final String date;
+    private final List<String> date;
 
     @SerializedName("meetingPoint")
     private final String meetingPoint;
