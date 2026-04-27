@@ -25,11 +25,16 @@ import com.example.androidapp.data.remote.RetrofitClient;
 
 import java.util.Map;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+@AndroidEntryPoint
 public class OtpVerifyFragment extends Fragment {
+    @Inject
+    AuthApi authApi;
 
     private EditText etCode;
     private Button btnVerify;
@@ -80,7 +85,7 @@ public class OtpVerifyFragment extends Fragment {
         btnVerify.setEnabled(false);
 
         OtpVerify request = new OtpVerify(email, code);
-        AuthApi authApi = RetrofitClient.getInstance().create(AuthApi.class);
+
 
         authApi.verifyOtp(request).enqueue(new Callback<ApiResponse<AuthResponse>>() {
             @Override
@@ -127,7 +132,7 @@ public class OtpVerifyFragment extends Fragment {
         btnResend.setEnabled(false);
 
         OtpRequest request = new OtpRequest(email);
-        AuthApi authApi = RetrofitClient.getInstance().create(AuthApi.class);
+
 
         authApi.resendOtp(request).enqueue(new Callback<ApiResponse<Map<String, String>>>() {
             @Override

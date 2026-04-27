@@ -23,11 +23,16 @@ import com.example.androidapp.data.model.LoginRequest;
 import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.RetrofitClient;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+@AndroidEntryPoint
 public class LoginFragment extends Fragment {
+    @Inject
+    AuthApi authApi;
 
     private EditText etUsername;
     private EditText etPassword;
@@ -79,7 +84,7 @@ public class LoginFragment extends Fragment {
 
         LoginRequest request = new LoginRequest(username, password);
 
-        AuthApi authApi = RetrofitClient.getInstance().create(AuthApi.class);
+
 
         authApi.login(request).enqueue(new Callback<ApiResponse<AuthResponse>>() {
             @Override

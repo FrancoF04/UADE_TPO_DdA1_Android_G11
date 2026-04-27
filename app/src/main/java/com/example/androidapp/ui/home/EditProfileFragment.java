@@ -24,11 +24,16 @@ import com.example.androidapp.data.model.UserUpdate;
 import com.example.androidapp.data.remote.RetrofitClient;
 import com.example.androidapp.data.remote.UserApi;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+@AndroidEntryPoint
 public class EditProfileFragment extends Fragment {
+    @Inject
+    UserApi userApi;
 
     private ImageView ivFotoPerfil;
     private EditText etFullName;
@@ -65,7 +70,7 @@ public class EditProfileFragment extends Fragment {
     //loadUserData carga los datos del usuario en las casillas al iniciar
     private void loadUserData() {
         progressBar.setVisibility(View.VISIBLE);
-        UserApi userApi = RetrofitClient.getInstance().create(UserApi.class);
+
 
         String token = "Bearer " + TokenManager.getInstance(requireContext()).getToken();
 
@@ -111,7 +116,7 @@ public class EditProfileFragment extends Fragment {
         btnGuardar.setEnabled(false);
 
         UserUpdate request = new UserUpdate(email, phoneNumber, fullName);
-        UserApi userApi = RetrofitClient.getInstance().create(UserApi.class);
+
 
         String token = "Bearer " + TokenManager.getInstance(requireContext()).getToken();
 
