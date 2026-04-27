@@ -9,6 +9,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -50,6 +51,7 @@ public class ActivityDetailFragment extends Fragment {
     private TextView tvCancellation;
     private TextView tvError;
     private ProgressBar progressBar;
+    private Button btnReserve;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -77,10 +79,20 @@ public class ActivityDetailFragment extends Fragment {
         tvCancellation = view.findViewById(R.id.tvCancellation);
         tvError = view.findViewById(R.id.tvError);
         progressBar = view.findViewById(R.id.progressBar);
+        btnReserve = view.findViewById(R.id.btnReserve);
 
         // Flecha para volver atras usando el NavController
         btnBack.setOnClickListener(v ->
                 Navigation.findNavController(view).navigateUp());
+
+        // Click en boton reservar para navegar al formulario de reserva
+        btnReserve.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("activityId", getArguments() != null
+                    ? getArguments().getString("activityId", "")
+                    : "");
+            Navigation.findNavController(v).navigate(R.id.action_activityDetail_to_reservationForm, bundle);
+        });
 
         // Leer el argumento activityId que viene del HomeFragment via Bundle
         String activityId = getArguments() != null
