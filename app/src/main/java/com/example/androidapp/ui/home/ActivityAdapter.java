@@ -14,6 +14,9 @@ import com.example.androidapp.data.model.Activity;
 import java.util.ArrayList;
 import java.util.List;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class ActivityAdapter extends BaseAdapter {
 
     private final Context context;

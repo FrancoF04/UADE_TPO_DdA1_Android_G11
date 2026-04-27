@@ -23,10 +23,11 @@ import com.example.androidapp.data.remote.RetrofitClient;
 
 import java.util.Map;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+@AndroidEntryPoint
 public class OtpRequestFragment extends Fragment {
 
     private EditText etEmail;

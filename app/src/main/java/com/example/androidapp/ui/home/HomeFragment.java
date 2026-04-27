@@ -23,10 +23,11 @@ import com.example.androidapp.data.remote.RetrofitClient;
 
 import java.util.List;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+@AndroidEntryPoint
 public class HomeFragment extends Fragment {
 
     private TextView tvWelcome;

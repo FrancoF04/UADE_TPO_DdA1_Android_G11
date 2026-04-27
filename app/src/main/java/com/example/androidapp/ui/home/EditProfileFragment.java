@@ -24,10 +24,11 @@ import com.example.androidapp.data.model.UserUpdate;
 import com.example.androidapp.data.remote.RetrofitClient;
 import com.example.androidapp.data.remote.UserApi;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+@AndroidEntryPoint
 public class EditProfileFragment extends Fragment {
 
     private ImageView ivFotoPerfil;

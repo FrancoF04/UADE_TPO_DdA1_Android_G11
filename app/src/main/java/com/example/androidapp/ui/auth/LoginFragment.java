@@ -23,10 +23,11 @@ import com.example.androidapp.data.model.LoginRequest;
 import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.RetrofitClient;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+@AndroidEntryPoint
 public class LoginFragment extends Fragment {
 
     private EditText etUsername;

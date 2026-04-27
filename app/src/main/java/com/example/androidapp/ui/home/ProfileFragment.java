@@ -27,10 +27,11 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+@AndroidEntryPoint
 public class ProfileFragment extends Fragment {
 
     private TextView tvNombre, tvEmail, tvTelefono;
