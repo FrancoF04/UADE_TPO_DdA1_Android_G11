@@ -43,6 +43,9 @@ public class Activity {
     @SerializedName("totalSpots")
     private final int totalSpots;
 
+    @SerializedName("schedules")
+    private final List<Schedule> schedules;
+
     @SerializedName(value = "date", alternate = {"dates"})
     @JsonAdapter(StringListOrStringAdapter.class)
     private final List<String> date;
@@ -68,7 +71,7 @@ public class Activity {
     public Activity(String id, String name, String destination, String category,
                     String description, String imageUrl, List<String> galleryUrls,
                     String duration, double price, String currency,
-                    int availableSpots, int totalSpots, List<String> date,
+                    int availableSpots, int totalSpots, List<Schedule> schedules, List<String> date,
                     String meetingPoint, Guide guide, String language,
                     List<String> included, String cancellationPolicy, boolean featured) {
         this.id = id;
@@ -83,6 +86,7 @@ public class Activity {
         this.currency = currency;
         this.availableSpots = availableSpots;
         this.totalSpots = totalSpots;
+        this.schedules = schedules;
         this.date = date;
         this.meetingPoint = meetingPoint;
         this.guide = guide;
@@ -104,6 +108,7 @@ public class Activity {
     public String getCurrency() { return currency; }
     public int getAvailableSpots() { return availableSpots; }
     public int getTotalSpots() { return totalSpots; }
+    public List<Schedule> getSchedules() { return schedules; }
     public List<String> getDate() { return date; }
     public String getMeetingPoint() { return meetingPoint; }
     public Guide getGuide() { return guide; }

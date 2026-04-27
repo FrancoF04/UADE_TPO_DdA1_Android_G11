@@ -19,10 +19,18 @@ import androidx.navigation.Navigation;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
 import com.example.androidapp.data.remote.RetrofitClient;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
@@ -150,7 +158,9 @@ public class ActivityDetailFragment extends Fragment {
             tvPrice.setText(getString(R.string.price_format, activity.getPrice()));
         }
 
-        tvSpots.setText(getString(R.string.detail_spots, activity.getAvailableSpots()));
+        // Mostrar cupos de la fecha más reciente si la info viene en las fechas, sino fallback a availableSpots
+        int spotsToShow = getSpotsForLatestDate(activity);
+        tvSpots.setText(getString(R.string.detail_spots, spotsToShow));
         tvDescription.setText(activity.getDescription());
         tvMeetingPoint.setText(activity.getMeetingPoint());
 
@@ -178,5 +188,79 @@ public class ActivityDetailFragment extends Fragment {
 
         // Placeholder — no image loading library available (limited knowledge).
         ivImage.setImageDrawable(null);
+    }
+
+    private int getSpotsForLatestDate(Activity activity) {
+        List<Schedule> schedules = activity.getSchedules();
+        if (schedules != null && !schedules.isEmpty()) {
+            Schedule latestSchedule = null;
+
+            for (Schedule schedule : schedules) {
+                if (schedule == null || schedule.getDate() == null) {
+                    continue;
+                }
+
+                if (latestSchedule == null || isAfter(schedule.getDate(), latestSchedule.getDate())) {
+                    latestSchedule = schedule;
+                }
+            }
+
+            if (latestSchedule != null) {
+                return latestSchedule.getAvailableSpots();
+            }
+        }
+
+        List<String> rawDates = activity.getDate();
+        if (rawDates == null || rawDates.isEmpty()) return activity.getAvailableSpots();
+
+        Pattern datePattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})");
+        Pattern numberPattern = Pattern.compile("\\b(\\d+)\\b");
+        LocalDate latest = null;
+        Integer spotsForLatest = null;
+        DateTimeFormatter fmt = DateTimeFormatter.ISO_LOCAL_DATE;
+
+        for (String raw : rawDates) {
+            if (raw == null) continue;
+            Matcher m = datePattern.matcher(raw);
+            if (!m.find()) continue;
+            String dateStr = m.group(1);
+            try {
+                LocalDate d = LocalDate.parse(dateStr, fmt);
+                if (latest == null || d.isAfter(latest)) {
+                    latest = d;
+                    String after = raw.substring(m.end());
+                    Matcher numM = numberPattern.matcher(after);
+                    if (numM.find()) {
+                        try {
+                            spotsForLatest = Integer.parseInt(numM.group(1));
+                        } catch (NumberFormatException ignored) {
+                            spotsForLatest = null;
+                        }
+                    } else {
+                        spotsForLatest = null;
+                    }
+                }
+            } catch (DateTimeParseException ignored) {
+            }
+        }
+
+        if (spotsForLatest != null) return spotsForLatest;
+        return activity.getAvailableSpots();
+    }
+
+    private boolean isAfter(String firstDate, String secondDate) {
+        try {
+            return parseDateTime(firstDate).isAfter(parseDateTime(secondDate));
+        } catch (RuntimeException ignored) {
+            return firstDate.compareTo(secondDate) > 0;
+        }
+    }
+
+    private LocalDateTime parseDateTime(String rawDate) {
+        try {
+            return OffsetDateTime.parse(rawDate).toLocalDateTime();
+        } catch (RuntimeException ignored) {
+            return LocalDateTime.parse(rawDate);
+        }
     }
 }

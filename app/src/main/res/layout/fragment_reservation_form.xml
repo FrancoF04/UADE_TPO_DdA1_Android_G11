@@ -7,63 +7,122 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-    <!-- Flecha para volver atras -->
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_margin="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/back"
-            android:src="@android:drawable/ic_menu_revert" />
+        <!-- Flecha para volver atras -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_margin="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/back"
+                android:src="@android:drawable/ic_menu_revert" />
 
-        <TextView
-            android:id="@+id/tvTitleForm"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tvTitleForm"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:gravity="center"/>
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvFecha"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Seleccione fecha: "/>
-        <Spinner
-            android:id="@+id/sDate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-        <TextView
-            android:id="@+id/tvHorario"
+            android:orientation="vertical"
+            android:layout_margin="10dp">
+            <TextView
+                android:id="@+id/tvFecha"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="5dp"
+                android:text="Seleccione fecha: " />
+            <Spinner
+                android:id="@+id/sDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+        </LinearLayout>
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Seleccione horario: "/>
-        <Spinner
-            android:id="@+id/sTime"
+            android:orientation="vertical"
+            android:layout_margin="10dp">
+            <TextView
+                android:id="@+id/tvHorario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="5dp"
+                android:text="Seleccione horario: "/>
+            <Spinner
+                android:id="@+id/sTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-        <TextView
-            android:id="@+id/tvCantidad"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/tvCantidad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="5dp"
+                android:text="Seleccione cantidad de personas: "/>
+            <TextView
+            android:id="@+id/tvAvailableSpots"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Seleccione cantidad de personas: "/>
-        <Button
-            android:id="@+id/btnCantidadMenos"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="-"/>
-        <TextView
-            android:id="@+id/tvCantidadPersonas"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <Button
-            android:id="@+id/btnCantidadMas"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="+"/>
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            android:gravity="center"
+            android:layout_marginBottom="5dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/btnCantidadMenos"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="-"/>
+                <TextView
+                    android:id="@+id/tvCantidadPersonas"
+                    android:layout_width="0dp"
+                    android:layout_weight="2"
+                    android:gravity="center"
+                    android:layout_height="wrap_content"
+                    android:textSize="15sp"
+                    android:textStyle="bold"/>
+                <Button
+                    android:id="@+id/btnCantidadMas"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="+"/>
+            </LinearLayout>
+        </LinearLayout>
 
         <Button
             android:id="@+id/btnConfirmar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Confirmar"/>
+            android:text="Confirmar"
+            android:layout_margin="10dp"/>
     </LinearLayout>
 </FrameLayout>
