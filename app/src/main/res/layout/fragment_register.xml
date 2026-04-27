@@ -31,6 +31,15 @@
             android:layout_marginBottom="16dp" />
 
         <EditText
+            android:id="@+id/etPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/register_phone"
+            android:inputType="phone"
+            android:maxLines="1"
+            android:layout_marginBottom="16dp" />
+
+        <EditText
             android:id="@+id/etEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -26,6 +26,10 @@
         <action
             android:id="@+id/action_home_to_search"
             app:destination="@id/searchFragment" />
+
+        <action
+            android:id="@+id/action_home_to_profile"
+            app:destination="@id/profileFragment" />
     </fragment>
 
     <fragment
@@ -47,6 +51,30 @@
             android:name="activityId"
             app:argType="string"
             android:defaultValue="" />
+    </fragment>
+
+    <!-- fragmentos de perfil, accion desde home a profile y de profile a editProfile -->
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.androidapp.ui.home.ProfileFragment"
+        android:label="Perfil">
+
+        <action
+            android:id="@+id/action_profile_to_editProfile"
+            app:destination="@id/editProfileFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.example.androidapp.ui.home.EditProfileFragment"
+        android:label="EditarPerfil">
+
+        <action
+            android:id="@+id/action_editProfile_to_profile"
+            app:destination="@+id/profileFragment"
+            app:popUpTo="@id/profileFragment"
+            app:popUpToInclusive="true"/>
+
     </fragment>
 
 </navigation>

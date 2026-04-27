@@ -1,7 +1,6 @@
 package com.example.androidapp.data.remote;
 
 import com.example.androidapp.BuildConfig;
-
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 

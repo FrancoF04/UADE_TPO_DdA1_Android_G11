@@ -16,15 +16,20 @@ public class RegisterRequest {
     @SerializedName("fullName")
     private final String fullName;
 
-    public RegisterRequest(String email, String username, String password, String fullName) {
+    @SerializedName("phoneNumber")
+    private final String phoneNumber;
+
+    public RegisterRequest(String email, String username, String password, String fullName, String phoneNumber) {
         this.email = email;
         this.username = username;
         this.password = password;
         this.fullName = fullName;
+        this.phoneNumber = phoneNumber;
     }
 
     public String getEmail() { return email; }
     public String getUsername() { return username; }
     public String getPassword() { return password; }
     public String getFullName() { return fullName; }
+    public String getPhoneNumber() { return phoneNumber; }
 }

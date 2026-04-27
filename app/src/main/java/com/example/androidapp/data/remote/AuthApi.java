@@ -20,7 +20,7 @@ public interface AuthApi {
     Call<ApiResponse<AuthResponse>> login(@Body LoginRequest request);
 
     @POST("auth/register")
-    Call<ApiResponse<User>> register(@Body RegisterRequest request);
+    Call<ApiResponse<User.UserResponse>> register(@Body RegisterRequest request);
 
     @POST("auth/otp/request")
     Call<ApiResponse<Map<String, String>>> requestOtp(@Body OtpRequest request);

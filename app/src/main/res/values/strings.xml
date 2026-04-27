@@ -12,6 +12,7 @@
     <!-- Register -->
     <string name="register_title">Crear Cuenta</string>
     <string name="register_fullname">Nombre Completo</string>
+    <string name="register_phone">Teléfono</string>
     <string name="register_email">Email</string>
     <string name="register_username">Usuario</string>
     <string name="register_password">Contrasena</string>
@@ -65,6 +66,24 @@
     <string name="detail_rating">%1$.1f ★</string>
     <string name="detail_language_value">Idioma: %1$s</string>
     <string name="back">Volver</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Mi Perfil</string>
+    <string name="profile_label_fullname">Nombre Completo</string>
+    <string name="profile_label_email">Correo Electrónico</string>
+    <string name="profile_label_phone">Teléfono de Contacto</string>
+    <string name="profile_edit_button">Editar Perfil</string>
+    <string name="profile_no_phone">No especificado</string>
+    <string name="profile_error_load">Error al cargar datos</string>
+    <string name="profile_preferences_button">Seleccionar Intereses</string>
+
+    <string-array name="travel_categories">
+        <item>Aventura</item>
+        <item>Cultura</item>
+        <item>Gastronomía</item>
+        <item>Naturaleza</item>
+        <item>Relax</item>
+    </string-array>
 
     <!-- Errors -->
     <string name="error_generic">Ocurrio un error. Intenta de nuevo.</string>
