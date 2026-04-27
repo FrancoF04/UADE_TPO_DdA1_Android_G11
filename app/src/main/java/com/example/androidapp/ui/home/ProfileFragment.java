@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
+import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.User;
 import com.example.androidapp.data.model.UserPreferencesRequest;
@@ -71,8 +72,11 @@ public class ProfileFragment extends Fragment {
         if (currentUser != null && currentUser.getPreferences() != null && currentUser.getPreferences().getCategories() != null) {
             List<String> userCategories = currentUser.getPreferences().getCategories();
             for (int i = 0; i < items.length; i++) {
-                if (userCategories.contains(items[i].toLowerCase())) {
-                    checkedItems[i] = true;
+                for (String userCat : userCategories) {
+                    if (userCat.equalsIgnoreCase(items[i])) {
+                        checkedItems[i] = true;
+                        break;
+                    }
                 }
             }
         }
@@ -96,8 +100,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void savePreferences(List<String> categories) {
-        SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
-        String token = "Bearer " + prefs.getString("auth_token", "");
+        String token = "Bearer " + TokenManager.getInstance(requireContext()).getToken();
 
         UserApi userApi = RetrofitClient.getInstance().create(UserApi.class);
         UserPreferencesRequest request = new UserPreferencesRequest(categories);
@@ -105,7 +108,9 @@ public class ProfileFragment extends Fragment {
         userApi.updatePreferences(token, request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<User.UserResponse>> call, Response<ApiResponse<User.UserResponse>> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Actualizar el usuario local con la respuesta del servidor
+                    currentUser = response.body().getData().getUser();
                     Toast.makeText(getContext(), "Preferencias actualizadas", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getContext(), "Error al guardar preferencias", Toast.LENGTH_SHORT).show();
@@ -120,8 +125,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void loadUserProfile() {
-        SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
-        String rawToken = prefs.getString("auth_token", null);
+        String rawToken = TokenManager.getInstance(requireContext()).getToken();
 
         if (rawToken == null) {
             Toast.makeText(getContext(), "Sesión no válida", Toast.LENGTH_SHORT).show();

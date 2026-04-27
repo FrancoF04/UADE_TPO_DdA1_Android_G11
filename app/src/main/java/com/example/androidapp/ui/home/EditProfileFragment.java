@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
+import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.User;
 import com.example.androidapp.data.model.UserUpdate;
@@ -66,8 +67,7 @@ public class EditProfileFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         UserApi userApi = RetrofitClient.getInstance().create(UserApi.class);
 
-        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE);
-        String token = "Bearer " + prefs.getString("auth_token", "");
+        String token = "Bearer " + TokenManager.getInstance(requireContext()).getToken();
 
         userApi.getUser(token).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override
@@ -113,8 +113,7 @@ public class EditProfileFragment extends Fragment {
         UserUpdate request = new UserUpdate(email, phoneNumber, fullName);
         UserApi userApi = RetrofitClient.getInstance().create(UserApi.class);
 
-        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE);
-        String token = "Bearer " + prefs.getString("auth_token", "");
+        String token = "Bearer " + TokenManager.getInstance(requireContext()).getToken();
 
         userApi.updateUser(token, request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override

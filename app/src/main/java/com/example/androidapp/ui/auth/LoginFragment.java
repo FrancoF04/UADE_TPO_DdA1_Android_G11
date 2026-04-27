@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
+import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.AuthResponse;
 import com.example.androidapp.data.model.LoginRequest;
@@ -90,11 +91,9 @@ public class LoginFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null
                         && response.body().isSuccess()) {
-                    //obtener token y guardarlo en sharedPreferences
+                    // Obtener token y guardarlo de forma segura
                     String token = response.body().getData().getToken();
-                    android.content.SharedPreferences prefs = requireContext()
-                            .getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE);
-                    prefs.edit().putString("auth_token", token).apply();
+                    TokenManager.getInstance(requireContext()).saveToken(token);
 
                     navigateToHome(view, username);
                 } else {
