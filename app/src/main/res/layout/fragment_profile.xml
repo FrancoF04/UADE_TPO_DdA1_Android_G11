@@ -86,7 +86,15 @@
                 android:id="@+id/btnEditarPerfil"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Editar Perfil" />
+                android:text="Editar Perfil"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
+                android:id="@+id/btnPreferencias"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:text="@string/profile_preferences_button" />
 
         </LinearLayout>
     </ScrollView>
