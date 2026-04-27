@@ -22,12 +22,16 @@ import com.example.androidapp.data.model.User;
 import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.RetrofitClient;
 
+import javax.inject.Inject;
+
 import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 @AndroidEntryPoint
 public class RegisterFragment extends Fragment {
+    @Inject
+    AuthApi authApi;
 
     private EditText etFullName;
     private EditText etPhone;
@@ -90,7 +94,7 @@ public class RegisterFragment extends Fragment {
         btnRegister.setEnabled(false);
 
         RegisterRequest request = new RegisterRequest(email, username, password, fullName, phone);
-        AuthApi authApi = RetrofitClient.getInstance().create(AuthApi.class);
+
 
         authApi.register(request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override

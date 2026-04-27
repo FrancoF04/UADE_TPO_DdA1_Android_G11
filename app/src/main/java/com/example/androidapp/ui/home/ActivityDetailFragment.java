@@ -23,12 +23,16 @@ import com.example.androidapp.data.remote.RetrofitClient;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 @AndroidEntryPoint
 public class ActivityDetailFragment extends Fragment {
+    @Inject
+    ActivityApi api;
 
     private ImageButton btnBack;
     private ImageView ivImage;
@@ -92,7 +96,7 @@ public class ActivityDetailFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         tvError.setVisibility(View.GONE);
 
-        ActivityApi api = RetrofitClient.getInstance().create(ActivityApi.class);
+
 
         api.getActivityById(activityId).enqueue(new Callback<ApiResponse<Activity>>() {
             @Override

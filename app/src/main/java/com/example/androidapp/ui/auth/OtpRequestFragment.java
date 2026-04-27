@@ -23,12 +23,16 @@ import com.example.androidapp.data.remote.RetrofitClient;
 
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 @AndroidEntryPoint
 public class OtpRequestFragment extends Fragment {
+    @Inject
+    AuthApi authApi;
 
     private EditText etEmail;
     private Button btnSendOtp;
@@ -73,7 +77,7 @@ public class OtpRequestFragment extends Fragment {
         btnSendOtp.setEnabled(false);
 
         OtpRequest request = new OtpRequest(email);
-        AuthApi authApi = RetrofitClient.getInstance().create(AuthApi.class);
+
 
         authApi.requestOtp(request).enqueue(new Callback<ApiResponse<Map<String, String>>>() {
             @Override

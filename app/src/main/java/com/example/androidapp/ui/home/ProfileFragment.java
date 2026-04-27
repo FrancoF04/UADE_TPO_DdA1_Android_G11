@@ -27,6 +27,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -34,6 +36,8 @@ import retrofit2.Response;
 @AndroidEntryPoint
 public class ProfileFragment extends Fragment {
 
+    @Inject
+    UserApi userApi;
     private TextView tvNombre, tvEmail, tvTelefono;
     private Button btnEditarPerfil, btnPreferencias;
     private User currentUser;
@@ -103,8 +107,8 @@ public class ProfileFragment extends Fragment {
     private void savePreferences(List<String> categories) {
         String token = "Bearer " + TokenManager.getInstance(requireContext()).getToken();
 
-        UserApi userApi = RetrofitClient.getInstance().create(UserApi.class);
         UserPreferencesRequest request = new UserPreferencesRequest(categories);
+
 
         userApi.updatePreferences(token, request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override
@@ -134,7 +138,6 @@ public class ProfileFragment extends Fragment {
         }
 
         String token = "Bearer " + rawToken;
-        UserApi userApi = RetrofitClient.getInstance().create(UserApi.class);
 
         userApi.getUser(token).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override
