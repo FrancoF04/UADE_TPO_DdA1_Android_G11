@@ -21,7 +21,7 @@
 
         <action
             android:id="@+id/action_home_to_detail"
-            app:destination="@id/activityDetailFragment" />
+            app:destination="@id/activity_nav_graph" />
 
         <action
             android:id="@+id/action_home_to_search"
@@ -39,18 +39,7 @@
 
         <action
             android:id="@+id/action_search_to_detail"
-            app:destination="@id/activityDetailFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/activityDetailFragment"
-        android:name="com.example.androidapp.ui.home.ActivityDetailFragment"
-        android:label="Detalle">
-
-        <argument
-            android:name="activityId"
-            app:argType="string"
-            android:defaultValue="" />
+            app:destination="@id/activity_nav_graph" />
     </fragment>
 
     <!-- fragmentos de perfil, accion desde home a profile y de profile a editProfile -->

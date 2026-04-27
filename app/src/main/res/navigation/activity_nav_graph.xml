@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/activity_nav_graph"
+    app:startDestination="@id/activityDetailFragment">
+
+    <fragment
+        android:id="@+id/activityDetailFragment"
+        android:name="com.example.androidapp.ui.home.ActivityDetailFragment"
+        android:label="Detalle">
+
+        <argument
+            android:name="activityId"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <action
+            android:id="@+id/action_activityDetail_to_reservationForm"
+            app:destination="@id/reservationFormFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/reservationFormFragment"
+        android:name="com.example.androidapp.ui.reservation.ReservationFormFragment"
+        android:label="Reserva">
+
+        <argument
+            android:name="activityId"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
+
+</navigation>
