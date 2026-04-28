@@ -16,18 +16,6 @@
 
         <action
             android:id="@+id/action_activityDetail_to_reservationForm"
-            app:destination="@id/reservationFormFragment" />
+            app:destination="@id/reservation_form_nav_graph" />
     </fragment>
-
-    <fragment
-        android:id="@+id/reservationFormFragment"
-        android:name="com.example.androidapp.ui.reservation.ReservationFormFragment"
-        android:label="Reserva">
-
-        <argument
-            android:name="activityId"
-            app:argType="string"
-            android:defaultValue="" />
-    </fragment>
-
 </navigation>

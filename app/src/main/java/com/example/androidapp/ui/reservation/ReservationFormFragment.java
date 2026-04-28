@@ -16,12 +16,19 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
+import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
+import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.model.Reservation;
+import com.example.androidapp.data.model.ReservationRequest;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
+import com.example.androidapp.data.remote.UserApi;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -40,7 +47,10 @@ import retrofit2.Response;
 public class ReservationFormFragment extends Fragment {
     @Inject
     ActivityApi activityApi;
+    @Inject
+    UserApi userApi;
 
+    private String activityId;
     private ImageButton btnBack;
     private TextView tvTitulo;
     private Spinner sDate;
@@ -68,18 +78,17 @@ public class ReservationFormFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        initViews(view);
-
         // Leer activityId pasado por Navigation
-        String activityId = getArguments() != null
-                ? getArguments().getString("activityId", "")
-                : "";
-
+        activityId = getArguments() != null
+        ? getArguments().getString("activityId", "")
+        : "";
+        
         if (!activityId.isEmpty()) {
             loadActivity(activityId);
         }else {
             showUnknownError();
         }
+        initViews(view);
     }
 
     private void initViews(@NonNull View view) {
@@ -122,7 +131,37 @@ public class ReservationFormFragment extends Fragment {
         });
 
         btnConfirmar.setOnClickListener(v -> {
-            // Aquí podrías construir el body de la reserva y llamar al endpoint correspondiente
+            String fechaISO = reconstructDateToTimesFromSpinner();
+            if (fechaISO == null || cantidad <= 0) {
+                Toast.makeText(requireContext(), "Por favor seleccione fecha, horario y cantidad válidos", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            ReservationRequest req = new ReservationRequest(activityId, fechaISO, cantidad);
+
+            String rawToken = TokenManager.getInstance(requireContext()).getToken();
+            userApi.createReservation("Bearer " + rawToken, req).enqueue(new Callback<ApiResponse<Reservation>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<com.example.androidapp.data.model.Reservation>> call, Response<ApiResponse<com.example.androidapp.data.model.Reservation>> response) {
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        Toast.makeText(requireContext(), "Reserva guardada", Toast.LENGTH_SHORT).show();
+
+                        NavController navController = Navigation.findNavController(requireView());
+                        navController.navigate(R.id.home_nav_graph, null,
+                            new NavOptions.Builder()
+                                .setPopUpTo(R.id.reservation_form_nav_graph, true)
+                                .build()
+                        );
+                    } else {
+                        Toast.makeText(requireContext(), "Error al guardar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<com.example.androidapp.data.model.Reservation>> call, Throwable t) {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(), "Error al guardar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         btnBack.setOnClickListener(v -> requireActivity().onBackPressed());
@@ -326,5 +365,25 @@ public class ReservationFormFragment extends Fragment {
         } else {
             tvAvailableSpots.setText("");
         }
+    }
+
+    private String reconstructDateToTimesFromSpinner() {
+        String dateISO;
+
+        String selectedDate = sDate.getSelectedItem() != null
+            ? (String) sDate.getSelectedItem()
+            : null;
+
+        String selectedTime = sTime.getSelectedItem() != null
+            ? (String) sTime.getSelectedItem()
+            : null;
+
+        if (selectedDate == null || selectedTime == null) {
+            dateISO = null;
+        } else {
+            dateISO = selectedDate+"T"+selectedTime+":00Z";
+        }
+
+        return dateISO;
     }
 }
