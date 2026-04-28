@@ -12,6 +12,7 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
@@ -38,7 +39,6 @@ public interface UserApi {
     @GET("profile/bookings-summary")
     Call<ApiResponse<Object>> getBookingsSummary(@Header("Authorization") String token);
 
-    // Reservas (usuarios)
     @GET("users/reservations")
     Call<ApiResponse<ReservationsData>> getReservations(@Header("Authorization") String token);
 
@@ -51,4 +51,3 @@ public interface UserApi {
 
     @POST("users/reservations/{id}/cancel")
     Call<ApiResponse<Object>> cancelReservationPost(@Header("Authorization") String token, @Path("id") String id);
-}

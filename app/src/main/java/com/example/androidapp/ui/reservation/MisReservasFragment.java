@@ -101,7 +101,7 @@ public class MisReservasFragment extends Fragment {
         btnActividadesProximas = view.findViewById(R.id.btnActividadesProximas);
         btnActividadesPasadas = view.findViewById(R.id.btnActividadesPasadas);
 
-        adapter = new ReservationAdapter(requireContext(), new ArrayList<>(), false);
+        adapter = new ReservationAdapter(requireContext(), new ArrayList<>(), false, this::onCancelReservation);
         lvActividades.setAdapter(adapter);
 
         btnActividadesProximas.setOnClickListener(v -> mostrarReservasProximas());
