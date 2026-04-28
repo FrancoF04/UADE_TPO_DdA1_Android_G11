@@ -427,7 +427,37 @@ public class ReservationFormFragment extends Fragment {
         });
 
         btnConfirmar.setOnClickListener(v -> {
-            // Aquí podrías construir el body de la reserva y llamar al endpoint correspondiente
+            String fechaISO = reconstructDateToTimesFromSpinner();
+            if (fechaISO == null || cantidad <= 0) {
+                Toast.makeText(requireContext(), "Por favor seleccione fecha, horario y cantidad válidos", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            ReservationRequest req = new ReservationRequest(activityId, fechaISO, cantidad);
+
+            String rawToken = TokenManager.getInstance(requireContext()).getToken();
+            userApi.createReservation("Bearer " + rawToken, req).enqueue(new Callback<ApiResponse<Reservation>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<com.example.androidapp.data.model.Reservation>> call, Response<ApiResponse<com.example.androidapp.data.model.Reservation>> response) {
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        Toast.makeText(requireContext(), "Reserva guardada", Toast.LENGTH_SHORT).show();
+
+                        NavController navController = Navigation.findNavController(requireView());
+                        navController.navigate(R.id.home_nav_graph, null,
+                            new NavOptions.Builder()
+                                .setPopUpTo(R.id.reservation_form_nav_graph, true)
+                                .build()
+                        );
+                    } else {
+                        Toast.makeText(requireContext(), "Error al guardar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<com.example.androidapp.data.model.Reservation>> call, Throwable t) {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(), "Error al guardar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         btnBack.setOnClickListener(v -> requireActivity().onBackPressed());
@@ -631,5 +661,25 @@ public class ReservationFormFragment extends Fragment {
         } else {
             tvAvailableSpots.setText("");
         }
+    }
+
+    private String reconstructDateToTimesFromSpinner() {
+        String dateISO;
+
+        String selectedDate = sDate.getSelectedItem() != null
+            ? (String) sDate.getSelectedItem()
+            : null;
+
+        String selectedTime = sTime.getSelectedItem() != null
+            ? (String) sTime.getSelectedItem()
+            : null;
+
+        if (selectedDate == null || selectedTime == null) {
+            dateISO = null;
+        } else {
+            dateISO = selectedDate+"T"+selectedTime+":00Z";
+        }
+
+        return dateISO;
     }
 }
