@@ -23,6 +23,8 @@ public interface UserApi {
     // Perfil
     @GET("profile")
     Call<ApiResponse<User.UserResponse>> getUser(@Header("Authorization") String token);
+    @GET("Users/activities")
+    Call<ApiResponse<ReservationsData>> getReservations(@Header("Authorization") String token);
 
     @PATCH("profile")
     Call<ApiResponse<User.UserResponse>> updateUser(@Header("Authorization") String token, @Body UserUpdate user);
