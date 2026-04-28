@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/reservation_form_nav_graph"
+    app:startDestination="@id/reservationFormFragment">
+    <fragment
+        android:id="@+id/reservationFormFragment"
+        android:name="com.example.androidapp.ui.reservation.ReservationFormFragment"
+        android:label="Reserva">
+
+        <argument
+            android:name="activityId"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
+</navigation>
