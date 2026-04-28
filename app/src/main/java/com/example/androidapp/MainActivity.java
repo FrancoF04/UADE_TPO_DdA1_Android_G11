@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
         NavigationUI.setupWithNavController(bottomNav, navController);
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
-            if (destination.getId() == R.id.homeFragment) { //ir agregando mas destinos en funcion de los fragments creados
+            if (destination.getId() == R.id.homeFragment || destination.getId() == R.id.reservasFragment) { //ir agregando mas destinos en funcion de los fragments creados
                 bottomNav.setVisibility(View.VISIBLE);
             } else {
                 bottomNav.setVisibility(View.GONE);

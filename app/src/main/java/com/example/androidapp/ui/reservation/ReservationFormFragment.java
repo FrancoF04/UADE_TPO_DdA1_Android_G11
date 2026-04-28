@@ -141,7 +141,7 @@ public class ReservationFormFragment extends Fragment {
             String rawToken = TokenManager.getInstance(requireContext()).getToken();
             userApi.createReservation("Bearer " + rawToken, req).enqueue(new Callback<ApiResponse<Reservation>>() {
                 @Override
-                public void onResponse(Call<ApiResponse<com.example.androidapp.data.model.Reservation>> call, Response<ApiResponse<com.example.androidapp.data.model.Reservation>> response) {
+                public void onResponse(Call<ApiResponse<com.example.androidapp.data.model.Reservation>> call, Response<ApiResponse<Reservation>> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(requireContext(), "Reserva guardada", Toast.LENGTH_SHORT).show();
 

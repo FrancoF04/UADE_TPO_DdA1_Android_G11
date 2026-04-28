@@ -1,0 +1,113 @@
+package com.example.androidapp.ui.reservation;
+
+import android.annotation.SuppressLint;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import androidx.fragment.app.Fragment;
+
+import com.example.androidapp.R;
+import com.example.androidapp.data.local.TokenManager;
+import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.model.Reservation;
+import com.example.androidapp.data.model.ReservationsData;
+import com.example.androidapp.data.remote.UserApi;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import dagger.hilt.android.AndroidEntryPoint;
+import jakarta.inject.Inject;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+@AndroidEntryPoint
+public class MisReservasFragment extends Fragment {
+    @Inject
+    UserApi userApi;
+    private TextView tvActividades;
+    private List<Reservation> reservas;
+    private ReservationAdapter adapter;
+    private ListView lvActividades;
+    private Button btnActividadesProximas;
+    private Button btnActividadesPasadas;
+    private boolean past;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_mis_reservas, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        cargarReservas();
+        initViews(view);
+    }
+
+    private void cargarReservas() {
+        userApi.getReservations("Bearer " + TokenManager.getInstance(requireContext()).getToken())
+                .enqueue(new Callback<ApiResponse<ReservationsData>>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse<ReservationsData>> call, Response<ApiResponse<ReservationsData>> response) {
+                        if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                            ReservationsData data = response.body().getData();
+                            reservas = data != null && data.getDetailedActivities() != null ? data.getDetailedActivities() : new ArrayList<>();
+                        } else {
+                            reservas = new ArrayList<>();
+                        }
+                        adapter.setReservations(filterReservations(past));
+                    }
+
+                    @Override
+                    public void onFailure(Call<ApiResponse<ReservationsData>> call, Throwable throwable) {
+                        reservas = new ArrayList<>();
+                        adapter.setReservations(filterReservations(past));
+                    }
+                });
+    }
+
+    private void mostrarReservasProximas() {
+        past = false;
+        tvActividades.setText("Mis actividades proximas");
+        adapter.setReservations(filterReservations(past));
+    }
+
+    private List<Reservation> filterReservations(boolean past) {
+        if (reservas == null) return new ArrayList<>();
+        Instant now = Instant.now();
+        return reservas.stream().filter(r -> {
+            try {
+                Instant it = Instant.parse(r.getSelectedDate());
+                return past ? it.isBefore(now) : !it.isBefore(now);
+            } catch (Exception e) {
+                return false;
+            }
+        }).collect(Collectors.toList());
+    }
+
+    private void initViews(View view){
+        tvActividades = view.findViewById(R.id.tvActividades);
+        lvActividades = view.findViewById(R.id.lvActividades);
+        btnActividadesProximas = view.findViewById(R.id.btnActividadesProximas);
+        btnActividadesPasadas = view.findViewById(R.id.btnActividadesPasadas);
+
+        adapter = new ReservationAdapter(requireContext(), new ArrayList<>(), false);
+        lvActividades.setAdapter(adapter);
+
+        btnActividadesProximas.setOnClickListener(v -> mostrarReservasProximas());
+
+        btnActividadesPasadas.setOnClickListener(v -> {});
+        
+        mostrarReservasProximas();
+    }
+}

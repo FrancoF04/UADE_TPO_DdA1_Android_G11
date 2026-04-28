@@ -63,7 +63,5 @@
             app:destination="@+id/profileFragment"
             app:popUpTo="@id/profileFragment"
             app:popUpToInclusive="true"/>
-
     </fragment>
-
 </navigation>
