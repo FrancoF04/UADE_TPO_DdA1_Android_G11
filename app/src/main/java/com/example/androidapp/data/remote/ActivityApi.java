@@ -9,6 +9,7 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.Header;
 
 public interface ActivityApi {
 
@@ -26,4 +27,15 @@ public interface ActivityApi {
 
     @GET("activities/{id}")
     Call<ApiResponse<Activity>> getActivityById(@Path("id") String id);
+
+        @GET("activities/recommended")
+        Call<ApiResponse<List<Activity>>> getRecommended(@Header("Authorization") String token);
+
+        @GET("activities/featured")
+        Call<ApiResponse<List<Activity>>> getFeatured();
+
+        @GET("activities/history")
+        Call<ApiResponse<List<Activity>>> getHistory(@Header("Authorization") String token,
+                                                                                                @Query("page") int page,
+                                                                                                @Query("page_size") int pageSize);
 }

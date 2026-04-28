@@ -5,6 +5,9 @@ import static com.example.androidapp.BuildConfig.API_BASE_URL;
 import com.example.androidapp.data.remote.ActivityApi;
 import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.UserApi;
+import com.example.androidapp.data.remote.RatingsApi;
+import com.example.androidapp.data.remote.FavoritesApi;
+import com.example.androidapp.data.remote.NewsApi;
 
 import javax.inject.Singleton;
 
@@ -44,5 +47,23 @@ public class NetworkModule {
     @Singleton
     public AuthApi provideAuthApiService(Retrofit retrofit) {
         return retrofit.create(AuthApi.class);
+    }
+
+    @Provides
+    @Singleton
+    public RatingsApi provideRatingsApiService(Retrofit retrofit) {
+        return retrofit.create(RatingsApi.class);
+    }
+
+    @Provides
+    @Singleton
+    public FavoritesApi provideFavoritesApiService(Retrofit retrofit) {
+        return retrofit.create(FavoritesApi.class);
+    }
+
+    @Provides
+    @Singleton
+    public NewsApi provideNewsApiService(Retrofit retrofit) {
+        return retrofit.create(NewsApi.class);
     }
 }
