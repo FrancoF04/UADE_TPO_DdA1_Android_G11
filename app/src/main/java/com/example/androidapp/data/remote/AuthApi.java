@@ -13,6 +13,7 @@ import java.util.Map;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
+import retrofit2.http.Header;
 
 public interface AuthApi {
 
@@ -30,4 +31,10 @@ public interface AuthApi {
 
     @POST("auth/otp/resend")
     Call<ApiResponse<Map<String, String>>> resendOtp(@Body OtpRequest request);
+
+    @POST("auth/refresh")
+    Call<ApiResponse<AuthResponse>> refresh(@Body Map<String, String> body);
+
+    @POST("auth/logout")
+    Call<ApiResponse<Object>> logout(@Header("Authorization") String token);
 }
