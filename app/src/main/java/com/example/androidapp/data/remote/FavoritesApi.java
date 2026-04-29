@@ -10,16 +10,15 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Body;
-import retrofit2.http.Header;
 
 public interface FavoritesApi {
 
     @GET("favorites")
-    Call<ApiResponse<Object>> getFavorites(@Header("Authorization") String token);
+    Call<ApiResponse<Object>> getFavorites();
 
     @POST("favorites")
-    Call<ApiResponse<Object>> addFavorite(@Header("Authorization") String token, @Body Map<String, Object> body);
+    Call<ApiResponse<Object>> addFavorite(@Body Map<String, Object> body);
 
     @DELETE("favorites/{activityId}")
-    Call<ApiResponse<Object>> removeFavorite(@Header("Authorization") String token, @Path("activityId") String activityId);
+    Call<ApiResponse<Object>> removeFavorite(@Path("activityId") String activityId);
 }

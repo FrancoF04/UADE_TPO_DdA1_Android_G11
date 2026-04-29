@@ -96,6 +96,21 @@ public class MisReservasFragment extends Fragment {
                 .navigate(R.id.action_CancelarReservaFragment, args);
     }
 
+    private void onCancelReservation(Reservation reservation) {
+        CancelReservationFragment fragment = new CancelReservationFragment();
+        Bundle args = new Bundle();
+        args.putString("activityName", reservation.getActivityName());
+        args.putString("date", reservation.getSelectedDate());
+        args.putString("quantity", String.valueOf(reservation.getQuantity()));
+        args.putString("bookingId", reservation.getId());
+        fragment.setArguments(args);
+
+        getParentFragmentManager().beginTransaction()
+                .replace(R.id.nav_host_fragment, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
     private void initViews(View view){
         tvActividades = view.findViewById(R.id.tvActividades);
         lvActividades = view.findViewById(R.id.lvActividades);

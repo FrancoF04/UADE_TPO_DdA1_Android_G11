@@ -2,6 +2,7 @@ package com.example.androidapp.ui.reservation;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,10 +22,8 @@ import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
-import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
-import com.example.androidapp.data.model.Reservation;
 import com.example.androidapp.data.model.ReservationRequest;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
@@ -93,13 +92,14 @@ public class ReservationFormFragment extends Fragment {
         activityId = getArguments() != null
         ? getArguments().getString("activityId", "")
         : "";
-        
+
+        initViews(view);
+
         if (!activityId.isEmpty()) {
             loadActivity(activityId);
-        }else {
+        } else {
             showUnknownError();
         }
-        initViews(view);
     }
 
     private void initViews(@NonNull View view) {
@@ -147,10 +147,11 @@ public class ReservationFormFragment extends Fragment {
             }
             ReservationRequest req = new ReservationRequest(activityId, fechaISO, cantidad);
 
-            String rawToken = TokenManager.getInstance(requireContext()).getToken();
-            userApi.createReservation("Bearer " + rawToken, req).enqueue(new Callback<ApiResponse<Reservation>>() {
+
+            userApi.createReservation(req).enqueue(new Callback<ApiResponse<Object>>() {
                 @Override
-                public void onResponse(Call<ApiResponse<com.example.androidapp.data.model.Reservation>> call, Response<ApiResponse<Reservation>> response) {
+                public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                    if (!isAdded()) return;
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(requireContext(), "Reserva guardada", Toast.LENGTH_SHORT).show();
 
@@ -161,13 +162,20 @@ public class ReservationFormFragment extends Fragment {
                                 .build()
                         );
                     } else {
+                        int code = response.code();
+                        Log.e("ReservationForm", "Error HTTP " + code + ": " + response.message());
+                        try {
+                            if (response.errorBody() != null)
+                                Log.e("ReservationForm", "Body: " + response.errorBody().string());
+                        } catch (Exception ignored) {}
                         Toast.makeText(requireContext(), "Error al guardar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
-                public void onFailure(Call<ApiResponse<com.example.androidapp.data.model.Reservation>> call, Throwable t) {
+                public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                     if (!isAdded()) return;
+                    Log.e("ReservationForm", "onFailure: " + t.getMessage(), t);
                     Toast.makeText(requireContext(), "Error al guardar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
                 }
             });

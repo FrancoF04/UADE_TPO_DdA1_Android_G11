@@ -72,9 +72,7 @@ public class EditProfileFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
 
 
-        String token = "Bearer " + TokenManager.getInstance(requireContext()).getToken();
-
-        userApi.getUser(token).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
+        userApi.getUser().enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<User.UserResponse>> call, Response<ApiResponse<User.UserResponse>> response) {
                 if (!isAdded()) return;
@@ -118,9 +116,7 @@ public class EditProfileFragment extends Fragment {
         UserUpdate request = new UserUpdate(email, phoneNumber, fullName);
 
 
-        String token = "Bearer " + TokenManager.getInstance(requireContext()).getToken();
-
-        userApi.updateUser(token, request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
+        userApi.updateUser(request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<User.UserResponse>> call,
                                    Response<ApiResponse<User.UserResponse>> response) {
