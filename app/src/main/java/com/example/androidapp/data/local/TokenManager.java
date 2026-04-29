@@ -7,13 +7,20 @@ import androidx.security.crypto.MasterKey;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import dagger.hilt.android.qualifiers.ApplicationContext;
+
+@Singleton
 public class TokenManager {
     private static final String PREF_NAME = "secure_user_prefs";
     private static final String KEY_AUTH_TOKEN = "auth_token";
     private static TokenManager instance;
     private SharedPreferences sharedPreferences;
 
-    private TokenManager(Context context) {
+    @Inject
+    private TokenManager(@ApplicationContext Context context) {
         try {
             MasterKey masterKey = new MasterKey.Builder(context)
                     .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -29,6 +36,7 @@ public class TokenManager {
         } catch (GeneralSecurityException | IOException e) {
             e.printStackTrace();
             // Fallback to regular SharedPreferences if encryption fails (optional, but safer for the app not to crash)
+            //TODO: chequear esto despues si es neceario, y el resto de este archivo
             sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         }
     }
