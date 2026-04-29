@@ -105,12 +105,11 @@ public class ProfileFragment extends Fragment {
     }
 
     private void savePreferences(List<String> categories) {
-        String token = "Bearer " + TokenManager.getInstance(requireContext()).getToken();
 
         UserPreferencesRequest request = new UserPreferencesRequest(categories);
 
 
-        userApi.updatePreferences(token, request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
+        userApi.updatePreferences(request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<User.UserResponse>> call, Response<ApiResponse<User.UserResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -137,9 +136,8 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        String token = "Bearer " + rawToken;
 
-        userApi.getUser(token).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
+        userApi.getUser().enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<User.UserResponse>> call, Response<ApiResponse<User.UserResponse>> response) {
                 if (!isAdded()) return;

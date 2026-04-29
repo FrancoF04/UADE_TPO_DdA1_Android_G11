@@ -66,8 +66,8 @@ public class CancelReservationFragment extends Fragment {
         btnCancelar.setOnClickListener(v -> requireActivity().onBackPressed());
 
         btnConfirmar.setOnClickListener(v -> {
-            String rawToken = TokenManager.getInstance(requireContext()).getToken();
-            userApi.cancelReservation("Bearer " + rawToken, idActivity).enqueue(new Callback<ApiResponse<Object>>() {
+
+            userApi.cancelReservation(idActivity).enqueue(new Callback<ApiResponse<Object>>() {
                 @Override
                 public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {

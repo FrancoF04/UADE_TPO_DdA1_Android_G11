@@ -138,8 +138,8 @@ public class ReservationFormFragment extends Fragment {
             }
             ReservationRequest req = new ReservationRequest(activityId, fechaISO, cantidad);
 
-            String rawToken = TokenManager.getInstance(requireContext()).getToken();
-            userApi.createReservation("Bearer " + rawToken, req).enqueue(new Callback<ApiResponse<Reservation>>() {
+
+            userApi.createReservation(req).enqueue(new Callback<ApiResponse<Reservation>>() {
                 @Override
                 public void onResponse(Call<ApiResponse<com.example.androidapp.data.model.Reservation>> call, Response<ApiResponse<Reservation>> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {

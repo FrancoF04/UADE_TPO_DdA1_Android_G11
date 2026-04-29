@@ -20,7 +20,7 @@ public class TokenManager {
     private SharedPreferences sharedPreferences;
 
     @Inject
-    private TokenManager(@ApplicationContext Context context) {
+    public TokenManager(@ApplicationContext Context context) {
         try {
             MasterKey masterKey = new MasterKey.Builder(context)
                     .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
