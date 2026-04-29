@@ -1,6 +1,5 @@
 package com.example.androidapp.ui.reservation;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,14 +18,8 @@ import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.Reservation;
 import com.example.androidapp.data.remote.UserApi;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import jakarta.inject.Inject;
@@ -42,9 +35,7 @@ public class MisReservasFragment extends Fragment {
     private List<Reservation> reservas;
     private ReservationAdapter adapter;
     private ListView lvActividades;
-    private Button btnActividadesProximas;
     private Button btnActividadesPasadas;
-    private boolean past;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -76,39 +67,15 @@ public class MisReservasFragment extends Fragment {
                         } else {
                             reservas = new ArrayList<>();
                         }
-                        adapter.setReservations(filterReservations(past));
+                        adapter.setReservations(reservas);
                     }
 
                     @Override
                     public void onFailure(Call<ApiResponse<List<Reservation>>> call, Throwable throwable) {
                         reservas = new ArrayList<>();
-                        adapter.setReservations(filterReservations(past));
+                        adapter.setReservations(reservas);
                     }
                 });
-    }
-
-    private void mostrarReservasProximas() {
-        past = false;
-        tvActividades.setText("Mis actividades proximas");
-        adapter.setReservations(filterReservations(past));
-    }
-
-    private List<Reservation> filterReservations(boolean past) {
-        if (reservas == null) return new ArrayList<>();
-        Instant now = Instant.now();
-        return reservas.stream().filter(r -> {
-            if (r == null || isCancelled(r.getStatus())) {
-                return false;
-            }
-
-            Instant selectedDate = parseInstant(r.getSelectedDate());
-            if (selectedDate == null) {
-                return false;
-            }
-
-            return past ? selectedDate.isBefore(now) : !selectedDate.isBefore(now);
-        }).sorted(Comparator.comparing(r -> parseInstant(r.getSelectedDate())))
-                .collect(Collectors.toList());
     }
 
     private void onCancelReservation(Reservation reservation) {
@@ -132,48 +99,15 @@ public class MisReservasFragment extends Fragment {
     private void initViews(View view){
         tvActividades = view.findViewById(R.id.tvActividades);
         lvActividades = view.findViewById(R.id.lvActividades);
-        btnActividadesProximas = view.findViewById(R.id.btnActividadesProximas);
         btnActividadesPasadas = view.findViewById(R.id.btnActividadesPasadas);
 
         adapter = new ReservationAdapter(requireContext(), new ArrayList<>(), false, this::onCancelReservation);
         lvActividades.setAdapter(adapter);
 
-        btnActividadesProximas.setOnClickListener(v -> mostrarReservasProximas());
+        tvActividades.setText(R.string.mis_actividades);
 
         btnActividadesPasadas.setOnClickListener(v ->
                 Navigation.findNavController(requireView()).navigate(R.id.action_reservas_to_historial));
-        
-        mostrarReservasProximas();
     }
 
-    private boolean isCancelled(String status) {
-        if (status == null) {
-            return false;
-        }
-
-        String normalized = status.trim().toLowerCase();
-        return normalized.contains("cancel");
-    }
-
-    private Instant parseInstant(String raw) {
-        if (raw == null || raw.trim().isEmpty()) {
-            return null;
-        }
-
-        try {
-            return Instant.parse(raw);
-        } catch (RuntimeException ignored) {
-        }
-
-        try {
-            return OffsetDateTime.parse(raw).toInstant();
-        } catch (RuntimeException ignored) {
-        }
-
-        try {
-            return LocalDateTime.parse(raw).atZone(ZoneId.systemDefault()).toInstant();
-        } catch (RuntimeException ignored) {
-            return null;
-        }
-    }
 }

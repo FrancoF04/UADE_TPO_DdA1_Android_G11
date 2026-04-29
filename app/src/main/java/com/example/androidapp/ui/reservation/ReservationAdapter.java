@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -71,6 +72,7 @@ public class ReservationAdapter extends BaseAdapter {
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.item_reservation, parent, false);
             holder = new ViewHolder();
+            holder.ivActivityImage = convertView.findViewById(R.id.ivActivityImage);
             holder.tvActivityName = convertView.findViewById(R.id.tvActivityName);
             holder.tvSchedule = convertView.findViewById(R.id.tvSchedule);
             holder.tvQuantity = convertView.findViewById(R.id.tvQuantity);
@@ -82,6 +84,7 @@ public class ReservationAdapter extends BaseAdapter {
         }
 
         Reservation reservation = getItem(position);
+        holder.ivActivityImage.setImageDrawable(null);
         holder.tvActivityName.setText(String.format(reservation.getActivityName()));
 
         String scheduleText = reservation.getSelectedDate();
@@ -102,22 +105,39 @@ public class ReservationAdapter extends BaseAdapter {
         holder.tvStatus.setText(String.format("Estado: %s", reservation.getStatus()));
         holder.tvQuantity.setText(String.format("Cantidad: %d", reservation.getQuantity()));
 
-        // Determinar si se puede cancelar
-        boolean canCancel = canCancelReservation(reservation);
-        
-        holder.btnCancelar.setVisibility(View.VISIBLE);
-        holder.btnCancelar.setOnClickListener(v -> {
-            if (canCancel) {
-                if (onCancelClickListener != null) {
-                    onCancelClickListener.onCancelClick(reservation);
+        // Mostrar botón cancelar solo para reservas activas (no canceladas y fecha futura)
+        boolean isActive = !isCancelled(reservation.getStatus()) && !isPast(reservation.getSelectedDate());
+        if (isActive) {
+            holder.btnCancelar.setVisibility(View.VISIBLE);
+            holder.btnCancelar.setOnClickListener(v -> {
+                if (canCancelReservation(reservation)) {
+                    if (onCancelClickListener != null) {
+                        onCancelClickListener.onCancelClick(reservation);
+                    }
+                } else {
+                    Toast.makeText(context, "Esta reserva ya no se puede cancelar", Toast.LENGTH_SHORT).show();
                 }
-                return;
-            }
-
-            Toast.makeText(context, "Esta reserva ya no se puede cancelar", Toast.LENGTH_SHORT).show();
-        });
+            });
+        } else {
+            holder.btnCancelar.setVisibility(View.GONE);
+            holder.btnCancelar.setOnClickListener(null);
+        }
 
         return convertView;
+    }
+
+    private boolean isCancelled(String status) {
+        if (status == null) return false;
+        return status.trim().toLowerCase().contains("cancel");
+    }
+
+    private boolean isPast(String selectedDate) {
+        try {
+            Instant instant = parseInstant(selectedDate);
+            return instant != null && instant.isBefore(Instant.now());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private boolean canCancelReservation(Reservation reservation) {
@@ -163,6 +183,7 @@ public class ReservationAdapter extends BaseAdapter {
     }
 
     static class ViewHolder {
+        ImageView ivActivityImage;
         TextView tvActivityName;
         TextView tvSchedule;
         TextView tvStatus;

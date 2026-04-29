@@ -79,7 +79,7 @@ public class HomeFragment extends Fragment {
             Navigation.findNavController(view).navigate(R.id.action_home_to_profile);
         });
 
-        adapter = new ActivityAdapter(requireContext(), listView);
+        adapter = new ActivityAdapter(requireContext());
         listView.setAdapter(adapter);
         listView.setOnItemClickListener((parent, v, position, id) -> {
             Activity activity = adapter.getItem(position);
@@ -93,7 +93,10 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        loadActivities();
+        // Post to the next layout pass so the ListView has its final measured
+        // dimensions before we populate it (avoids a race with the Navigation
+        // enter animation / bottom-nav padding changes on first entry).
+        listView.post(this::loadActivities);
     }
 
     private void loadActivities() {
