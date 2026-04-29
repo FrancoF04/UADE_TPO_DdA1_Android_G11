@@ -45,11 +45,12 @@ public final class DateTimeUtils {
     public static boolean isFutureOrNow(String raw) {
         if (raw == null || raw.trim().isEmpty()) return false;
 
-        // Date-only strings (YYYY-MM-DD) compare by day so today's activities are included
-        if (raw.trim().matches("\\d{4}-\\d{2}-\\d{2}")) {
+        // Compare by calendar date only — avoids UTC vs. local-timezone issues where
+        // "2026-04-29T20:30:00Z" (UTC) could be yesterday in Argentina (UTC-3).
+        String dateKey = extractDateKey(raw);
+        if (dateKey != null) {
             try {
-                LocalDate date = LocalDate.parse(raw.trim());
-                return !date.isBefore(LocalDate.now());
+                return !LocalDate.parse(dateKey).isBefore(LocalDate.now());
             } catch (RuntimeException ignored) {
             }
         }
