@@ -11,6 +11,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.Header;
 
 public interface ActivityApi {
 
@@ -34,4 +35,10 @@ public interface ActivityApi {
             @Header("Authorization") String token,
             @Query("page") int page,
             @Query("limit") int limit);
+        @GET("activities/recommended")
+        Call<ApiResponse<List<Activity>>> getRecommended(@Header("Authorization") String token);
+
+        @GET("activities/featured")
+        Call<ApiResponse<List<Activity>>> getFeatured();
+
 }
