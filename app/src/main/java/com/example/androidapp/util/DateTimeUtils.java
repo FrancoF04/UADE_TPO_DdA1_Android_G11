@@ -43,6 +43,17 @@ public final class DateTimeUtils {
     }
 
     public static boolean isFutureOrNow(String raw) {
+        if (raw == null || raw.trim().isEmpty()) return false;
+
+        // Date-only strings (YYYY-MM-DD) compare by day so today's activities are included
+        if (raw.trim().matches("\\d{4}-\\d{2}-\\d{2}")) {
+            try {
+                LocalDate date = LocalDate.parse(raw.trim());
+                return !date.isBefore(LocalDate.now());
+            } catch (RuntimeException ignored) {
+            }
+        }
+
         Instant instant = parseToInstant(raw);
         return instant != null && !instant.isBefore(Instant.now());
     }
