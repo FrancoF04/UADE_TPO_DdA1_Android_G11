@@ -13,12 +13,12 @@ import retrofit2.http.Body;
 
 public interface FavoritesApi {
 
-    @GET("favorites")
+    @GET("/favorites")
     Call<ApiResponse<Object>> getFavorites();
 
-    @POST("favorites")
+    @POST("/favorites")
     Call<ApiResponse<Object>> addFavorite(@Body Map<String, Object> body);
 
-    @DELETE("favorites/{activityId}")
+    @DELETE("/favorites/{activityId}")
     Call<ApiResponse<Object>> removeFavorite(@Path("activityId") String activityId);
 }

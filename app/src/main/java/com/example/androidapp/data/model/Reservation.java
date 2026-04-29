@@ -7,9 +7,6 @@ public class Reservation {
     private final String id;
     @SerializedName("activityId")
     private final String activityId;
-
-    @SerializedName("id")
-    private String id;
     
     @SerializedName("activityName")
     private final String activityName;

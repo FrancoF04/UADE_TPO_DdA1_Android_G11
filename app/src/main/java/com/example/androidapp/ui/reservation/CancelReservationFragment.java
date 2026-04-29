@@ -15,7 +15,6 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
-import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.remote.UserApi;
 
@@ -87,27 +86,26 @@ public class CancelReservationFragment extends Fragment {
                 return;
             }
 
-            String rawToken = TokenManager.getInstance(requireContext()).getToken();
-            userApi.cancelReservation("Bearer " + rawToken, reservationId).enqueue(new Callback<ApiResponse<Object>>() {
+            userApi.cancelReservation(reservationId).enqueue(new Callback<ApiResponse<Object>>() {
                 @Override
                 public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(requireContext(), "Reserva cancelada", Toast.LENGTH_SHORT).show();
                         Navigation.findNavController(requireView()).navigateUp();
                     } else {
-                        cancelWithPostFallback(rawToken);
+                        cancelWithPostFallback();
                     }
                 }
                 @Override
                 public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
-                    cancelWithPostFallback(rawToken);
+                    cancelWithPostFallback();
                 }
             });
         });
     }
 
-    private void cancelWithPostFallback(String rawToken) {
-        userApi.cancelReservationPost("Bearer " + rawToken, reservationId).enqueue(new Callback<ApiResponse<Object>>() {
+    private void cancelWithPostFallback() {
+        userApi.cancelReservationPost(reservationId).enqueue(new Callback<ApiResponse<Object>>() {
             @Override
             public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                 if (!isAdded()) {

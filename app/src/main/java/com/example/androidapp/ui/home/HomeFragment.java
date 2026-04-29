@@ -153,7 +153,7 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        userApi.getUser("Bearer " + token).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
+        userApi.getUser().enqueue(new Callback<ApiResponse<User.UserResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<User.UserResponse>> call,
                                    Response<ApiResponse<User.UserResponse>> response) {
