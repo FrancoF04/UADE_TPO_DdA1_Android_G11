@@ -31,6 +31,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 @AndroidEntryPoint
 public class LoginFragment extends Fragment {
+
+    @Inject
+    TokenManager tokenManager;
     @Inject
     AuthApi authApi;
 
@@ -98,7 +101,8 @@ public class LoginFragment extends Fragment {
                         && response.body().isSuccess()) {
                     // Obtener token y guardarlo de forma segura
                     String token = response.body().getData().getToken();
-                    TokenManager.getInstance(requireContext()).saveToken(token);
+                    //Ahora el token se va inyectar en el header de cada request
+                    tokenManager.saveToken(token);
 
                     navigateToHome(view, username);
                 } else {
