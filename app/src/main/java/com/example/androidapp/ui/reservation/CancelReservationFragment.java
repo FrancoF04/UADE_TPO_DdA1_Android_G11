@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.local.TokenManager;
@@ -35,7 +36,11 @@ public class CancelReservationFragment extends Fragment {
     private TextView tvDate;
     private TextView tvQuantity;
 
-    private String bookingId;
+    private String reservationId;
+    private String activityId;
+    private String reservationDate;
+    private int reservationQuantity;
+    private String idSchedule;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -50,36 +55,82 @@ public class CancelReservationFragment extends Fragment {
         tvDate = view.findViewById(R.id.tvDate);
         tvQuantity = view.findViewById(R.id.tvQuantity);
 
-        if(getArguments()!=null){
-            tvActivity.setText(getArguments().getString("activityName"));
-            tvDate.setText(getArguments().getString("date"));
-            tvQuantity.setText(getArguments().getString("quantity"));
-            bookingId = getArguments().getString("bookingId");
+        Bundle args = getArguments();
+        if(args != null){
+            tvActivity.setText(args.getString("activityName"));
+            reservationDate = args.getString("date");
+            activityId = args.getString("activityId");
+
+            String quantityArg = args.getString("quantity");
+            tvDate.setText(reservationDate);
+            tvQuantity.setText(quantityArg);
+
+            try {
+                reservationQuantity = Integer.parseInt(quantityArg != null ? quantityArg : "0");
+            } catch (NumberFormatException ignored) {
+                reservationQuantity = 0;
+            }
+
+            reservationId = args.getString("reservationId");
+            idSchedule = args.getString("idSchedule");
         }else{
-            requireActivity().onBackPressed();
             Toast.makeText(requireContext(), "Error al cargar la actividad", Toast.LENGTH_SHORT).show();
+            requireActivity().onBackPressed();
         }
 
-        btnBack.setOnClickListener(v -> requireActivity().onBackPressed());
-        btnCancelar.setOnClickListener(v -> requireActivity().onBackPressed());
+        btnBack.setOnClickListener(v -> Navigation.findNavController(requireView()).navigateUp());
+        btnCancelar.setOnClickListener(v -> Navigation.findNavController(requireView()).navigateUp());
 
         btnConfirmar.setOnClickListener(v -> {
+            if (reservationId == null || reservationId.isEmpty()) {
+                Toast.makeText(requireContext(), "No se pudo identificar la reserva", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            userApi.cancelReservation(bookingId).enqueue(new Callback<ApiResponse<Object>>() {
+            String rawToken = TokenManager.getInstance(requireContext()).getToken();
+            userApi.cancelReservation("Bearer " + rawToken, reservationId).enqueue(new Callback<ApiResponse<Object>>() {
                 @Override
                 public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(requireContext(), "Reserva cancelada", Toast.LENGTH_SHORT).show();
-                        requireActivity().onBackPressed();
+                        Navigation.findNavController(requireView()).navigateUp();
                     } else {
-                        Toast.makeText(requireContext(), "Error al cancelar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
+                        cancelWithPostFallback(rawToken);
                     }
                 }
                 @Override
                 public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
-                    Toast.makeText(requireContext(), "Error al cancelar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
+                    cancelWithPostFallback(rawToken);
                 }
             });
         });
     }
+
+    private void cancelWithPostFallback(String rawToken) {
+        userApi.cancelReservationPost("Bearer " + rawToken, reservationId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                if (!isAdded()) {
+                    return;
+                }
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Toast.makeText(requireContext(), "Reserva cancelada", Toast.LENGTH_SHORT).show();
+                    Navigation.findNavController(requireView()).navigateUp();
+                } else {
+                    Toast.makeText(requireContext(), "Error al cancelar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                if (!isAdded()) {
+                    return;
+                }
+
+                Toast.makeText(requireContext(), "Error al cancelar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 }

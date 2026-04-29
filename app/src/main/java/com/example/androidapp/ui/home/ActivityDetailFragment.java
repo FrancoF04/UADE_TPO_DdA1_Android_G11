@@ -21,7 +21,7 @@ import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
-import com.example.androidapp.data.remote.RetrofitClient;
+import com.example.androidapp.util.DateTimeUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -159,7 +159,7 @@ public class ActivityDetailFragment extends Fragment {
         }
 
         // Mostrar cupos de la fecha más reciente si la info viene en las fechas, sino fallback a availableSpots
-        int spotsToShow = getSpotsForLatestDate(activity);
+        int spotsToShow = getSpotsForNextAvailableDate(activity);
         tvSpots.setText(getString(R.string.detail_spots, spotsToShow));
         tvDescription.setText(activity.getDescription());
         if (activity.getMeetingPoint() != null) {
@@ -188,27 +188,41 @@ public class ActivityDetailFragment extends Fragment {
             tvCancellation.setText(cancellation);
         }
 
+        boolean hasUpcomingDates = hasUpcomingSchedules(activity);
+        btnReserve.setEnabled(hasUpcomingDates);
+        if (!hasUpcomingDates) {
+            btnReserve.setText("Sin fechas disponibles");
+        } else {
+            btnReserve.setText("Reservar");
+        }
+
         // Placeholder — no image loading library available (limited knowledge).
         ivImage.setImageDrawable(null);
     }
 
-    private int getSpotsForLatestDate(Activity activity) {
+    private int getSpotsForNextAvailableDate(Activity activity) {
         List<Schedule> schedules = activity.getSchedules();
         if (schedules != null && !schedules.isEmpty()) {
-            Schedule latestSchedule = null;
+            Schedule nextSchedule = null;
+            int nextScheduleSpots = activity.getAvailableSpots();
 
             for (Schedule schedule : schedules) {
                 if (schedule == null || schedule.getDate() == null) {
                     continue;
                 }
 
-                if (latestSchedule == null || isAfter(schedule.getDate(), latestSchedule.getDate())) {
-                    latestSchedule = schedule;
+                if (!DateTimeUtils.isFutureOrNow(schedule.getDate())) {
+                    continue;
+                }
+
+                if (nextSchedule == null || isBefore(schedule.getDate(), nextSchedule.getDate())) {
+                    nextSchedule = schedule;
+                    nextScheduleSpots = schedule.getAvailableSpots();
                 }
             }
 
-            if (latestSchedule != null) {
-                return latestSchedule.getAvailableSpots();
+            if (nextSchedule != null) {
+                return nextScheduleSpots;
             }
         }
 
@@ -228,7 +242,11 @@ public class ActivityDetailFragment extends Fragment {
             String dateStr = m.group(1);
             try {
                 LocalDate d = LocalDate.parse(dateStr, fmt);
-                if (latest == null || d.isAfter(latest)) {
+                if (d.isBefore(LocalDate.now())) {
+                    continue;
+                }
+
+                if (latest == null || d.isBefore(latest)) {
                     latest = d;
                     String after = raw.substring(m.end());
                     Matcher numM = numberPattern.matcher(after);
@@ -248,6 +266,39 @@ public class ActivityDetailFragment extends Fragment {
 
         if (spotsForLatest != null) return spotsForLatest;
         return activity.getAvailableSpots();
+    }
+
+    private boolean hasUpcomingSchedules(Activity activity) {
+        List<Schedule> schedules = activity.getSchedules();
+        if (schedules != null && !schedules.isEmpty()) {
+            for (Schedule schedule : schedules) {
+                if (schedule != null && DateTimeUtils.isFutureOrNow(schedule.getDate())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        List<String> dates = activity.getDate();
+        if (dates == null || dates.isEmpty()) {
+            return false;
+        }
+
+        for (String date : dates) {
+            if (DateTimeUtils.isFutureOrNow(date)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isBefore(String firstDate, String secondDate) {
+        try {
+            return parseDateTime(firstDate).isBefore(parseDateTime(secondDate));
+        } catch (RuntimeException ignored) {
+            return firstDate.compareTo(secondDate) < 0;
+        }
     }
 
     private boolean isAfter(String firstDate, String secondDate) {

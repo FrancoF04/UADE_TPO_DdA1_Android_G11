@@ -8,11 +8,42 @@
         android:id="@+id/reservasFragment"
         android:name="com.example.androidapp.ui.reservation.MisReservasFragment"
         android:label="Mis Reservas">
-
+        <action
+            android:id="@+id/action_CancelarReservaFragment"
+            app:destination="@id/CancelarReservaFragment"/>
         <action
             android:id="@+id/action_reservas_to_historial"
             app:destination="@id/historial_nav_graph" />
-
     </fragment>
-
+    
+    <fragment
+        android:id="@+id/CancelarReservaFragment"
+        android:name="com.example.androidapp.ui.reservation.CancelReservationFragment"
+        android:label="Cancelar Reserva">
+        <argument
+            android:name="activityName"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="date"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="activityId"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="quantity"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="reservationId"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="idSchedule"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+    
 </navigation>

@@ -6,12 +6,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Reservation;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -68,6 +72,7 @@ public class ReservationAdapter extends BaseAdapter {
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.item_reservation, parent, false);
             holder = new ViewHolder();
+            holder.ivActivityImage = convertView.findViewById(R.id.ivActivityImage);
             holder.tvActivityName = convertView.findViewById(R.id.tvActivityName);
             holder.tvSchedule = convertView.findViewById(R.id.tvSchedule);
             holder.tvQuantity = convertView.findViewById(R.id.tvQuantity);
@@ -79,12 +84,16 @@ public class ReservationAdapter extends BaseAdapter {
         }
 
         Reservation reservation = getItem(position);
+        holder.ivActivityImage.setImageDrawable(null);
         holder.tvActivityName.setText(String.format(reservation.getActivityName()));
 
         String scheduleText = reservation.getSelectedDate();
         if (scheduleText != null) {
             try {
-                Instant inst = Instant.parse(scheduleText);
+                Instant inst = parseInstant(scheduleText);
+                if (inst == null) {
+                    throw new IllegalArgumentException();
+                }
                 ZonedDateTime zdt = ZonedDateTime.ofInstant(inst, ZoneId.systemDefault());
                 DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                 scheduleText = fmt.format(zdt);
@@ -96,27 +105,48 @@ public class ReservationAdapter extends BaseAdapter {
         holder.tvStatus.setText(String.format("Estado: %s", reservation.getStatus()));
         holder.tvQuantity.setText(String.format("Cantidad: %d", reservation.getQuantity()));
 
-        // Determinar si se puede cancelar
-        boolean canCancel = canCancelReservation(reservation);
-        
-        if (canCancel) {
+        // Mostrar botón cancelar solo para reservas activas (no canceladas y fecha futura)
+        boolean isActive = !isCancelled(reservation.getStatus()) && !isPast(reservation.getSelectedDate());
+        if (isActive) {
             holder.btnCancelar.setVisibility(View.VISIBLE);
             holder.btnCancelar.setOnClickListener(v -> {
-                if (onCancelClickListener != null) {
-                    onCancelClickListener.onCancelClick(reservation);
+                if (canCancelReservation(reservation)) {
+                    if (onCancelClickListener != null) {
+                        onCancelClickListener.onCancelClick(reservation);
+                    }
+                } else {
+                    Toast.makeText(context, "Esta reserva ya no se puede cancelar", Toast.LENGTH_SHORT).show();
                 }
             });
         } else {
             holder.btnCancelar.setVisibility(View.GONE);
+            holder.btnCancelar.setOnClickListener(null);
         }
 
         return convertView;
     }
 
+    private boolean isCancelled(String status) {
+        if (status == null) return false;
+        return status.trim().toLowerCase().contains("cancel");
+    }
+
+    private boolean isPast(String selectedDate) {
+        try {
+            Instant instant = parseInstant(selectedDate);
+            return instant != null && instant.isBefore(Instant.now());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private boolean canCancelReservation(Reservation reservation) {
         try {
             Instant now = Instant.now();
-            Instant reservationTime = Instant.parse(reservation.getSelectedDate());
+            Instant reservationTime = parseInstant(reservation.getSelectedDate());
+            if (reservationTime == null) {
+                return false;
+            }
             
             // Calcular las horas entre ahora y la reserva
             long hoursBetween = java.time.temporal.ChronoUnit.HOURS.between(now, reservationTime);
@@ -130,7 +160,30 @@ public class ReservationAdapter extends BaseAdapter {
         }
     }
 
+    private Instant parseInstant(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return Instant.parse(raw);
+        } catch (RuntimeException ignored) {
+        }
+
+        try {
+            return OffsetDateTime.parse(raw).toInstant();
+        } catch (RuntimeException ignored) {
+        }
+
+        try {
+            return LocalDateTime.parse(raw).atZone(ZoneId.systemDefault()).toInstant();
+        } catch (RuntimeException ignored) {
+            return null;
+        }
+    }
+
     static class ViewHolder {
+        ImageView ivActivityImage;
         TextView tvActivityName;
         TextView tvSchedule;
         TextView tvStatus;

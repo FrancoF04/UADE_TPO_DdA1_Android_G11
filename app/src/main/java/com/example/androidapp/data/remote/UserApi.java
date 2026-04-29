@@ -37,7 +37,8 @@ public interface UserApi {
     Call<ApiResponse<Object>> getBookingsSummary();
 
     @GET("users/reservations")
-    Call<ApiResponse<List<Reservation>>> getReservations();
+    Call<ApiResponse<List<Reservation>>> getReservations(@Header("Authorization") String token);
+
 
     @POST("users/reservations")
     Call<ApiResponse<Object>> createReservation(@Body ReservationRequest reservation);
@@ -46,6 +47,6 @@ public interface UserApi {
     Call<ApiResponse<Object>> cancelReservation(@Path("id") String id);
 
     @POST("users/reservations/{id}/cancel")
-    Call<ApiResponse<Object>> cancelReservationPost(@Path("id") String id);
-
+    Call<ApiResponse<Object>> cancelReservationPost(@Header("Authorization") String token, @Path("id") String id);
+    
 }
