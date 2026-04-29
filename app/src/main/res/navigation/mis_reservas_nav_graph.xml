@@ -3,8 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/mis_reservas_nav_graph"
     app:startDestination="@id/reservasFragment">
+
     <fragment
         android:id="@+id/reservasFragment"
         android:name="com.example.androidapp.ui.reservation.MisReservasFragment"
-        android:label="Mis Reservas" />
+        android:label="Mis Reservas">
+
+        <action
+            android:id="@+id/action_reservas_to_historial"
+            app:destination="@id/historial_nav_graph" />
+
+    </fragment>
+
 </navigation>

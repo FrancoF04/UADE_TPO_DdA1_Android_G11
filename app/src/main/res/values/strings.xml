@@ -97,4 +97,17 @@
     <string name="actividades_proximas">Actividades proximas</string>
     <string name="actividades_pasadas">Actividades pasadas</string>
     <string name="cancelar_reserva">Cancelar reserva</string>
+
+    <!-- Historial -->
+    <string name="historial_titulo">Historial de Actividades</string>
+    <string name="historial_empty">No hay actividades en el historial</string>
+    <string name="historial_desde">Desde</string>
+    <string name="historial_hasta">Hasta</string>
+    <string name="historial_desde_con_fecha">Desde: %1$s</string>
+    <string name="historial_hasta_con_fecha">Hasta: %1$s</string>
+    <string name="historial_aplicar">Aplicar</string>
+    <string name="historial_limpiar">Limpiar</string>
+    <string name="historial_destino">Destino: %1$s</string>
+    <string name="historial_guia">Guía: %1$s</string>
+    <string name="historial_duracion">Duración: %1$s</string>
 </resources>

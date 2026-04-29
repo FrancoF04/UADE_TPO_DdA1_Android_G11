@@ -10,6 +10,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.local.TokenManager;
@@ -106,7 +107,8 @@ public class MisReservasFragment extends Fragment {
 
         btnActividadesProximas.setOnClickListener(v -> mostrarReservasProximas());
 
-        btnActividadesPasadas.setOnClickListener(v -> {});
+        btnActividadesPasadas.setOnClickListener(v ->
+                Navigation.findNavController(requireView()).navigate(R.id.action_reservas_to_historial));
         
         mostrarReservasProximas();
     }
