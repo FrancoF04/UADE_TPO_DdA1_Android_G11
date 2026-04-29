@@ -61,4 +61,5 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation(libs.hilt.android)
     annotationProcessor(libs.hilt.compiler)   // Java usa annotationProcessor (no kapt)
+    implementation(libs.okhttp)
 }

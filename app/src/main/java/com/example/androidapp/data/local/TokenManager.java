@@ -36,7 +36,7 @@ public class TokenManager {
         } catch (GeneralSecurityException | IOException e) {
             e.printStackTrace();
             // Fallback to regular SharedPreferences if encryption fails (optional, but safer for the app not to crash)
-            //TODO: chequear esto despues si es neceario, y el resto de este archivo
+            //TODO: chequear esto despues si es neceario, y el resto de este archivo, ver si separar lo de encrypted en un fragment aparte como en el repositorio
             sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         }
     }
