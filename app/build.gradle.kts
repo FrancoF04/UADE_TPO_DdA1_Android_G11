@@ -29,7 +29,7 @@ android {
     buildTypes {
         debug {
             // Uncomment the line below to use local emulator instead of Railway:
-            //buildConfigField("String", "API_BASE_URL", "\"http://172.23.15.208:3000/api/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.35:3000/api/\"")
         }
         release {
             isMinifyEnabled = false
@@ -61,4 +61,5 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation(libs.hilt.android)
     annotationProcessor(libs.hilt.compiler)   // Java usa annotationProcessor (no kapt)
+    implementation(libs.okhttp)
 }

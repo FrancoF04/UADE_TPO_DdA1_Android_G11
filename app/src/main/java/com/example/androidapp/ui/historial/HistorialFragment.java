@@ -159,8 +159,8 @@ public class HistorialFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         tvEmpty.setVisibility(View.GONE);
 
-        String token = "Bearer " + TokenManager.getInstance(requireContext()).getToken();
-        activityApi.getHistory(token, 1, 100).enqueue(new Callback<ApiResponse<List<HistorialItem>>>() {
+
+        activityApi.getHistory(1, 100).enqueue(new Callback<ApiResponse<List<HistorialItem>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<HistorialItem>>> call,
                                    Response<ApiResponse<List<HistorialItem>>> response) {

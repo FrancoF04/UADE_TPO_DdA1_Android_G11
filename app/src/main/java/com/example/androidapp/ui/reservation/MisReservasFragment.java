@@ -55,7 +55,7 @@ public class MisReservasFragment extends Fragment {
     }
 
     private void cargarReservas() {
-        userApi.getReservations("Bearer " + TokenManager.getInstance(requireContext()).getToken())
+        userApi.getReservations()
                 .enqueue(new Callback<ApiResponse<List<Reservation>>>() {
                     @Override
                     public void onResponse(Call<ApiResponse<List<Reservation>>> call, Response<ApiResponse<List<Reservation>>> response) {
