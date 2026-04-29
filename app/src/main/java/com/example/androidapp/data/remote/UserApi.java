@@ -39,11 +39,9 @@ public interface UserApi {
     @GET("users/reservations")
     Call<ApiResponse<List<Reservation>>> getReservations();
 
-
     @POST("users/reservations")
-    Call<ApiResponse<Reservation>> createReservation(@Body ReservationRequest reservation);
+    Call<ApiResponse<Object>> createReservation(@Body ReservationRequest reservation);
 
-    // Cancelar reserva: DELETE y alias POST cancel
     @DELETE("users/reservations/{id}")
     Call<ApiResponse<Object>> cancelReservation(@Path("id") String id);
 

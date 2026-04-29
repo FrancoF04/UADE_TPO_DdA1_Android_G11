@@ -3,6 +3,8 @@ package com.example.androidapp.data.model;
 import com.google.gson.annotations.SerializedName;
 
 public class Reservation {
+    @SerializedName("id")
+    private final String id;
     @SerializedName("activityId")
     private final String activityId;
     @SerializedName("activityName")
@@ -21,8 +23,9 @@ public class Reservation {
     @SerializedName("status")
     private final String status;
 
-    public Reservation(String activityId, String activityName, String selectedDate, String selectedScheduleId,
-                       int quantity, int cancellationHours, String status) {
+    public Reservation(String id, String activityId, String activityName, String selectedDate,
+                       String selectedScheduleId, int quantity, int cancellationHours, String status) {
+        this.id = id;
         this.activityId = activityId;
         this.activityName = activityName;
         this.activity = null;
@@ -31,6 +34,10 @@ public class Reservation {
         this.quantity = quantity;
         this.cancellationHours = cancellationHours;
         this.status = status;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getActivityId() {
