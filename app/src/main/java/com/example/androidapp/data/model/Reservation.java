@@ -7,6 +7,9 @@ public class Reservation {
     private final String activityId;
     @SerializedName("activityName")
     private final String activityName;
+
+    @SerializedName("activity")
+    private final ActivitySummary activity;
     @SerializedName("selectedDate")
     private final String selectedDate;
     @SerializedName("selectedScheduleId")
@@ -22,6 +25,7 @@ public class Reservation {
                        int quantity, int cancellationHours, String status) {
         this.activityId = activityId;
         this.activityName = activityName;
+        this.activity = null;
         this.selectedDate = selectedDate;
         this.selectedScheduleId = selectedScheduleId;
         this.quantity = quantity;
@@ -54,6 +58,27 @@ public class Reservation {
     }
 
     public String getActivityName() {
-        return activityName;
+        if (activityName != null && !activityName.isEmpty()) {
+            return activityName;
+        }
+
+        if (activity != null) {
+            return activity.getName();
+        }
+
+        return null;
+    }
+
+    public static class ActivitySummary {
+        @SerializedName("name")
+        private final String name;
+
+        public ActivitySummary(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 }

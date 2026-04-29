@@ -67,9 +67,9 @@ public class CancelReservationFragment extends Fragment {
 
         btnConfirmar.setOnClickListener(v -> {
             String rawToken = TokenManager.getInstance(requireContext()).getToken();
-            userApi.cancelActivity("Bearer" + rawToken, idActivity, idSchedule).enqueue(new Callback<ApiResponse<Void>>() {
+            userApi.cancelReservation("Bearer " + rawToken, idActivity).enqueue(new Callback<ApiResponse<Object>>() {
                 @Override
-                public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(requireContext(), "Reserva cancelada", Toast.LENGTH_SHORT).show();
                         requireActivity().onBackPressed();
@@ -78,7 +78,7 @@ public class CancelReservationFragment extends Fragment {
                     }
                 }
                 @Override
-                public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                     Toast.makeText(requireContext(), "Error al cancelar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
                 }
             });

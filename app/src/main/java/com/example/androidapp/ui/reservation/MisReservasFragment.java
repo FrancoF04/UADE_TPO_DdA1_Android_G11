@@ -15,7 +15,6 @@ import com.example.androidapp.R;
 import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.Reservation;
-import com.example.androidapp.data.model.ReservationsData;
 import com.example.androidapp.data.remote.UserApi;
 
 import java.time.Instant;
@@ -50,18 +49,18 @@ public class MisReservasFragment extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        cargarReservas();
         initViews(view);
+        cargarReservas();
     }
 
     private void cargarReservas() {
         userApi.getReservations("Bearer " + TokenManager.getInstance(requireContext()).getToken())
-                .enqueue(new Callback<ApiResponse<ReservationsData>>() {
+                .enqueue(new Callback<ApiResponse<List<Reservation>>>() {
                     @Override
-                    public void onResponse(Call<ApiResponse<ReservationsData>> call, Response<ApiResponse<ReservationsData>> response) {
+                    public void onResponse(Call<ApiResponse<List<Reservation>>> call, Response<ApiResponse<List<Reservation>>> response) {
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                            ReservationsData data = response.body().getData();
-                            reservas = data != null && data.getDetailedActivities() != null ? data.getDetailedActivities() : new ArrayList<>();
+                            List<Reservation> data = response.body().getData();
+                            reservas = data != null ? data : new ArrayList<>();
                         } else {
                             reservas = new ArrayList<>();
                         }
@@ -69,7 +68,7 @@ public class MisReservasFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(Call<ApiResponse<ReservationsData>> call, Throwable throwable) {
+                    public void onFailure(Call<ApiResponse<List<Reservation>>> call, Throwable throwable) {
                         reservas = new ArrayList<>();
                         adapter.setReservations(filterReservations(past));
                     }
@@ -95,6 +94,22 @@ public class MisReservasFragment extends Fragment {
         }).collect(Collectors.toList());
     }
 
+    private void onCancelReservation(Reservation reservation) {
+        CancelReservationFragment fragment = new CancelReservationFragment();
+        Bundle args = new Bundle();
+        args.putString("activityName", reservation.getActivityName());
+        args.putString("date", reservation.getSelectedDate());
+        args.putString("quantity", String.valueOf(reservation.getQuantity()));
+        args.putString("idActivity", reservation.getActivityId());
+        args.putString("idSchedule", reservation.getSelectedScheduleId());
+        fragment.setArguments(args);
+
+        getParentFragmentManager().beginTransaction()
+                .replace(R.id.nav_host_fragment, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
     private void initViews(View view){
         tvActividades = view.findViewById(R.id.tvActividades);
         lvActividades = view.findViewById(R.id.lvActividades);
@@ -107,7 +122,7 @@ public class MisReservasFragment extends Fragment {
         btnActividadesProximas.setOnClickListener(v -> mostrarReservasProximas());
 
         btnActividadesPasadas.setOnClickListener(v -> {});
-        
+
         mostrarReservasProximas();
     }
 }
