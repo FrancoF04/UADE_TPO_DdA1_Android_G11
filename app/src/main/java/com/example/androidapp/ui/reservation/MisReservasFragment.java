@@ -13,7 +13,6 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
-import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.Reservation;
 import com.example.androidapp.data.remote.UserApi;
@@ -57,7 +56,7 @@ public class MisReservasFragment extends Fragment {
     }
 
     private void cargarReservas() {
-        userApi.getReservations("Bearer " + TokenManager.getInstance(requireContext()).getToken())
+        userApi.getReservations()
                 .enqueue(new Callback<ApiResponse<List<Reservation>>>() {
                     @Override
                     public void onResponse(Call<ApiResponse<List<Reservation>>> call, Response<ApiResponse<List<Reservation>>> response) {
@@ -94,21 +93,6 @@ public class MisReservasFragment extends Fragment {
         
         Navigation.findNavController(requireView())
                 .navigate(R.id.action_CancelarReservaFragment, args);
-    }
-
-    private void onCancelReservation(Reservation reservation) {
-        CancelReservationFragment fragment = new CancelReservationFragment();
-        Bundle args = new Bundle();
-        args.putString("activityName", reservation.getActivityName());
-        args.putString("date", reservation.getSelectedDate());
-        args.putString("quantity", String.valueOf(reservation.getQuantity()));
-        args.putString("bookingId", reservation.getId());
-        fragment.setArguments(args);
-
-        getParentFragmentManager().beginTransaction()
-                .replace(R.id.nav_host_fragment, fragment)
-                .addToBackStack(null)
-                .commit();
     }
 
     private void initViews(View view){

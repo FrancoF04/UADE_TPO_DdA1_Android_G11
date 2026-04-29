@@ -12,9 +12,9 @@ import retrofit2.http.Path;
 
 public interface RatingsApi {
 
-    @POST("ratings")
+    @POST("/ratings")
     Call<ApiResponse<Object>> submitRating(@Body Map<String, Object> ratingBody);
 
-    @GET("ratings/{bookingId}")
+    @GET("/ratings/{bookingId}")
     Call<ApiResponse<Object>> getRating(@Path("bookingId") String bookingId);
 }
