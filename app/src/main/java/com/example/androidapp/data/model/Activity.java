@@ -51,7 +51,7 @@ public class Activity {
     private final List<String> date;
 
     @SerializedName("meetingPoint")
-    private final String meetingPoint;
+    private final MeetingPoint meetingPoint;
 
     @SerializedName("guide")
     private final Guide guide;
@@ -72,7 +72,7 @@ public class Activity {
                     String description, String imageUrl, List<String> galleryUrls,
                     String duration, double price, String currency,
                     int availableSpots, int totalSpots, List<Schedule> schedules, List<String> date,
-                    String meetingPoint, Guide guide, String language,
+                    MeetingPoint meetingPoint, Guide guide, String language,
                     List<String> included, String cancellationPolicy, boolean featured) {
         this.id = id;
         this.name = name;
@@ -110,7 +110,7 @@ public class Activity {
     public int getTotalSpots() { return totalSpots; }
     public List<Schedule> getSchedules() { return schedules; }
     public List<String> getDate() { return date; }
-    public String getMeetingPoint() { return meetingPoint; }
+    public MeetingPoint getMeetingPoint() { return meetingPoint; }
     public Guide getGuide() { return guide; }
     public String getLanguage() { return language; }
     public List<String> getIncluded() { return included; }

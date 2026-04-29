@@ -97,6 +97,9 @@
     <string name="actividades_proximas">Actividades proximas</string>
     <string name="actividades_pasadas">Actividades pasadas</string>
     <string name="cancelar_reserva">Cancelar reserva</string>
+    <string name="est_seguro_que_desea_cancelar_esta_actividad">¿Está seguro que desea cancelar esta actividad?</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="confirmar">Confirmar</string>
 
     <!-- Historial -->
     <string name="historial_titulo">Historial de Actividades</string>

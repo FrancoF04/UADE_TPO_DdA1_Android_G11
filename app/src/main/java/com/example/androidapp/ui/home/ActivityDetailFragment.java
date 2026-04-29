@@ -162,7 +162,9 @@ public class ActivityDetailFragment extends Fragment {
         int spotsToShow = getSpotsForLatestDate(activity);
         tvSpots.setText(getString(R.string.detail_spots, spotsToShow));
         tvDescription.setText(activity.getDescription());
-        tvMeetingPoint.setText(activity.getMeetingPoint());
+        if (activity.getMeetingPoint() != null) {
+            tvMeetingPoint.setText(activity.getMeetingPoint().toDisplayString());
+        }
 
         if (activity.getGuide() != null) {
             String guideText = activity.getGuide().getName()
