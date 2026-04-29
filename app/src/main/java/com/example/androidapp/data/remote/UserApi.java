@@ -50,5 +50,5 @@ public interface UserApi {
 
     @POST("users/reservations/{id}/cancel")
     Call<ApiResponse<Object>> cancelReservationPost(@Header("Authorization") String token, @Path("id") String id);
-
+    
 }

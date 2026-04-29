@@ -12,6 +12,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavArgs;
+import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.local.TokenManager;
@@ -51,19 +53,20 @@ public class CancelReservationFragment extends Fragment {
         tvDate = view.findViewById(R.id.tvDate);
         tvQuantity = view.findViewById(R.id.tvQuantity);
 
-        if(getArguments()!=null){
-            tvActivity.setText(getArguments().getString("activityName"));
-            tvDate.setText(getArguments().getString("date"));
-            tvQuantity.setText(getArguments().getString("quantity"));
-            idActivity = getArguments().getString("idActivity");
-            idSchedule = getArguments().getString("idSchedule");
+        Bundle args = getArguments();
+        if(args != null){
+            tvActivity.setText(args.getString("activityName"));
+            tvDate.setText(args.getString("date"));
+            tvQuantity.setText(args.getString("quantity"));
+            idActivity = args.getString("idActivity");
+            idSchedule = args.getString("idSchedule");
         }else{
-            requireActivity().onBackPressed();
             Toast.makeText(requireContext(), "Error al cargar la actividad", Toast.LENGTH_SHORT).show();
+            requireActivity().onBackPressed();
         }
 
-        btnBack.setOnClickListener(v -> requireActivity().onBackPressed());
-        btnCancelar.setOnClickListener(v -> requireActivity().onBackPressed());
+        btnBack.setOnClickListener(v -> Navigation.findNavController(requireView()).navigateUp());
+        btnCancelar.setOnClickListener(v -> Navigation.findNavController(requireView()).navigateUp());
 
         btnConfirmar.setOnClickListener(v -> {
             String rawToken = TokenManager.getInstance(requireContext()).getToken();
@@ -72,7 +75,7 @@ public class CancelReservationFragment extends Fragment {
                 public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(requireContext(), "Reserva cancelada", Toast.LENGTH_SHORT).show();
-                        requireActivity().onBackPressed();
+                        Navigation.findNavController(requireView()).navigateUp();
                     } else {
                         Toast.makeText(requireContext(), "Error al cancelar la reserva. Intente nuevamente.", Toast.LENGTH_SHORT).show();
                     }

@@ -5,6 +5,10 @@ import com.google.gson.annotations.SerializedName;
 public class Reservation {
     @SerializedName("activityId")
     private final String activityId;
+
+    @SerializedName("id")
+    private String id;
+    
     @SerializedName("activityName")
     private final String activityName;
 
@@ -31,6 +35,10 @@ public class Reservation {
         this.quantity = quantity;
         this.cancellationHours = cancellationHours;
         this.status = status;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getActivityId() {
