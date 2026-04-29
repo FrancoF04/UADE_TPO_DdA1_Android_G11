@@ -7,11 +7,14 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Reservation;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -84,7 +87,10 @@ public class ReservationAdapter extends BaseAdapter {
         String scheduleText = reservation.getSelectedDate();
         if (scheduleText != null) {
             try {
-                Instant inst = Instant.parse(scheduleText);
+                Instant inst = parseInstant(scheduleText);
+                if (inst == null) {
+                    throw new IllegalArgumentException();
+                }
                 ZonedDateTime zdt = ZonedDateTime.ofInstant(inst, ZoneId.systemDefault());
                 DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                 scheduleText = fmt.format(zdt);
@@ -99,16 +105,17 @@ public class ReservationAdapter extends BaseAdapter {
         // Determinar si se puede cancelar
         boolean canCancel = canCancelReservation(reservation);
         
-        if (canCancel) {
-            holder.btnCancelar.setVisibility(View.VISIBLE);
-            holder.btnCancelar.setOnClickListener(v -> {
+        holder.btnCancelar.setVisibility(View.VISIBLE);
+        holder.btnCancelar.setOnClickListener(v -> {
+            if (canCancel) {
                 if (onCancelClickListener != null) {
                     onCancelClickListener.onCancelClick(reservation);
                 }
-            });
-        } else {
-            holder.btnCancelar.setVisibility(View.GONE);
-        }
+                return;
+            }
+
+            Toast.makeText(context, "Esta reserva ya no se puede cancelar", Toast.LENGTH_SHORT).show();
+        });
 
         return convertView;
     }
@@ -116,7 +123,10 @@ public class ReservationAdapter extends BaseAdapter {
     private boolean canCancelReservation(Reservation reservation) {
         try {
             Instant now = Instant.now();
-            Instant reservationTime = Instant.parse(reservation.getSelectedDate());
+            Instant reservationTime = parseInstant(reservation.getSelectedDate());
+            if (reservationTime == null) {
+                return false;
+            }
             
             // Calcular las horas entre ahora y la reserva
             long hoursBetween = java.time.temporal.ChronoUnit.HOURS.between(now, reservationTime);
@@ -127,6 +137,28 @@ public class ReservationAdapter extends BaseAdapter {
             return hoursBetween > reservation.getCancellationHours();
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    private Instant parseInstant(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return Instant.parse(raw);
+        } catch (RuntimeException ignored) {
+        }
+
+        try {
+            return OffsetDateTime.parse(raw).toInstant();
+        } catch (RuntimeException ignored) {
+        }
+
+        try {
+            return LocalDateTime.parse(raw).atZone(ZoneId.systemDefault()).toInstant();
+        } catch (RuntimeException ignored) {
+            return null;
         }
     }
 

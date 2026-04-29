@@ -21,10 +21,11 @@ import com.example.androidapp.R;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.remote.ActivityApi;
-import com.example.androidapp.data.remote.RetrofitClient;
+import com.example.androidapp.util.DateTimeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -101,8 +102,9 @@ public class SearchFragment extends Fragment {
                         if (response.isSuccessful() && response.body() != null
                                 && response.body().isSuccess()) {
                             List<Activity> results = response.body().getData();
-                            if (results != null && !results.isEmpty()) {
-                                adapter.setActivities(results);
+                            List<Activity> upcomingResults = filterUpcomingActivities(results);
+                            if (!upcomingResults.isEmpty()) {
+                                adapter.setActivities(upcomingResults);
                                 tvEmpty.setVisibility(View.GONE);
                             } else {
                                 adapter.setActivities(new ArrayList<>());
@@ -124,5 +126,31 @@ public class SearchFragment extends Fragment {
                         Log.e("SearchFragment", "Search failed", t);
                     }
                 });
+    }
+
+    private List<Activity> filterUpcomingActivities(List<Activity> activities) {
+        if (activities == null) {
+            return new ArrayList<>();
+        }
+
+        return activities.stream().filter(this::hasUpcomingSchedule).collect(Collectors.toList());
+    }
+
+    private boolean hasUpcomingSchedule(Activity activity) {
+        if (activity == null) {
+            return false;
+        }
+
+        if (activity.getSchedules() != null && !activity.getSchedules().isEmpty()) {
+            return activity.getSchedules().stream()
+                    .anyMatch(schedule -> schedule != null && DateTimeUtils.isFutureOrNow(schedule.getDate()));
+        }
+
+        List<String> rawDates = activity.getDate();
+        if (rawDates == null || rawDates.isEmpty()) {
+            return true;
+        }
+
+        return rawDates.stream().anyMatch(DateTimeUtils::isFutureOrNow);
     }
 }

@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
@@ -19,7 +20,11 @@ import com.example.androidapp.data.model.Reservation;
 import com.example.androidapp.data.remote.UserApi;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,6 +56,12 @@ public class MisReservasFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
+        cargarReservas();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
         cargarReservas();
     }
 
@@ -86,21 +97,32 @@ public class MisReservasFragment extends Fragment {
         if (reservas == null) return new ArrayList<>();
         Instant now = Instant.now();
         return reservas.stream().filter(r -> {
-            try {
-                Instant it = Instant.parse(r.getSelectedDate());
-                return past ? it.isBefore(now) : !it.isBefore(now);
-            } catch (Exception e) {
+            if (r == null || isCancelled(r.getStatus())) {
                 return false;
             }
-        }).collect(Collectors.toList());
+
+            Instant selectedDate = parseInstant(r.getSelectedDate());
+            if (selectedDate == null) {
+                return false;
+            }
+
+            return past ? selectedDate.isBefore(now) : !selectedDate.isBefore(now);
+        }).sorted(Comparator.comparing(r -> parseInstant(r.getSelectedDate())))
+                .collect(Collectors.toList());
     }
 
     private void onCancelReservation(Reservation reservation) {
+        if (reservation == null || reservation.getId() == null || reservation.getId().isEmpty()) {
+            Toast.makeText(requireContext(), "No se pudo identificar la reserva a cancelar", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Bundle args = new Bundle();
         args.putString("activityName", reservation.getActivityName());
+        args.putString("activityId", reservation.getActivityId());
         args.putString("date", reservation.getSelectedDate());
         args.putString("quantity", String.valueOf(reservation.getQuantity()));
-        args.putString("idActivity", reservation.getId());
+        args.putString("reservationId", reservation.getId());
         args.putString("idSchedule", String.valueOf(reservation.getSelectedScheduleId()));
         
         Navigation.findNavController(requireView())
@@ -122,5 +144,36 @@ public class MisReservasFragment extends Fragment {
                 Navigation.findNavController(requireView()).navigate(R.id.action_reservas_to_historial));
         
         mostrarReservasProximas();
+    }
+
+    private boolean isCancelled(String status) {
+        if (status == null) {
+            return false;
+        }
+
+        String normalized = status.trim().toLowerCase();
+        return normalized.contains("cancel");
+    }
+
+    private Instant parseInstant(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return Instant.parse(raw);
+        } catch (RuntimeException ignored) {
+        }
+
+        try {
+            return OffsetDateTime.parse(raw).toInstant();
+        } catch (RuntimeException ignored) {
+        }
+
+        try {
+            return LocalDateTime.parse(raw).atZone(ZoneId.systemDefault()).toInstant();
+        } catch (RuntimeException ignored) {
+            return null;
+        }
     }
 }

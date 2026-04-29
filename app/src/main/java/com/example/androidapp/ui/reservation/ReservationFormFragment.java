@@ -29,11 +29,13 @@ import com.example.androidapp.data.model.ReservationRequest;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
 import com.example.androidapp.data.remote.UserApi;
+import com.example.androidapp.util.DateTimeUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,11 +64,20 @@ public class ReservationFormFragment extends Fragment {
     private Button btnCantidadMenos;
     private Button btnConfirmar;
 
-    // Map fecha -> lista de horarios (hora formato HH:mm o similar)
-    private Map<String, List<String>> dateToTimes = new LinkedHashMap<>();
-    // Map fecha -> cupos disponibles por schedule. Si no existe la fecha en el map, usar fallbackAvailableSpots
-    private Map<String, Integer> dateToAvailableSpots = new LinkedHashMap<>();
+    private Map<String, List<ScheduleOption>> dateToScheduleOptions = new LinkedHashMap<>();
     private int fallbackAvailableSpots = -1;
+
+    private static class ScheduleOption {
+        final String displayTime;
+        final String selectedDate;
+        final int availableSpots;
+
+        ScheduleOption(String displayTime, String selectedDate, int availableSpots) {
+            this.displayTime = displayTime;
+            this.selectedDate = selectedDate;
+            this.availableSpots = availableSpots;
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -105,9 +116,7 @@ public class ReservationFormFragment extends Fragment {
         tvCantidadPersonas.setText(String.valueOf(cantidad));
 
         btnCantidadMas.setOnClickListener(v -> {
-            String sel = null;
-            if (sDate.getSelectedItem() != null) sel = (String) sDate.getSelectedItem();
-            int spots = getAvailableSpotsForDate(sel);
+            int spots = getAvailableSpotsForSelection();
             if (spots >= 0) {
                 if (cantidad < spots) {
                     cantidad++;
@@ -171,9 +180,25 @@ public class ReservationFormFragment extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedDate = (String) parent.getItemAtPosition(position);
                 updateTimeSpinner(selectedDate);
-                updateAvailableSpots(selectedDate);
+                updateAvailableSpots();
                 // ajustar cantidad si supera los cupos de la fecha seleccionada
-                int spots = getAvailableSpotsForDate(selectedDate);
+                int spots = getAvailableSpotsForSelection();
+                if (spots >= 0 && cantidad > spots) {
+                    cantidad = spots;
+                    tvCantidadPersonas.setText(String.valueOf(cantidad));
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        sTime.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                updateAvailableSpots();
+                int spots = getAvailableSpotsForSelection();
                 if (spots >= 0 && cantidad > spots) {
                     cantidad = spots;
                     tvCantidadPersonas.setText(String.valueOf(cantidad));
@@ -224,8 +249,7 @@ public class ReservationFormFragment extends Fragment {
     }
 
     private void parseDatesAndPopulate(List<Schedule> schedules, List<String> rawDates) {
-        dateToTimes.clear();
-        dateToAvailableSpots.clear();
+        dateToScheduleOptions.clear();
 
         if (schedules != null && !schedules.isEmpty()) {
             for (Schedule schedule : schedules) {
@@ -233,18 +257,31 @@ public class ReservationFormFragment extends Fragment {
                     continue;
                 }
 
-                String key = extractDateKey(schedule.getDate());
-                String timePart = extractTimePart(schedule.getDate());
+                if (!DateTimeUtils.isFutureOrNow(schedule.getDate())) {
+                    continue;
+                }
 
-                dateToAvailableSpots.put(key, schedule.getAvailableSpots());
-                dateToTimes.computeIfAbsent(key, k -> new ArrayList<>());
-                List<String> times = dateToTimes.get(key);
-                if (!times.contains(timePart)) {
-                    times.add(timePart);
+                String key = DateTimeUtils.extractDateKey(schedule.getDate());
+                String timePart = DateTimeUtils.extractTimePart(schedule.getDate());
+
+                int adjustedSpots = schedule.getAvailableSpots();
+
+                dateToScheduleOptions.computeIfAbsent(key, k -> new ArrayList<>());
+                List<ScheduleOption> options = dateToScheduleOptions.get(key);
+                boolean exists = false;
+                for (ScheduleOption option : options) {
+                    if (option.displayTime.equals(timePart)) {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (!exists) {
+                    options.add(new ScheduleOption(timePart, schedule.getDate(), adjustedSpots));
                 }
             }
 
-            List<String> fechas = new ArrayList<>(dateToTimes.keySet());
+            List<String> fechas = new ArrayList<>(dateToScheduleOptions.keySet());
             populateDateSpinner(fechas);
             return;
         }
@@ -255,6 +292,10 @@ public class ReservationFormFragment extends Fragment {
 
         for (String raw : rawDates) {
             if (raw == null) continue;
+
+            if (!DateTimeUtils.isFutureOrNow(raw)) {
+                continue;
+            }
 
             // fecha como llave (fallback a raw completo si no hay yyyy-mm-dd)
             String key = raw;
@@ -285,41 +326,20 @@ public class ReservationFormFragment extends Fragment {
                 }
             }
 
-            if (spots != null) dateToAvailableSpots.put(key, spots);
-
-            // añadir horario al map
-            dateToTimes.computeIfAbsent(key, k -> new ArrayList<>());
-            List<String> times = dateToTimes.get(key);
-            if (!times.contains(timePart)) times.add(timePart);
+            int availableSpots = spots != null ? spots : fallbackAvailableSpots;
+            dateToScheduleOptions.computeIfAbsent(key, k -> new ArrayList<>());
+            dateToScheduleOptions.get(key).add(new ScheduleOption(timePart, raw, availableSpots));
         }
 
         // Si no hay fechas parseadas, usar rawDates como fechas (fallback)
-        if (dateToTimes.isEmpty() && !rawDates.isEmpty()) {
+        if (dateToScheduleOptions.isEmpty() && !rawDates.isEmpty()) {
             for (String r : rawDates) {
-                dateToTimes.put(r, new ArrayList<String>() {{ add("--"); }});
+                dateToScheduleOptions.put(r, new ArrayList<ScheduleOption>() {{ add(new ScheduleOption("--", r, fallbackAvailableSpots)); }});
             }
         }
 
-        List<String> fechas = new ArrayList<>(dateToTimes.keySet());
+        List<String> fechas = dateToScheduleOptions.keySet().stream().sorted().collect(Collectors.toList());
         populateDateSpinner(fechas);
-    }
-
-    private String extractDateKey(String rawDate) {
-        Pattern datePattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})");
-        Matcher matcher = datePattern.matcher(rawDate);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return rawDate;
-    }
-
-    private String extractTimePart(String rawDate) {
-        Pattern timePattern = Pattern.compile("(\\d{1,2}:\\d{2})");
-        Matcher matcher = timePattern.matcher(rawDate);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return "--";
     }
 
     private void populateDateSpinner(List<String> fechas) {
@@ -331,8 +351,8 @@ public class ReservationFormFragment extends Fragment {
         if (!fechas.isEmpty()) {
             sDate.setSelection(0);
             updateTimeSpinner(fechas.get(0));
-            updateAvailableSpots(fechas.get(0));
-            int spots = getAvailableSpotsForDate(fechas.get(0));
+            updateAvailableSpots();
+            int spots = getAvailableSpotsForSelection();
             if (spots >= 0 && cantidad > spots) {
                 cantidad = spots;
                 tvCantidadPersonas.setText(String.valueOf(cantidad));
@@ -342,24 +362,35 @@ public class ReservationFormFragment extends Fragment {
             ArrayAdapter<String> emptyAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, new ArrayList<>());
             emptyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             sTime.setAdapter(emptyAdapter);
+            btnConfirmar.setEnabled(false);
+            tvAvailableSpots.setText("No hay fechas disponibles");
         }
     }
 
-    private int getAvailableSpotsForDate(String dateKey) {
-        if (dateKey == null) return fallbackAvailableSpots;
-        return dateToAvailableSpots.getOrDefault(dateKey, fallbackAvailableSpots);
+    private int getAvailableSpotsForSelection() {
+        ScheduleOption selectedOption = getSelectedOption();
+        if (selectedOption == null) {
+            return fallbackAvailableSpots;
+        }
+        return selectedOption.availableSpots;
     }
 
     private void updateTimeSpinner(String selectedDate) {
-        List<String> times = dateToTimes.get(selectedDate);
-        if (times == null) times = new ArrayList<>();
+        List<ScheduleOption> options = dateToScheduleOptions.get(selectedDate);
+        List<String> times = new ArrayList<>();
+        if (options != null) {
+            for (ScheduleOption option : options) {
+                times.add(option.displayTime);
+            }
+        }
         ArrayAdapter<String> timeAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, times);
         timeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sTime.setAdapter(timeAdapter);
+        btnConfirmar.setEnabled(!times.isEmpty());
     }
 
-    private void updateAvailableSpots(String selectedDate) {
-        int spots = getAvailableSpotsForDate(selectedDate);
+    private void updateAvailableSpots() {
+        int spots = getAvailableSpotsForSelection();
         if (spots >= 0) {
             tvAvailableSpots.setText(getString(R.string.detail_spots, spots));
         } else {
@@ -370,20 +401,37 @@ public class ReservationFormFragment extends Fragment {
     private String reconstructDateToTimesFromSpinner() {
         String dateISO;
 
-        String selectedDate = sDate.getSelectedItem() != null
-            ? (String) sDate.getSelectedItem()
-            : null;
-
-        String selectedTime = sTime.getSelectedItem() != null
-            ? (String) sTime.getSelectedItem()
-            : null;
-
-        if (selectedDate == null || selectedTime == null) {
+        ScheduleOption selectedOption = getSelectedOption();
+        if (selectedOption == null) {
+            dateISO = null;
+        } else if ("--".equals(selectedOption.displayTime)) {
             dateISO = null;
         } else {
-            dateISO = selectedDate+"T"+selectedTime+":00Z";
+            dateISO = selectedOption.selectedDate;
         }
 
         return dateISO;
+    }
+
+    private ScheduleOption getSelectedOption() {
+        String selectedDate = sDate.getSelectedItem() != null ? (String) sDate.getSelectedItem() : null;
+        String selectedTime = sTime.getSelectedItem() != null ? (String) sTime.getSelectedItem() : null;
+
+        if (selectedDate == null || selectedTime == null) {
+            return null;
+        }
+
+        List<ScheduleOption> options = dateToScheduleOptions.get(selectedDate);
+        if (options == null) {
+            return null;
+        }
+
+        for (ScheduleOption option : options) {
+            if (selectedTime.equals(option.displayTime)) {
+                return option;
+            }
+        }
+
+        return null;
     }
 }

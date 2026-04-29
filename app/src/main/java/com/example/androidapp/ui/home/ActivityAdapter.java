@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.androidapp.R;
@@ -20,9 +21,15 @@ public class ActivityAdapter extends BaseAdapter {
 
     private final Context context;
     private final List<Activity> activities;
+    private ListView listView;
 
     public ActivityAdapter(Context context) {
+        this(context, null);
+    }
+
+    public ActivityAdapter(Context context, ListView listView) {
         this.context = context;
+        this.listView = listView;
         this.activities = new ArrayList<>();
     }
 
@@ -32,6 +39,12 @@ public class ActivityAdapter extends BaseAdapter {
             activities.addAll(newActivities);
         }
         notifyDataSetChanged();
+        if (listView != null) {
+            // Force a full adapter reset to bypass any hardware layer cache from
+            // the navigation enter animation that may have captured a stale frame.
+            listView.setAdapter(null);
+            listView.setAdapter(this);
+        }
     }
 
     @Override

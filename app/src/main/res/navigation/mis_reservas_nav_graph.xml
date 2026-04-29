@@ -29,11 +29,15 @@
             app:argType="string"
             app:nullable="true" />
         <argument
+            android:name="activityId"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
             android:name="quantity"
             app:argType="string"
             app:nullable="true" />
         <argument
-            android:name="idActivity"
+            android:name="reservationId"
             app:argType="string"
             app:nullable="true" />
         <argument
