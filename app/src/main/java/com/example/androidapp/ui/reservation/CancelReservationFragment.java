@@ -35,8 +35,7 @@ public class CancelReservationFragment extends Fragment {
     private TextView tvDate;
     private TextView tvQuantity;
 
-    private String idActivity;
-    private String idSchedule;
+    private String bookingId;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -55,8 +54,7 @@ public class CancelReservationFragment extends Fragment {
             tvActivity.setText(getArguments().getString("activityName"));
             tvDate.setText(getArguments().getString("date"));
             tvQuantity.setText(getArguments().getString("quantity"));
-            idActivity = getArguments().getString("idActivity");
-            idSchedule = getArguments().getString("idSchedule");
+            bookingId = getArguments().getString("bookingId");
         }else{
             requireActivity().onBackPressed();
             Toast.makeText(requireContext(), "Error al cargar la actividad", Toast.LENGTH_SHORT).show();
@@ -67,7 +65,7 @@ public class CancelReservationFragment extends Fragment {
 
         btnConfirmar.setOnClickListener(v -> {
 
-            userApi.cancelReservation(idActivity).enqueue(new Callback<ApiResponse<Object>>() {
+            userApi.cancelReservation(bookingId).enqueue(new Callback<ApiResponse<Object>>() {
                 @Override
                 public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {

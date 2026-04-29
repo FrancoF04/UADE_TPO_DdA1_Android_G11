@@ -86,6 +86,7 @@ public class MisReservasFragment extends Fragment {
         if (reservas == null) return new ArrayList<>();
         Instant now = Instant.now();
         return reservas.stream().filter(r -> {
+            if ("cancelled".equals(r.getStatus())) return false;
             try {
                 Instant it = Instant.parse(r.getSelectedDate());
                 return past ? it.isBefore(now) : !it.isBefore(now);
@@ -101,8 +102,7 @@ public class MisReservasFragment extends Fragment {
         args.putString("activityName", reservation.getActivityName());
         args.putString("date", reservation.getSelectedDate());
         args.putString("quantity", String.valueOf(reservation.getQuantity()));
-        args.putString("idActivity", reservation.getActivityId());
-        args.putString("idSchedule", reservation.getSelectedScheduleId());
+        args.putString("bookingId", reservation.getId());
         fragment.setArguments(args);
 
         getParentFragmentManager().beginTransaction()

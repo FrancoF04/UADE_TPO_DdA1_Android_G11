@@ -51,6 +51,7 @@ public class Activity {
     private final List<String> date;
 
     @SerializedName("meetingPoint")
+    @JsonAdapter(MeetingPointAdapter.class)
     private final MeetingPoint meetingPoint;
 
     @SerializedName("guide")

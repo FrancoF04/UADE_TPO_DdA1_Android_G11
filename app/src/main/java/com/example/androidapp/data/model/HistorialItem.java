@@ -4,8 +4,8 @@ import com.google.gson.annotations.SerializedName;
 
 public class HistorialItem {
 
-    @SerializedName("id")
-    private String id;
+    @SerializedName("bookingId")
+    private String bookingId;
 
     @SerializedName("activityId")
     private String activityId;
@@ -13,33 +13,26 @@ public class HistorialItem {
     @SerializedName("activityName")
     private String activityName;
 
-    @SerializedName("selectedDate")
-    private String selectedDate;
+    @SerializedName("destination")
+    private String destination;
 
-    @SerializedName("status")
-    private String status;
+    @SerializedName("guide")
+    private Guide guide;
 
-    @SerializedName("activity")
-    private Activity activity;
+    @SerializedName("duration")
+    private String duration;
 
-    public String getId() { return id; }
+    @SerializedName("date")
+    private String date;
+
+    public String getBookingId() { return bookingId; }
     public String getActivityId() { return activityId; }
     public String getActivityName() { return activityName; }
-    public String getSelectedDate() { return selectedDate; }
-    public String getStatus() { return status; }
-    public Activity getActivity() { return activity; }
-
-    public String getDestination() {
-        return activity != null ? activity.getDestination() : "";
-    }
+    public String getDestination() { return destination != null ? destination : ""; }
+    public String getDuration() { return duration != null ? duration : ""; }
+    public String getSelectedDate() { return date; }
 
     public String getGuideName() {
-        return (activity != null && activity.getGuide() != null)
-                ? activity.getGuide().getName()
-                : "";
-    }
-
-    public String getDuration() {
-        return activity != null ? activity.getDuration() : "";
+        return guide != null && guide.getName() != null ? guide.getName() : "";
     }
 }
