@@ -1,8 +1,8 @@
 package com.example.androidapp.data.remote;
 
 import com.example.androidapp.data.model.ApiResponse;
-
-import java.util.Map;
+import com.example.androidapp.data.model.Rating;
+import com.example.androidapp.data.model.RatingRequest;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -12,9 +12,9 @@ import retrofit2.http.Path;
 
 public interface RatingsApi {
 
-    @POST("/ratings")
-    Call<ApiResponse<Object>> submitRating(@Body Map<String, Object> ratingBody);
+    @POST("ratings")
+    Call<ApiResponse<Rating>> submitRating(@Body RatingRequest request);
 
-    @GET("/ratings/{bookingId}")
-    Call<ApiResponse<Object>> getRating(@Path("bookingId") String bookingId);
+    @GET("ratings/{bookingId}")
+    Call<ApiResponse<Rating>> getRating(@Path("bookingId") String bookingId);
 }

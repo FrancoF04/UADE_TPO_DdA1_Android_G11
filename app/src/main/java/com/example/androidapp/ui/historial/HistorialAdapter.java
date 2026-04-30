@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,12 +21,21 @@ import java.util.List;
 
 public class HistorialAdapter extends BaseAdapter {
 
+    public interface OnRatingClickListener {
+        void onRatingClick(HistorialItem item);
+    }
+
     private final Context context;
     private final List<HistorialItem> items;
+    private OnRatingClickListener ratingClickListener;
 
     public HistorialAdapter(Context context) {
         this.context = context;
         this.items = new ArrayList<>();
+    }
+
+    public void setOnRatingClickListener(OnRatingClickListener listener) {
+        this.ratingClickListener = listener;
     }
 
     public void setItems(List<HistorialItem> newItems) {
@@ -47,13 +57,14 @@ public class HistorialAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder;
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.item_activity_card, parent, false);
+            convertView = LayoutInflater.from(context).inflate(R.layout.item_historial_card, parent, false);
             holder = new ViewHolder();
             holder.ivImage = convertView.findViewById(R.id.ivImage);
             holder.tvName = convertView.findViewById(R.id.tvName);
             holder.tvDestination = convertView.findViewById(R.id.tvDestination);
             holder.tvCategory = convertView.findViewById(R.id.tvCategory);
             holder.tvPrice = convertView.findViewById(R.id.tvPrice);
+            holder.btnCalificar = convertView.findViewById(R.id.btnCalificar);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -67,6 +78,12 @@ public class HistorialAdapter extends BaseAdapter {
         holder.tvPrice.setText(item.getDuration() != null && !item.getDuration().isEmpty()
                 ? context.getString(R.string.historial_duracion, item.getDuration())
                 : "");
+
+        holder.btnCalificar.setOnClickListener(v -> {
+            if (ratingClickListener != null) {
+                ratingClickListener.onRatingClick(item);
+            }
+        });
 
         return convertView;
     }
@@ -88,5 +105,6 @@ public class HistorialAdapter extends BaseAdapter {
         TextView tvDestination;
         TextView tvCategory;
         TextView tvPrice;
+        Button btnCalificar;
     }
 }
