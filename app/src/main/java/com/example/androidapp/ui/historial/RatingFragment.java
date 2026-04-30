@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.Rating;
+import com.example.androidapp.data.model.RatingData;
 import com.example.androidapp.data.model.RatingRequest;
 import com.example.androidapp.data.remote.RatingsApi;
 
@@ -105,24 +106,23 @@ public class RatingFragment extends Fragment {
 
         progressBar.setVisibility(View.VISIBLE);
 
-        ratingsApi.getRating(bookingId).enqueue(new Callback<ApiResponse<Rating>>() {
+        ratingsApi.getRating(bookingId).enqueue(new Callback<ApiResponse<RatingData>>() {
             @Override
-            public void onResponse(Call<ApiResponse<Rating>> call, Response<ApiResponse<Rating>> response) {
+            public void onResponse(Call<ApiResponse<RatingData>> call, Response<ApiResponse<RatingData>> response) {
                 if (!isAdded()) return;
                 progressBar.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null
-                        && response.body().isSuccess() && response.body().getData() != null) {
-                    showReadOnly(response.body().getData());
-                } else if (response.code() == 404) {
-                    showForm();
+                        && response.body().isSuccess() && response.body().getData() != null
+                        && response.body().getData().getRating() != null) {
+                    showReadOnly(response.body().getData().getRating());
                 } else {
                     showForm();
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Rating>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<RatingData>> call, Throwable t) {
                 if (!isAdded()) return;
                 progressBar.setVisibility(View.GONE);
                 Log.e("RatingFragment", "Error cargando calificación", t);
@@ -177,16 +177,16 @@ public class RatingFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         btnEnviar.setEnabled(false);
 
-        ratingsApi.submitRating(request).enqueue(new Callback<ApiResponse<Rating>>() {
+        ratingsApi.submitRating(request).enqueue(new Callback<ApiResponse<RatingData>>() {
             @Override
-            public void onResponse(Call<ApiResponse<Rating>> call, Response<ApiResponse<Rating>> response) {
+            public void onResponse(Call<ApiResponse<RatingData>> call, Response<ApiResponse<RatingData>> response) {
                 if (!isAdded()) return;
                 progressBar.setVisibility(View.GONE);
                 btnEnviar.setEnabled(true);
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     Toast.makeText(requireContext(), "¡Calificación enviada!", Toast.LENGTH_SHORT).show();
-                    Rating saved = response.body().getData();
+                    Rating saved = response.body().getData() != null ? response.body().getData().getRating() : null;
                     if (saved != null) {
                         showReadOnly(saved);
                     } else {
@@ -215,7 +215,7 @@ public class RatingFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Rating>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<RatingData>> call, Throwable t) {
                 if (!isAdded()) return;
                 progressBar.setVisibility(View.GONE);
                 btnEnviar.setEnabled(true);
