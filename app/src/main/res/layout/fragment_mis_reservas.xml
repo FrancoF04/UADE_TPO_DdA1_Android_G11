@@ -27,6 +27,16 @@
             android:textStyle="bold"
             android:gravity="center"/>
 
+        <TextView
+            android:id="@+id/tvEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="48dp"
+            android:text="No tenés actividades reservadas."
+            android:textSize="16sp"
+            android:gravity="center"
+            android:visibility="gone" />
+
         <ListView
             android:layout_marginTop="12dp"
             android:id="@+id/lvActividades"

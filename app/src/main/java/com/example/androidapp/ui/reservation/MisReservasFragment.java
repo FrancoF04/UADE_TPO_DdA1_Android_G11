@@ -32,6 +32,7 @@ public class MisReservasFragment extends Fragment {
     @Inject
     UserApi userApi;
     private TextView tvActividades;
+    private TextView tvEmpty;
     private List<Reservation> reservas;
     private ReservationAdapter adapter;
     private ListView lvActividades;
@@ -72,12 +73,14 @@ public class MisReservasFragment extends Fragment {
                             reservas = new ArrayList<>();
                         }
                         adapter.setReservations(reservas);
+                        tvEmpty.setVisibility(reservas.isEmpty() ? View.VISIBLE : View.GONE);
                     }
 
                     @Override
                     public void onFailure(Call<ApiResponse<List<Reservation>>> call, Throwable throwable) {
                         reservas = new ArrayList<>();
                         adapter.setReservations(reservas);
+                        tvEmpty.setVisibility(View.VISIBLE);
                     }
                 });
     }
@@ -102,6 +105,7 @@ public class MisReservasFragment extends Fragment {
 
     private void initViews(View view){
         tvActividades = view.findViewById(R.id.tvActividades);
+        tvEmpty = view.findViewById(R.id.tvEmpty);
         lvActividades = view.findViewById(R.id.lvActividades);
         btnActividadesPasadas = view.findViewById(R.id.btnActividadesPasadas);
 
