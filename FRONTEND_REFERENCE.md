@@ -194,7 +194,12 @@ src/
 | `destination` | `Buenos Aires`, `Bariloche`, `Mendoza`, `Ushuaia`, `Córdoba`, `Salta` |
 | `currency` | `ARS` |
 | `language` | `Espanol` |
-| `booking.status` | `confirmed`, `finalized`, `cancelled` |
+| `booking.status` | `confirmed` (activa/futura), `finalized` (pasada), `cancelled` |
+
+**Lógica de transición de estados de booking:**
+- `confirmed` → `finalized`: cuando `selectedDate + duración_actividad < ahora` (se evalúa en UTC-3, Argentina)
+- `confirmed` → `cancelled`: cuando el usuario cancela dentro del plazo permitido
+- El frontend debe filtrar por `status == "confirmed"` en "Mis Actividades" — el backend devuelve todos los estados en `GET /api/bookings`
 
 ---
 
@@ -512,6 +517,8 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 | POST | `/` | **Sí** | `{ bookingId\|booking_id, activityRating\|activity_rating, guideRating\|guide_rating, comment? }` | `{ rating }` 201 |
 | GET | `/:bookingId` | **Sí** | — | `{ rating }` |
 
+> ⚠️ **Estructura de respuesta anidada**: ambos endpoints devuelven `{ "data": { "rating": {...} } }`, no `{ "data": { campos directos } }`. En el front usar `ApiResponse<RatingData>` y llamar `.getData().getRating()`.
+
 **`POST /api/ratings` — body:**
 ```json
 {
@@ -522,11 +529,29 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 }
 ```
 
+**Respuesta exitosa (estructura real):**
+```json
+{
+  "success": true,
+  "data": {
+    "rating": {
+      "id": "r...",
+      "bookingId": "b-...",
+      "userId": "u1",
+      "activityRating": 5,
+      "guideRating": 4,
+      "comment": "Excelente experiencia",
+      "createdAt": "2026-04-30T..."
+    }
+  }
+}
+```
+
 **Reglas de calificación:**
 - `activityRating` y `guideRating`: enteros entre 1 y 5 (obligatorios)
-- `comment`: string, máximo 300 caracteres (opcional)
-- Solo se puede calificar **después** de que la actividad haya ocurrido (o status `finalized`)
-- La ventana de calificación es de **48 horas** desde la fecha de la actividad
+- `comment`: string, máximo 300 caracteres (opcional, puede ser `null`)
+- Solo se puede calificar después de que la actividad haya ocurrido
+- La ventana de calificación es de **48 horas** desde `selectedDate + duración de la actividad`
 - Cada reserva solo puede calificarse **una vez**
 
 **Errores:**
@@ -638,25 +663,27 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 
 8. **Cancelación de reservas**: usar `DELETE /api/bookings/:id` o `POST /api/bookings/:id/cancel` (equivalentes). Si se intenta cancelar fuera de plazo, retorna 409.
 
-9. **Calificaciones**: solo se pueden enviar después de la actividad y dentro de las 48hs. Verificar `booking.status === "finalized"` y `booking.selectedDate` antes de mostrar el formulario.
+9. **Calificaciones**: solo se pueden enviar después de la actividad y dentro de las 48hs. La respuesta es `{ data: { rating: {...} } }` — usar `RatingData` como wrapper. El formulario debe verificar `isWithin48Hours()` en el cliente como resguardo adicional antes de mostrarse.
 
-10b. **Status de reservas**: el estado real que retorna el servidor es `confirmed` (activa), `finalized` (pasada) y `cancelled`. El valor `active` NO existe en los bookings del array `/api/bookings` — existe internamente solo en `user.activities` pero nunca se expone al cliente.
+10. **Status de reservas**: el estado real en `GET /api/bookings` es `confirmed`, `finalized` o `cancelled`. El valor `active` NO se expone al cliente — existe solo internamente en `user.activities`. Filtrar por `"confirmed"` para mostrar reservas vigentes en la UI.
 
-10. **Favoritos**: al agregar, la respuesta incluye `priceChanged` y `spotsChanged` para mostrar alertas de precio/disponibilidad.
+11. **Favoritos**: al agregar, la respuesta incluye `priceChanged` y `spotsChanged` para mostrar alertas de precio/disponibilidad.
 
-11. **Noticias**: `activityId` puede ser `null`. Si tiene valor, se puede navegar a `GET /api/activities/:activityId` desde la noticia.
+12. **Noticias**: `activityId` puede ser `null`. Si tiene valor, se puede navegar a `GET /api/activities/:activityId` desde la noticia.
 
-12. **Recommended** requiere que el usuario tenga preferences configuradas. Si están vacías, puede retornar lista vacía.
+13. **Recommended** requiere que el usuario tenga preferences configuradas. Si están vacías, puede retornar lista vacía.
 
-13. **No hay endpoints para crear/editar/borrar actividades** desde el frontend.
+14. **No hay endpoints para crear/editar/borrar actividades** desde el frontend.
 
-14. **Sesiones en memoria**: en desarrollo, el server puede reiniciarse y los tokens dejan de funcionar. Implementar manejo de 401 que lleve al login.
+15. **Sesiones en memoria**: en desarrollo, el server puede reiniciarse y los tokens dejan de funcionar. Implementar manejo de 401 que lleve al login.
 
-15. **OTP se imprime en consola del server** (no hay envío de email real). Para desarrollo, revisar los logs del backend.
+16. **OTP se imprime en consola del server** (no hay envío de email real). Para desarrollo, revisar los logs del backend.
 
-16. **Foto de perfil**: `PUT /api/users/me` NO acepta `profilePhotoUrl`. Para actualizar la foto usar `PATCH /api/profile/me` con el campo `photoUrl` o `profilePhotoUrl`. No hay endpoint de upload — se guarda como URL string externa.
+17. **Foto de perfil**: `PUT /api/users/me` NO acepta `profilePhotoUrl`. Para actualizar la foto usar `PATCH /api/profile/me` con el campo `photoUrl` o `profilePhotoUrl`. No hay endpoint de upload — se guarda como URL string externa.
 
-17. **Offline bundle**: `GET /api/bookings/offline-bundle` retorna reservas con `status === "confirmed"` (las activas no finalizadas ni canceladas). Es correcto — filtra exactamente las reservas vigentes.
+18. **Offline bundle**: `GET /api/bookings/offline-bundle` retorna reservas con `status === "confirmed"` (las activas no finalizadas ni canceladas). Es correcto — filtra exactamente las reservas vigentes.
+
+19. **Filtrado de actividades pasadas**: las fechas de actividades (`dates`, `schedules[].date`) son ISO 8601 con `Z` (UTC). Comparar siempre como `Instant` UTC contra `Instant.now()`. No usar `LocalDate` para esta comparación — la fecha calendario UTC puede diferir de la local cerca de la medianoche.
 
 ---
 
