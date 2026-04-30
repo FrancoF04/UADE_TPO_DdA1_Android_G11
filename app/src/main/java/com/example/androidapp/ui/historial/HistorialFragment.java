@@ -88,6 +88,8 @@ public class HistorialFragment extends Fragment {
             HistorialItem item = adapter.getItem(position);
             Bundle args = new Bundle();
             args.putString("activityId", item.getActivityId());
+            args.putBoolean("showReserveButton", false);
+            args.putBoolean("showSpotsField", false);
             Navigation.findNavController(requireView()).navigate(R.id.action_historial_to_detail, args);
         });
 

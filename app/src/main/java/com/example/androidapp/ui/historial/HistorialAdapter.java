@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.androidapp.R;
@@ -46,24 +47,26 @@ public class HistorialAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder;
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.item_historial, parent, false);
+            convertView = LayoutInflater.from(context).inflate(R.layout.item_activity_card, parent, false);
             holder = new ViewHolder();
-            holder.tvNombre = convertView.findViewById(R.id.tvHistorialNombre);
-            holder.tvFecha = convertView.findViewById(R.id.tvHistorialFecha);
-            holder.tvDestino = convertView.findViewById(R.id.tvHistorialDestino);
-            holder.tvGuia = convertView.findViewById(R.id.tvHistorialGuia);
-            holder.tvDuracion = convertView.findViewById(R.id.tvHistorialDuracion);
+            holder.ivImage = convertView.findViewById(R.id.ivImage);
+            holder.tvName = convertView.findViewById(R.id.tvName);
+            holder.tvDestination = convertView.findViewById(R.id.tvDestination);
+            holder.tvCategory = convertView.findViewById(R.id.tvCategory);
+            holder.tvPrice = convertView.findViewById(R.id.tvPrice);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
         HistorialItem item = getItem(position);
-        holder.tvNombre.setText(item.getActivityName());
-        holder.tvFecha.setText(formatDate(item.getSelectedDate()));
-        holder.tvDestino.setText(context.getString(R.string.historial_destino, item.getDestination()));
-        holder.tvGuia.setText(context.getString(R.string.historial_guia, item.getGuideName()));
-        holder.tvDuracion.setText(context.getString(R.string.historial_duracion, item.getDuration()));
+        holder.ivImage.setImageDrawable(null);
+        holder.tvName.setText(item.getActivityName());
+        holder.tvDestination.setText(item.getDestination());
+        holder.tvCategory.setText(formatDate(item.getSelectedDate()));
+        holder.tvPrice.setText(item.getDuration() != null && !item.getDuration().isEmpty()
+                ? context.getString(R.string.historial_duracion, item.getDuration())
+                : "");
 
         return convertView;
     }
@@ -80,10 +83,10 @@ public class HistorialAdapter extends BaseAdapter {
     }
 
     static class ViewHolder {
-        TextView tvNombre;
-        TextView tvFecha;
-        TextView tvDestino;
-        TextView tvGuia;
-        TextView tvDuracion;
+        ImageView ivImage;
+        TextView tvName;
+        TextView tvDestination;
+        TextView tvCategory;
+        TextView tvPrice;
     }
 }

@@ -12,6 +12,9 @@
             android:id="@+id/action_CancelarReservaFragment"
             app:destination="@id/CancelarReservaFragment"/>
         <action
+            android:id="@+id/action_reservas_to_detail"
+            app:destination="@id/activity_nav_graph" />
+        <action
             android:id="@+id/action_reservas_to_historial"
             app:destination="@id/historial_nav_graph" />
     </fragment>

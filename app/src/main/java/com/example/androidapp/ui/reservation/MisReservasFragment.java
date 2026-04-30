@@ -103,6 +103,15 @@ public class MisReservasFragment extends Fragment {
         adapter = new ReservationAdapter(requireContext(), new ArrayList<>(), false, this::onCancelReservation);
         lvActividades.setAdapter(adapter);
 
+        lvActividades.setOnItemClickListener((parent, v, position, id) -> {
+            Reservation reservation = adapter.getItem(position);
+            if (reservation == null || reservation.getActivityId() == null) return;
+            Bundle args = new Bundle();
+            args.putString("activityId", reservation.getActivityId());
+            args.putBoolean("showReserveButton", false);
+            Navigation.findNavController(requireView()).navigate(R.id.action_reservas_to_detail, args);
+        });
+
         tvActividades.setText(R.string.mis_actividades);
 
         btnActividadesPasadas.setOnClickListener(v ->
