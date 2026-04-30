@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageButton;
+
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,7 +52,7 @@ public class ReservationFormFragment extends Fragment {
     UserApi userApi;
 
     private String activityId;
-    private ImageButton btnBack;
+
     private TextView tvTitulo;
     private Spinner sDate;
     private Spinner sTime;
@@ -103,7 +103,6 @@ public class ReservationFormFragment extends Fragment {
     }
 
     private void initViews(@NonNull View view) {
-        btnBack = view.findViewById(R.id.btnBack);
         tvTitulo = view.findViewById(R.id.tvTitleForm);
         sDate = view.findViewById(R.id.sDate);
         tvAvailableSpots = view.findViewById(R.id.tvAvailableSpots);
@@ -180,8 +179,6 @@ public class ReservationFormFragment extends Fragment {
                 }
             });
         });
-
-        btnBack.setOnClickListener(v -> requireActivity().onBackPressed());
 
         sDate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
