@@ -44,17 +44,6 @@ public final class DateTimeUtils {
 
     public static boolean isFutureOrNow(String raw) {
         if (raw == null || raw.trim().isEmpty()) return false;
-
-        // Compare by calendar date only — avoids UTC vs. local-timezone issues where
-        // "2026-04-29T20:30:00Z" (UTC) could be yesterday in Argentina (UTC-3).
-        String dateKey = extractDateKey(raw);
-        if (dateKey != null) {
-            try {
-                return !LocalDate.parse(dateKey).isBefore(LocalDate.now());
-            } catch (RuntimeException ignored) {
-            }
-        }
-
         Instant instant = parseToInstant(raw);
         return instant != null && !instant.isBefore(Instant.now());
     }
