@@ -18,20 +18,13 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Flecha para volver atras -->
-                <ImageButton
-                    android:id="@+id/btnBack"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_margin="8dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/back"
-                    android:src="@android:drawable/ic_menu_revert" />
-
                 <ImageView
                     android:id="@+id/ivImage"
                     android:layout_width="match_parent"
                     android:layout_height="250dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
                     android:scaleType="centerCrop"
                     android:background="@color/placeholder_2"
                     android:contentDescription="@string/app_name" />

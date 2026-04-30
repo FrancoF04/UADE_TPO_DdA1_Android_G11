@@ -61,7 +61,8 @@
                 android:id="@+id/btnCancelar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/cancelar_reserva" />
+                android:text="@string/cancelar_reserva"
+                android:focusable="false" />
         </LinearLayout>
 
     </LinearLayout>

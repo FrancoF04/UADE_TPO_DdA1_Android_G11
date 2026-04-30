@@ -5,7 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
+
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,7 +28,7 @@ import retrofit2.Response;
 public class CancelReservationFragment extends Fragment {
     @Inject
     UserApi userApi;
-    private ImageButton btnBack;
+
     private Button btnCancelar;
     private Button btnConfirmar;
     private TextView tvActivity;
@@ -47,7 +47,6 @@ public class CancelReservationFragment extends Fragment {
     }
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        btnBack = view.findViewById(R.id.btnBack);
         btnCancelar = view.findViewById(R.id.btnCancelar);
         btnConfirmar = view.findViewById(R.id.btnConfirmar);
         tvActivity = view.findViewById(R.id.tvActivity);
@@ -77,7 +76,6 @@ public class CancelReservationFragment extends Fragment {
             requireActivity().onBackPressed();
         }
 
-        btnBack.setOnClickListener(v -> Navigation.findNavController(requireView()).navigateUp());
         btnCancelar.setOnClickListener(v -> Navigation.findNavController(requireView()).navigateUp());
 
         btnConfirmar.setOnClickListener(v -> {

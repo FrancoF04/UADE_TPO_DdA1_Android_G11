@@ -1,7 +1,9 @@
 package com.example.androidapp;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
@@ -31,6 +33,11 @@ public class MainActivity extends AppCompatActivity {
         View navHostView = findViewById(R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(bottomNav, navController);
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            View focus = getCurrentFocus();
+            if (focus != null) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(focus.getWindowToken(), 0);
+            }
             if (destination.getId() == R.id.homeFragment || destination.getId() == R.id.reservasFragment) { //ir agregando mas destinos en funcion de los fragments creados
                 bottomNav.setVisibility(View.VISIBLE);
                 bottomNav.post(() -> navHostView.setPadding(0, 0, 0, bottomNav.getHeight()));

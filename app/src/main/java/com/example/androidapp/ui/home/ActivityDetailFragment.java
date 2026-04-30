@@ -5,7 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
+
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -43,7 +43,7 @@ public class ActivityDetailFragment extends Fragment {
     @Inject
     ActivityApi api;
 
-    private ImageButton btnBack;
+
     private ImageView ivImage;
     private TextView tvName;
     private TextView tvDestination;
@@ -71,7 +71,6 @@ public class ActivityDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        btnBack = view.findViewById(R.id.btnBack);
         ivImage = view.findViewById(R.id.ivImage);
         tvName = view.findViewById(R.id.tvName);
         tvDestination = view.findViewById(R.id.tvDestination);
@@ -89,9 +88,12 @@ public class ActivityDetailFragment extends Fragment {
         progressBar = view.findViewById(R.id.progressBar);
         btnReserve = view.findViewById(R.id.btnReserve);
 
-        // Flecha para volver atras usando el NavController
-        btnBack.setOnClickListener(v ->
-                Navigation.findNavController(view).navigateUp());
+        boolean showReserve = getArguments() == null
+                || getArguments().getBoolean("showReserveButton", true);
+        boolean showSpots = getArguments() == null
+                || getArguments().getBoolean("showSpotsField", true);
+        btnReserve.setVisibility(showReserve ? View.VISIBLE : View.GONE);
+        tvSpots.setVisibility(showSpots ? View.VISIBLE : View.GONE);
 
         // Click en boton reservar para navegar al formulario de reserva
         btnReserve.setOnClickListener(v -> {

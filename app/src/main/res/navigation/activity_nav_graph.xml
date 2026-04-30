@@ -14,6 +14,16 @@
             app:argType="string"
             android:defaultValue="" />
 
+        <argument
+            android:name="showReserveButton"
+            app:argType="boolean"
+            android:defaultValue="true" />
+
+        <argument
+            android:name="showSpotsField"
+            app:argType="boolean"
+            android:defaultValue="true" />
+
         <action
             android:id="@+id/action_activityDetail_to_reservationForm"
             app:destination="@id/reservation_form_nav_graph" />

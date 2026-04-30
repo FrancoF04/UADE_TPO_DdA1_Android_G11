@@ -19,6 +19,7 @@ import com.example.androidapp.data.remote.UserApi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import jakarta.inject.Inject;
@@ -62,7 +63,11 @@ public class MisReservasFragment extends Fragment {
                     public void onResponse(Call<ApiResponse<List<Reservation>>> call, Response<ApiResponse<List<Reservation>>> response) {
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                             List<Reservation> data = response.body().getData();
-                            reservas = data != null ? data : new ArrayList<>();
+                            reservas = data != null
+                                    ? data.stream()
+                                            .filter(r -> "confirmed".equals(r.getStatus()))
+                                            .collect(Collectors.toList())
+                                    : new ArrayList<>();
                         } else {
                             reservas = new ArrayList<>();
                         }
@@ -102,6 +107,15 @@ public class MisReservasFragment extends Fragment {
 
         adapter = new ReservationAdapter(requireContext(), new ArrayList<>(), false, this::onCancelReservation);
         lvActividades.setAdapter(adapter);
+
+        lvActividades.setOnItemClickListener((parent, v, position, id) -> {
+            Reservation reservation = adapter.getItem(position);
+            if (reservation == null || reservation.getActivityId() == null) return;
+            Bundle args = new Bundle();
+            args.putString("activityId", reservation.getActivityId());
+            args.putBoolean("showReserveButton", false);
+            Navigation.findNavController(requireView()).navigate(R.id.action_reservas_to_detail, args);
+        });
 
         tvActividades.setText(R.string.mis_actividades);
 

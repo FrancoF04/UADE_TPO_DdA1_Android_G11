@@ -7,7 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
+
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -40,7 +40,7 @@ public class SearchFragment extends Fragment {
     private EditText etDestination;
     private EditText etCategory;
     private Button btnSearch;
-    private ImageButton btnBack;
+
     private ListView listView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
@@ -56,16 +56,12 @@ public class SearchFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        btnBack = view.findViewById(R.id.btnBack);
         etDestination = view.findViewById(R.id.etDestination);
         etCategory = view.findViewById(R.id.etCategory);
         btnSearch = view.findViewById(R.id.btnSearch);
         listView = view.findViewById(R.id.listView);
         progressBar = view.findViewById(R.id.progressBar);
         tvEmpty = view.findViewById(R.id.tvEmpty);
-
-        btnBack.setOnClickListener(v ->
-                Navigation.findNavController(view).navigateUp());
 
         adapter = new ActivityAdapter(requireContext());
         listView.setAdapter(adapter);

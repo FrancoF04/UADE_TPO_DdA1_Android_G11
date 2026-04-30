@@ -13,6 +13,32 @@
             android:id="@+id/action_historial_to_detail"
             app:destination="@id/activity_nav_graph" />
 
+        <action
+            android:id="@+id/action_historial_to_rating"
+            app:destination="@id/ratingFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/ratingFragment"
+        android:name="com.example.androidapp.ui.historial.RatingFragment"
+        android:label="Calificar actividad">
+
+        <argument
+            android:name="bookingId"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <argument
+            android:name="activityName"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <argument
+            android:name="activityDate"
+            app:argType="string"
+            android:defaultValue="" />
+
     </fragment>
 
 </navigation>
