@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Activity;
+import com.example.androidapp.util.ImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,8 +78,7 @@ public class ActivityAdapter extends BaseAdapter {
             holder.tvPrice.setText(context.getString(R.string.price_format, activity.getPrice()));
         }
 
-        // Placeholder — no image loading library available (limited knowledge).
-        holder.ivImage.setImageDrawable(null);
+        ImageLoader.load(holder.ivImage, activity.getCoverUrl());
 
         return convertView;
     }

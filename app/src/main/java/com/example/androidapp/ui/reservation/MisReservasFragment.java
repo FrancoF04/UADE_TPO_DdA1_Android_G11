@@ -19,7 +19,6 @@ import com.example.androidapp.data.remote.UserApi;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import jakarta.inject.Inject;
@@ -64,11 +63,7 @@ public class MisReservasFragment extends Fragment {
                     public void onResponse(Call<ApiResponse<List<Reservation>>> call, Response<ApiResponse<List<Reservation>>> response) {
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                             List<Reservation> data = response.body().getData();
-                            reservas = data != null
-                                    ? data.stream()
-                                            .filter(r -> "confirmed".equals(r.getStatus()))
-                                            .collect(Collectors.toList())
-                                    : new ArrayList<>();
+                            reservas = data != null ? data : new ArrayList<>();
                         } else {
                             reservas = new ArrayList<>();
                         }

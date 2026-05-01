@@ -56,6 +56,7 @@
     <string name="search_empty">No se encontraron actividades</string>
 
     <!-- Detail -->
+    <string name="detail_gallery">Galería de fotos</string>
     <string name="detail_description">Descripcion</string>
     <string name="detail_included">Que incluye</string>
     <string name="detail_meeting_point">Punto de encuentro</string>

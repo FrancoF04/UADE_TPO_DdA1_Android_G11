@@ -104,6 +104,11 @@ public class Activity {
     public String getDescription() { return description; }
     public String getImageUrl() { return imageUrl; }
     public List<String> getGalleryUrls() { return galleryUrls; }
+        public String getCoverUrl() {
+            if (imageUrl != null && !imageUrl.isEmpty()) return imageUrl;
+            if (galleryUrls != null && !galleryUrls.isEmpty()) return galleryUrls.get(0);
+            return null;
+        }
     public String getDuration() { return duration; }
     public double getPrice() { return price; }
     public String getCurrency() { return currency; }
