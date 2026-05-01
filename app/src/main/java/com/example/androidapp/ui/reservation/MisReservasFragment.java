@@ -60,6 +60,7 @@ public class MisReservasFragment extends Fragment {
                 .enqueue(new Callback<ApiResponse<List<Reservation>>>() {
                     @Override
                     public void onResponse(Call<ApiResponse<List<Reservation>>> call, Response<ApiResponse<List<Reservation>>> response) {
+                        if (!isAdded()) return;
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                             List<Reservation> data = response.body().getData();
                             reservas = data != null ? data : new ArrayList<>();
