@@ -55,7 +55,6 @@ public class HomeFragment extends Fragment {
     private ListView listView;
     private ProgressBar progressBar;
     private ActivityAdapter adapter;
-    private Button btnPerfil;
     private Button chipFeatured, chipForYou, chipAll, chipFilters;
 
     private ChipMode currentChip = ChipMode.ALL;
@@ -92,10 +91,6 @@ public class HomeFragment extends Fragment {
         Button btnSearch = view.findViewById(R.id.btnSearch);
         btnSearch.setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.action_home_to_search));
-
-        btnPerfil = view.findViewById(R.id.btnPerfil);
-        btnPerfil.setOnClickListener(v ->
-                Navigation.findNavController(view).navigate(R.id.action_home_to_profile));
 
         adapter = new ActivityAdapter(requireContext());
         listView.setAdapter(adapter);
@@ -181,15 +176,7 @@ public class HomeFragment extends Fragment {
                 api.getFeatured().enqueue(simpleListCallback(replace));
                 break;
             case FOR_YOU:
-                if (!preferencesStore.hasAnyPreference()) {
-                    loading = false;
-                    progressBar.setVisibility(View.GONE);
-                    if (replace) adapter.setActivities(new ArrayList<>());
-                    tvEmptyState.setText("Configurá tus preferencias en tu perfil para ver actividades recomendadas.");
-                    tvEmptyState.setVisibility(View.VISIBLE);
-                    return;
-                }
-                api.getRecommended().enqueue(simpleListCallback(replace));
+                api.getRecommended().enqueue(forYouCallback(replace));
                 break;
             case ALL:
             default:
@@ -200,6 +187,37 @@ public class HomeFragment extends Fragment {
                 ).enqueue(allCallback(replace));
                 break;
         }
+    }
+
+    private Callback<ApiResponse<List<Activity>>> forYouCallback(boolean replace) {
+        return new Callback<ApiResponse<List<Activity>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Activity>>> call,
+                                   Response<ApiResponse<List<Activity>>> response) {
+                if (!isAdded()) return;
+                loading = false;
+                progressBar.setVisibility(View.GONE);
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    List<Activity> data = response.body().getData();
+                    if (replace) adapter.setActivities(data); else adapter.append(data);
+                    if (data.isEmpty() && replace) {
+                        tvEmptyState.setText("Configurá tus intereses en Perfil → Preferencias para ver actividades recomendadas.");
+                        tvEmptyState.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    Toast.makeText(getContext(), "No pudimos cargar las recomendaciones", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Activity>>> call, Throwable t) {
+                if (!isAdded()) return;
+                loading = false;
+                progressBar.setVisibility(View.GONE);
+                Toast.makeText(getContext(), "Sin conexión, reintentá", Toast.LENGTH_SHORT).show();
+                Log.e("HomeFragment", "Failed to load recommended", t);
+            }
+        };
     }
 
     private Callback<ApiResponse<List<Activity>>> simpleListCallback(boolean replace) {

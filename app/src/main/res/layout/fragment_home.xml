@@ -75,11 +75,16 @@
                     android:layout_marginEnd="6dp"/>
                 <Button
                     android:id="@+id/chipFilters"
-                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Filtros"
-                    android:textSize="12sp"/>
+                    android:text="Filtros: fecha, precio…"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/chip_background_active"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:layout_marginStart="6dp"/>
             </LinearLayout>
         </HorizontalScrollView>
 
@@ -111,14 +116,6 @@
             android:visibility="gone" />
 
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btnPerfil"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Perfil"
-        android:layout_gravity="top|end"
-        android:layout_margin="16dp" />
 
     <ProgressBar
         android:id="@+id/progressBar"

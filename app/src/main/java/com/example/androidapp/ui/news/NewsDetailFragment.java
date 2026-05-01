@@ -63,15 +63,16 @@ public class NewsDetailFragment extends Fragment {
         }
 
         loading.setVisibility(View.VISIBLE);
-        newsApi.getNewsById(newsId).enqueue(new Callback<ApiResponse<NewsDetail>>() {
+        newsApi.getNewsById(newsId).enqueue(new Callback<ApiResponse<NewsDetail.Wrapper>>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<NewsDetail>> call,
-                                   @NonNull Response<ApiResponse<NewsDetail>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<NewsDetail.Wrapper>> call,
+                                   @NonNull Response<ApiResponse<NewsDetail.Wrapper>> response) {
                 if (!isAdded()) return;
                 loading.setVisibility(View.GONE);
-                ApiResponse<NewsDetail> body = response.body();
-                if (response.isSuccessful() && body != null && body.isSuccess() && body.getData() != null) {
-                    render(body.getData());
+                ApiResponse<NewsDetail.Wrapper> body = response.body();
+                if (response.isSuccessful() && body != null && body.isSuccess()
+                        && body.getData() != null && body.getData().getNews() != null) {
+                    render(body.getData().getNews());
                 } else {
                     errorState.setVisibility(View.VISIBLE);
                     Log.e(TAG, "load failed status=" + response.code());
@@ -79,7 +80,7 @@ public class NewsDetailFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<NewsDetail>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<NewsDetail.Wrapper>> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
                 loading.setVisibility(View.GONE);
                 errorState.setVisibility(View.VISIBLE);
@@ -91,7 +92,7 @@ public class NewsDetailFragment extends Fragment {
     private void render(NewsDetail d) {
         tvTitle.setText(d.getTitle());
         tvDate.setText(d.getCreatedAt() != null ? d.getCreatedAt() : "");
-        tvContent.setText(d.getContent());
+        tvContent.setText(d.getContent() != null ? d.getContent() : d.getDescription());
         if (d.getImage() != null && !d.getImage().isEmpty()) {
             Glide.with(this).load(d.getImage()).into(ivImage);
         }

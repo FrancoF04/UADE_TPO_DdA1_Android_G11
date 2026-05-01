@@ -10,15 +10,11 @@
         android:icon="@drawable/ic_reservas"
         android:title="Mis Reservas" />
     <item
-        android:id="@+id/favoritosFragment"
-        android:icon="@drawable/ic_favoritos"
-        android:title="Favoritos" />
-    <item
-        android:id="@+id/perfilFragment"
-        android:icon="@drawable/ic_perfil"
-        android:title="Perfil" />
-    <item
         android:id="@+id/news_nav_graph"
         android:icon="@drawable/ic_news_24"
         android:title="Noticias" />
+    <item
+        android:id="@+id/profileFragment"
+        android:icon="@drawable/ic_perfil"
+        android:title="Perfil" />
 </menu>

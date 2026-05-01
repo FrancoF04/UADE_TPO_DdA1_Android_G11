@@ -13,10 +13,10 @@ import retrofit2.http.Query;
 
 public interface NewsApi {
 
-    @GET("/news")
+    @GET("news")
     Call<ApiResponse<List<News>>> getNews(@Query("page") Integer page,
                                           @Query("page_size") Integer pageSize);
 
-    @GET("/news/{id}")
-    Call<ApiResponse<NewsDetail>> getNewsById(@Path("id") String id);
+    @GET("news/{id}")
+    Call<ApiResponse<NewsDetail.Wrapper>> getNewsById(@Path("id") String id);
 }
