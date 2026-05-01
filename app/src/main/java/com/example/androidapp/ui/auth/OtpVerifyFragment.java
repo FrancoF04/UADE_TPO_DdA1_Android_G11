@@ -1,6 +1,8 @@
 package com.example.androidapp.ui.auth;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,12 +19,14 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
+import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.AuthResponse;
 import com.example.androidapp.data.model.OtpRequest;
 import com.example.androidapp.data.model.OtpVerify;
 import com.example.androidapp.data.remote.AuthApi;
-import com.example.androidapp.data.remote.RetrofitClient;
+import com.example.androidapp.util.ApiErrorParser;
+import com.example.androidapp.util.OtpResendCooldown;
 
 import java.util.Map;
 
@@ -31,10 +36,16 @@ import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
 @AndroidEntryPoint
 public class OtpVerifyFragment extends Fragment {
-    @Inject
-    AuthApi authApi;
+
+    private static final long DEFAULT_ACCESS_TTL_MS = 60L * 60L * 1000L;
+    private static final long DEFAULT_REFRESH_TTL_MS = 7L * 24L * 60L * 60L * 1000L;
+    private static final String STATE_KEY_LAST_RESEND = "last_resend_at";
+
+    @Inject AuthApi authApi;
+    @Inject TokenManager tokenManager;
 
     private EditText etCode;
     private Button btnVerify;
@@ -42,6 +53,11 @@ public class OtpVerifyFragment extends Fragment {
     private ProgressBar progressBar;
     private TextView tvError;
     private String email;
+
+    private final OtpResendCooldown cooldown = new OtpResendCooldown();
+    private final Handler cooldownHandler = new Handler(Looper.getMainLooper());
+    private Runnable cooldownTick;
+    private CharSequence btnResendOriginalText;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -59,8 +75,8 @@ public class OtpVerifyFragment extends Fragment {
         progressBar = view.findViewById(R.id.progressBar);
         tvError = view.findViewById(R.id.tvError);
         TextView tvSubtitle = view.findViewById(R.id.tvSubtitle);
+        btnResendOriginalText = btnResend.getText();
 
-        // Leer el email que viene del OtpRequestFragment via Bundle
         email = getArguments() != null
                 ? getArguments().getString("email", "")
                 : "";
@@ -69,6 +85,25 @@ public class OtpVerifyFragment extends Fragment {
 
         btnVerify.setOnClickListener(v -> verifyOtp(view));
         btnResend.setOnClickListener(v -> resendOtp());
+
+        if (savedInstanceState != null) {
+            cooldown.restoreFrom(savedInstanceState.getLong(STATE_KEY_LAST_RESEND, 0L));
+        }
+        if (cooldown.secondsRemaining(System.currentTimeMillis()) > 0) {
+            startCooldownTick();
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(STATE_KEY_LAST_RESEND, cooldown.getLastResendAtEpochMs());
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (cooldownTick != null) cooldownHandler.removeCallbacks(cooldownTick);
     }
 
     private void verifyOtp(View view) {
@@ -86,7 +121,6 @@ public class OtpVerifyFragment extends Fragment {
 
         OtpVerify request = new OtpVerify(email, code);
 
-
         authApi.verifyOtp(request).enqueue(new Callback<ApiResponse<AuthResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<AuthResponse>> call,
@@ -96,15 +130,16 @@ public class OtpVerifyFragment extends Fragment {
                 btnVerify.setEnabled(true);
 
                 if (response.isSuccessful() && response.body() != null
-                        && response.body().isSuccess()) {
-                    // Obtener username del AuthResponse
+                        && response.body().isSuccess()
+                        && response.body().getData() != null) {
                     AuthResponse auth = response.body().getData();
+                    persistSession(auth);
+
                     String username = "";
-                    if (auth != null && auth.getUser() != null) {
+                    if (auth.getUser() != null) {
                         username = auth.getUser().getUsername();
                     }
 
-                    // Navegar al home pasando el username via Bundle
                     Bundle args = new Bundle();
                     args.putString("username", username);
                     Navigation.findNavController(view)
@@ -127,27 +162,45 @@ public class OtpVerifyFragment extends Fragment {
         });
     }
 
+    private void persistSession(AuthResponse data) {
+        long now = System.currentTimeMillis();
+        String accessToken = data.getToken();
+        String refreshToken = data.getRefreshToken() != null ? data.getRefreshToken() : accessToken;
+        long accessExpiresAt = parseIsoToEpoch(data.getExpiresAt(), now + DEFAULT_ACCESS_TTL_MS);
+        long refreshExpiresAt = parseIsoToEpoch(data.getRefreshExpiresAt(), now + DEFAULT_REFRESH_TTL_MS);
+        tokenManager.saveSession(accessToken, refreshToken, accessExpiresAt, refreshExpiresAt);
+    }
+
     private void resendOtp() {
+        if (!cooldown.canResend(System.currentTimeMillis())) {
+            Toast.makeText(getContext(), "Esperá unos segundos para reenviar", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (email == null || email.trim().isEmpty()) {
+            Toast.makeText(getContext(), "No se puede reenviar sin un email válido", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         tvError.setVisibility(View.GONE);
         btnResend.setEnabled(false);
 
         OtpRequest request = new OtpRequest(email);
-
 
         authApi.resendOtp(request).enqueue(new Callback<ApiResponse<Map<String, String>>>() {
             @Override
             public void onResponse(Call<ApiResponse<Map<String, String>>> call,
                                    Response<ApiResponse<Map<String, String>>> response) {
                 if (!isAdded()) return;
-                btnResend.setEnabled(true);
 
                 if (response.isSuccessful() && response.body() != null
                         && response.body().isSuccess()) {
-                    tvError.setText(R.string.otp_resent_success);
-                    tvError.setVisibility(View.VISIBLE);
+                    cooldown.markResendNow(System.currentTimeMillis());
+                    Toast.makeText(getContext(), "Código reenviado", Toast.LENGTH_SHORT).show();
+                    startCooldownTick();
                 } else {
-                    tvError.setText(R.string.error_generic);
-                    tvError.setVisibility(View.VISIBLE);
+                    btnResend.setEnabled(true);
+                    Toast.makeText(getContext(), ApiErrorParser.extractMessage(response), Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -155,10 +208,37 @@ public class OtpVerifyFragment extends Fragment {
             public void onFailure(Call<ApiResponse<Map<String, String>>> call, Throwable t) {
                 if (!isAdded()) return;
                 btnResend.setEnabled(true);
-                tvError.setText(R.string.error_network);
-                tvError.setVisibility(View.VISIBLE);
+                Toast.makeText(getContext(), "Sin conexión, reintentá", Toast.LENGTH_SHORT).show();
                 Log.e("OtpVerifyFragment", "OTP resend failed", t);
             }
         });
+    }
+
+    private void startCooldownTick() {
+        btnResend.setEnabled(false);
+        cooldownTick = new Runnable() {
+            @Override
+            public void run() {
+                if (!isAdded()) return;
+                long secs = cooldown.secondsRemaining(System.currentTimeMillis());
+                if (secs <= 0) {
+                    btnResend.setEnabled(true);
+                    btnResend.setText(btnResendOriginalText);
+                } else {
+                    btnResend.setText("Reenviar en " + secs + "s");
+                    cooldownHandler.postDelayed(this, 1000L);
+                }
+            }
+        };
+        cooldownHandler.post(cooldownTick);
+    }
+
+    private static long parseIsoToEpoch(String iso, long fallback) {
+        if (iso == null || iso.trim().isEmpty()) return fallback;
+        try {
+            return java.time.Instant.parse(iso).toEpochMilli();
+        } catch (Exception e) {
+            return fallback;
+        }
     }
 }
