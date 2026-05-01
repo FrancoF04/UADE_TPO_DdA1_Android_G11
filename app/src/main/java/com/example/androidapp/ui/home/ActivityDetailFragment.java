@@ -1,5 +1,7 @@
 package com.example.androidapp.ui.home;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -7,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Button;
@@ -16,12 +19,15 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import com.bumptech.glide.Glide;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.model.MeetingPoint;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
 import com.example.androidapp.util.DateTimeUtils;
+import com.example.androidapp.util.MapIntentLauncher;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,6 +48,8 @@ import retrofit2.Response;
 public class ActivityDetailFragment extends Fragment {
     @Inject
     ActivityApi api;
+    @Inject
+    MapIntentLauncher mapIntentLauncher;
 
 
     private ImageView ivImage;
@@ -58,8 +66,11 @@ public class ActivityDetailFragment extends Fragment {
     private TextView tvIncluded;
     private TextView tvCancellation;
     private TextView tvError;
+    private TextView tvGalleryHeader;
+    private LinearLayout galleryContainer;
     private ProgressBar progressBar;
     private Button btnReserve;
+    private Button btnOpenMap;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -85,8 +96,11 @@ public class ActivityDetailFragment extends Fragment {
         tvIncluded = view.findViewById(R.id.tvIncluded);
         tvCancellation = view.findViewById(R.id.tvCancellation);
         tvError = view.findViewById(R.id.tvError);
+        tvGalleryHeader = view.findViewById(R.id.tvGalleryHeader);
+        galleryContainer = view.findViewById(R.id.galleryContainer);
         progressBar = view.findViewById(R.id.progressBar);
         btnReserve = view.findViewById(R.id.btnReserve);
+        btnOpenMap = view.findViewById(R.id.btnOpenMap);
 
         boolean showReserve = getArguments() == null
                 || getArguments().getBoolean("showReserveButton", true);
@@ -198,8 +212,70 @@ public class ActivityDetailFragment extends Fragment {
             btnReserve.setText("Reservar");
         }
 
-        // Placeholder — no image loading library available (limited knowledge).
-        ivImage.setImageDrawable(null);
+        Glide.with(this)
+                .load(activity.getImageUrl())
+                .placeholder(R.drawable.ic_placeholder_activity)
+                .error(R.drawable.ic_placeholder_activity)
+                .centerCrop()
+                .into(ivImage);
+
+        renderGallery(activity.getGalleryUrls());
+        wireMapButton(activity.getMeetingPoint());
+    }
+
+    private void renderGallery(java.util.List<String> gallery) {
+        galleryContainer.removeAllViews();
+        if (gallery == null || gallery.isEmpty()) {
+            tvGalleryHeader.setVisibility(View.GONE);
+            return;
+        }
+
+        tvGalleryHeader.setVisibility(View.VISIBLE);
+        int marginPx = (int) (8 * getResources().getDisplayMetrics().density);
+        int heightPx = (int) (220 * getResources().getDisplayMetrics().density);
+
+        for (String url : gallery) {
+            ImageView iv = new ImageView(requireContext());
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    heightPx
+            );
+            params.topMargin = marginPx;
+            iv.setLayoutParams(params);
+            iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            iv.setBackgroundResource(R.drawable.ic_placeholder_activity);
+
+            Glide.with(this)
+                    .load(url)
+                    .placeholder(R.drawable.ic_placeholder_activity)
+                    .error(R.drawable.ic_placeholder_activity)
+                    .centerCrop()
+                    .into(iv);
+
+            iv.setOnClickListener(v -> {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+            });
+
+            galleryContainer.addView(iv);
+        }
+    }
+
+    private void wireMapButton(MeetingPoint mp) {
+        if (mp == null || (mp.getLatitude() == 0 && mp.getLongitude() == 0)) {
+            btnOpenMap.setVisibility(View.GONE);
+            btnOpenMap.setOnClickListener(null);
+            return;
+        }
+        btnOpenMap.setVisibility(View.VISIBLE);
+        btnOpenMap.setOnClickListener(v -> mapIntentLauncher.openMap(
+                requireContext(),
+                mp.getLatitude(),
+                mp.getLongitude(),
+                mp.getAddress()
+        ));
     }
 
     private int getSpotsForNextAvailableDate(Activity activity) {
