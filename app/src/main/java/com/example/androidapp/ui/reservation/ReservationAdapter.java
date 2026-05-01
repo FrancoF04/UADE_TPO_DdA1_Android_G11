@@ -106,8 +106,8 @@ public class ReservationAdapter extends BaseAdapter {
         holder.tvStatus.setText(String.format("Estado: %s", reservation.getStatus()));
         holder.tvQuantity.setText(String.format("Cantidad: %d", reservation.getQuantity()));
 
-        // Mostrar botón cancelar solo para reservas activas (no canceladas y fecha futura)
-        boolean isActive = !isCancelled(reservation.getStatus()) && !isPast(reservation.getSelectedDate());
+        // Mostrar botón cancelar solo para reservas activas (estado activo y fecha futura)
+        boolean isActive = isActiveStatus(reservation.getStatus()) && !isPast(reservation.getSelectedDate());
         if (isActive) {
             holder.btnCancelar.setVisibility(View.VISIBLE);
             holder.btnCancelar.setOnClickListener(v -> {
@@ -127,9 +127,12 @@ public class ReservationAdapter extends BaseAdapter {
         return convertView;
     }
 
-    private boolean isCancelled(String status) {
-        if (status == null) return false;
-        return status.trim().toLowerCase().contains("cancel");
+    private boolean isActiveStatus(String status) {
+        if (status == null) {
+            return false;
+        }
+        String normalized = status.trim().toLowerCase();
+        return "confirmed".equals(normalized) || "active".equals(normalized);
     }
 
     private boolean isPast(String selectedDate) {
