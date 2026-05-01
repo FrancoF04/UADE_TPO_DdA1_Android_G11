@@ -6,7 +6,8 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:layout_marginBottom="12dp"
-    android:background="?attr/selectableItemBackground">
+    android:background="?attr/selectableItemBackground"
+    android:descendantFocusability="blocksDescendants">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -30,6 +31,8 @@
             android:background="@drawable/pill_background"
             android:src="@drawable/ic_favoritos"
             android:contentDescription="Favorito"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
             app:tint="@color/price_color" />
     </FrameLayout>
 

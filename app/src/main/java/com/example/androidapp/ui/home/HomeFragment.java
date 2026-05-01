@@ -23,14 +23,18 @@ import com.example.androidapp.data.local.PreferencesStore;
 import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.model.FavoriteRequest;
+import com.example.androidapp.data.model.FavoriteResponse;
 import com.example.androidapp.data.model.Filters;
 import com.example.androidapp.data.model.User;
 import com.example.androidapp.data.remote.ActivityApi;
+import com.example.androidapp.data.remote.FavoritesApi;
 import com.example.androidapp.data.remote.UserApi;
 import com.example.androidapp.util.FilterQueryBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -46,6 +50,7 @@ public class HomeFragment extends Fragment {
 
     @Inject ActivityApi api;
     @Inject UserApi userApi;
+    @Inject FavoritesApi favoritesApi;
     @Inject TokenManager tokenManager;
     @Inject PreferencesStore preferencesStore;
 
@@ -57,6 +62,7 @@ public class HomeFragment extends Fragment {
     private ActivityAdapter adapter;
     private Button chipFeatured, chipForYou, chipAll, chipFilters;
 
+    private List<String> favoriteIds = new ArrayList<>();
     private ChipMode currentChip = ChipMode.ALL;
     private Filters currentFilters = new Filters();
     private int currentPage = 1;
@@ -89,6 +95,7 @@ public class HomeFragment extends Fragment {
         setWelcome(username);
 
         adapter = new ActivityAdapter(requireContext());
+        adapter.setOnFavoriteClickListener(activity -> this.toggleFavorite(activity));
         listView.setAdapter(adapter);
         listView.setOnItemClickListener((parent, v, position, id) -> {
             Activity activity = adapter.getItem(position);
@@ -106,7 +113,65 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        loadFavorites();
         listView.post(() -> loadCurrent(true));
+    }
+
+    private void loadFavorites() {
+        favoritesApi.getFavorites().enqueue(new Callback<ApiResponse<List<Activity>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Activity>>> call, Response<ApiResponse<List<Activity>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    favoriteIds = response.body().getData().stream()
+                            .map(Activity::getId)
+                            .collect(Collectors.toList());
+                    adapter.setFavoriteIds(favoriteIds);
+                }
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<List<Activity>>> call, Throwable t) {
+                Log.e("HomeFragment", "Error loading favorites", t);
+            }
+        });
+    }
+
+    private void toggleFavorite(Activity activity) {
+        if (favoriteIds.contains(activity.getId())) {
+            removeFavorite(activity.getId());
+        } else {
+            addFavorite(activity.getId());
+        }
+    }
+
+    private void addFavorite(String activityId) {
+        favoritesApi.addFavorite(new FavoriteRequest(activityId)).enqueue(new Callback<ApiResponse<FavoriteResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<FavoriteResponse>> call, Response<ApiResponse<FavoriteResponse>> response) {
+                if (response.isSuccessful()) {
+                    loadFavorites();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<FavoriteResponse>> call, Throwable t) {
+                Toast.makeText(getContext(), "Error al agregar a favoritos", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void removeFavorite(String activityId) {
+        favoritesApi.removeFavorite(activityId).enqueue(new Callback<ApiResponse<Void>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful()) {
+                    loadFavorites();
+                }
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                Toast.makeText(getContext(), "Error al eliminar favorito", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setupChips() {

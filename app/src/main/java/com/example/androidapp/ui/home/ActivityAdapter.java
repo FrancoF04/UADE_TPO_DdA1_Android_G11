@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -19,10 +20,28 @@ public class ActivityAdapter extends BaseAdapter {
 
     private final Context context;
     private final List<Activity> activities;
+    private final List<String> favoriteIds = new ArrayList<>();
+    private OnFavoriteClickListener favoriteClickListener;
+
+    public interface OnFavoriteClickListener {
+        void onFavoriteClick(Activity activity);
+    }
 
     public ActivityAdapter(Context context) {
         this.context = context;
         this.activities = new ArrayList<>();
+    }
+
+    public void setOnFavoriteClickListener(OnFavoriteClickListener listener) {
+        this.favoriteClickListener = listener;
+    }
+
+    public void setFavoriteIds(List<String> ids) {
+        this.favoriteIds.clear();
+        if (ids != null) {
+            this.favoriteIds.addAll(ids);
+        }
+        notifyDataSetChanged();
     }
 
     public void setActivities(List<Activity> newActivities) {
@@ -67,6 +86,7 @@ public class ActivityAdapter extends BaseAdapter {
             holder.tvDestination = convertView.findViewById(R.id.tvDestination);
             holder.tvCategory = convertView.findViewById(R.id.tvCategory);
             holder.tvPrice = convertView.findViewById(R.id.tvPrice);
+            holder.btnFavorite = convertView.findViewById(R.id.btnFavorite);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -85,6 +105,17 @@ public class ActivityAdapter extends BaseAdapter {
 
         ImageLoader.load(holder.ivImage, activity.getCoverUrl());
 
+        // Favoritos logic
+        boolean isFavorite = favoriteIds.contains(activity.getId());
+        holder.btnFavorite.setColorFilter(isFavorite ?
+                context.getColor(R.color.price_color) : context.getColor(android.R.color.darker_gray));
+
+        holder.btnFavorite.setOnClickListener(v -> {
+            if (favoriteClickListener != null) {
+                favoriteClickListener.onFavoriteClick(activity);
+            }
+        });
+
         return convertView;
     }
 
@@ -94,5 +125,6 @@ public class ActivityAdapter extends BaseAdapter {
         TextView tvDestination;
         TextView tvCategory;
         TextView tvPrice;
+        ImageButton btnFavorite;
     }
 }
