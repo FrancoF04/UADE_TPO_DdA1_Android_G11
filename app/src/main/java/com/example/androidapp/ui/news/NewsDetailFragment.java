@@ -13,11 +13,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.bumptech.glide.Glide;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.NewsDetail;
 import com.example.androidapp.data.remote.NewsApi;
+import com.example.androidapp.util.ImageLoader;
 
 import javax.inject.Inject;
 
@@ -93,8 +93,6 @@ public class NewsDetailFragment extends Fragment {
         tvTitle.setText(d.getTitle());
         tvDate.setText(d.getCreatedAt() != null ? d.getCreatedAt() : "");
         tvContent.setText(d.getContent() != null ? d.getContent() : d.getDescription());
-        if (d.getImage() != null && !d.getImage().isEmpty()) {
-            Glide.with(this).load(d.getImage()).into(ivImage);
-        }
+        ImageLoader.load(ivImage, d.getImage());
     }
 }

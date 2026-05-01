@@ -88,10 +88,6 @@ public class HomeFragment extends Fragment {
                 : "";
         setWelcome(username);
 
-        Button btnSearch = view.findViewById(R.id.btnSearch);
-        btnSearch.setOnClickListener(v ->
-                Navigation.findNavController(view).navigate(R.id.action_home_to_search));
-
         adapter = new ActivityAdapter(requireContext());
         listView.setAdapter(adapter);
         listView.setOnItemClickListener((parent, v, position, id) -> {

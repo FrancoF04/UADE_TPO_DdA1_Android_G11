@@ -26,18 +26,11 @@
             android:layout_marginBottom="12dp">
 
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/home_activities_title"
                 android:textSize="18sp"
                 android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btnSearch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/home_search_button" />
         </LinearLayout>
 
         <HorizontalScrollView

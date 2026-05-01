@@ -8,9 +8,9 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.News;
+import com.example.androidapp.util.ImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,22 +57,23 @@ public class NewsAdapter extends BaseAdapter {
         News n = items.get(position);
         holder.tvTitle.setText(n.getTitle());
         holder.tvDescription.setText(n.getDescription());
+        holder.tvChip.setText(n.categoryLabel());
+        holder.tvChip.setBackgroundResource(chipBackgroundFor(n.getCategory()));
 
-        if (n.hasRelatedActivity()) {
-            holder.tvChip.setText("Oferta");
-            holder.tvChip.setBackgroundResource(R.drawable.chip_offer);
-        } else {
-            holder.tvChip.setText("Destacado");
-            holder.tvChip.setBackgroundResource(R.drawable.chip_destacado);
-        }
-
-        if (n.getImage() != null && !n.getImage().isEmpty()) {
-            Glide.with(context).load(n.getImage()).into(holder.ivThumb);
-        } else {
-            holder.ivThumb.setImageDrawable(null);
-        }
+        ImageLoader.load(holder.ivThumb, n.getImage());
 
         return convertView;
+    }
+
+    private static int chipBackgroundFor(String category) {
+        if (category == null) return R.drawable.chip_noticia;
+        switch (category) {
+            case "descuento": return R.drawable.chip_offer;
+            case "promocion": return R.drawable.chip_promocion;
+            case "nuevo_destino": return R.drawable.chip_destacado;
+            case "noticia":
+            default: return R.drawable.chip_noticia;
+        }
     }
 
     private static class ViewHolder {

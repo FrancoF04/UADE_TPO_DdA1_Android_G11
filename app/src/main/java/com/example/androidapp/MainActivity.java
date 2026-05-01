@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements SessionExpiredLis
             if (destination.getId() == R.id.homeFragment
                     || destination.getId() == R.id.reservasFragment
                     || destination.getId() == R.id.newsFragment
+                    || destination.getId() == R.id.favoritesFragment
                     || destination.getId() == R.id.profileFragment) {
                 bottomNav.setVisibility(View.VISIBLE);
                 bottomNav.post(() -> navHostView.setPadding(0, 0, 0, bottomNav.getHeight()));

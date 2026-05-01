@@ -20,15 +20,10 @@ import com.example.androidapp.R;
 import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.User;
-import com.example.androidapp.data.model.UserPreferencesRequest;
 import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.UserApi;
 import com.example.androidapp.util.BiometricHelper;
 import com.example.androidapp.util.BiometricStatus;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -75,9 +70,8 @@ public class ProfileFragment extends Fragment {
             Navigation.findNavController(view).navigate(R.id.action_profile_to_editProfile);
         });
 
-        btnPreferencias.setOnClickListener(v -> {
-            showPreferencesDialog();
-        });
+        btnPreferencias.setOnClickListener(v ->
+                Navigation.findNavController(view).navigate(R.id.preferencesFragment));
 
         btnLogout.setOnClickListener(v -> confirmLogout(view));
 
@@ -178,65 +172,6 @@ public class ProfileFragment extends Fragment {
                 break;
             }
         }
-    }
-
-    private void showPreferencesDialog() {
-        String[] items = getResources().getStringArray(R.array.travel_categories);
-        boolean[] checkedItems = new boolean[items.length];
-
-        // Marcar los que ya tiene el usuario
-        if (currentUser != null && currentUser.getPreferences() != null && currentUser.getPreferences().getCategories() != null) {
-            List<String> userCategories = currentUser.getPreferences().getCategories();
-            for (int i = 0; i < items.length; i++) {
-                for (String userCat : userCategories) {
-                    if (userCat.equalsIgnoreCase(items[i])) {
-                        checkedItems[i] = true;
-                        break;
-                    }
-                }
-            }
-        }
-        
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Selecciona tus intereses")
-                .setMultiChoiceItems(items, checkedItems, (dialog, which, isChecked) -> {
-                    checkedItems[which] = isChecked;
-                })
-                .setPositiveButton("Guardar", (dialog, which) -> {
-                    List<String> selected = new ArrayList<>();
-                    for (int i = 0; i < items.length; i++) {
-                        if (checkedItems[i]) {
-                            selected.add(items[i].toLowerCase());
-                        }
-                    }
-                    savePreferences(selected);
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
-
-    private void savePreferences(List<String> categories) {
-
-        UserPreferencesRequest request = new UserPreferencesRequest(categories);
-
-
-        userApi.updatePreferences(request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<User.UserResponse>> call, Response<ApiResponse<User.UserResponse>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    // Actualizar el usuario local con la respuesta del servidor
-                    currentUser = response.body().getData().getUser();
-                    Toast.makeText(getContext(), "Preferencias actualizadas", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "Error al guardar preferencias", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<User.UserResponse>> call, Throwable t) {
-                Toast.makeText(getContext(), "Error de red", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void loadUserProfile() {

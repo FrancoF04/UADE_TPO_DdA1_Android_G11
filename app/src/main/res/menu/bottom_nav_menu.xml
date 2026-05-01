@@ -10,6 +10,10 @@
         android:icon="@drawable/ic_reservas"
         android:title="Mis Reservas" />
     <item
+        android:id="@+id/favoritesFragment"
+        android:icon="@drawable/ic_favoritos"
+        android:title="Favoritos" />
+    <item
         android:id="@+id/news_nav_graph"
         android:icon="@drawable/ic_news_24"
         android:title="Noticias" />
