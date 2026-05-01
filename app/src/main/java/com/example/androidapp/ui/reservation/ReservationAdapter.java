@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Reservation;
+import com.example.androidapp.util.ImageLoader;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -84,7 +85,7 @@ public class ReservationAdapter extends BaseAdapter {
         }
 
         Reservation reservation = getItem(position);
-        holder.ivActivityImage.setImageDrawable(null);
+        ImageLoader.load(holder.ivActivityImage, reservation.getActivityImageUrl());
         holder.tvActivityName.setText(String.format(reservation.getActivityName()));
 
         String scheduleText = reservation.getSelectedDate();

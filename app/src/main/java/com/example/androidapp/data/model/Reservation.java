@@ -11,6 +11,12 @@ public class Reservation {
     @SerializedName("activityName")
     private final String activityName;
 
+    @SerializedName(value = "imageUrl", alternate = {"image_url"})
+    private final String imageUrl;
+
+    @SerializedName("image")
+    private final String image;
+
     @SerializedName("activity")
     private final ActivitySummary activity;
     @SerializedName("selectedDate")
@@ -29,6 +35,8 @@ public class Reservation {
         this.id = id;
         this.activityId = activityId;
         this.activityName = activityName;
+        this.imageUrl = null;
+        this.image = null;
         this.activity = null;
         this.selectedDate = selectedDate;
         this.selectedScheduleId = selectedScheduleId;
@@ -77,16 +85,56 @@ public class Reservation {
         return null;
     }
 
+    public String getActivityImageUrl() {
+        if (activity != null) {
+            String nestedImage = activity.getImageUrl();
+            if (nestedImage != null && !nestedImage.isEmpty()) {
+                return nestedImage;
+            }
+
+            String nestedAlternate = activity.getImage();
+            if (nestedAlternate != null && !nestedAlternate.isEmpty()) {
+                return nestedAlternate;
+            }
+        }
+
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            return imageUrl;
+        }
+
+        if (image != null && !image.isEmpty()) {
+            return image;
+        }
+
+        return null;
+    }
+
     public static class ActivitySummary {
         @SerializedName("name")
         private final String name;
 
+        @SerializedName(value = "imageUrl", alternate = {"image_url"})
+        private final String imageUrl;
+
+        @SerializedName("image")
+        private final String image;
+
         public ActivitySummary(String name) {
             this.name = name;
+            this.imageUrl = null;
+            this.image = null;
         }
 
         public String getName() {
             return name;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public String getImage() {
+            return image;
         }
     }
 }
