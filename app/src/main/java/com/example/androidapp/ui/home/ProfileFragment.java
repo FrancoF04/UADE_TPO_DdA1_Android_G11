@@ -1,17 +1,17 @@
 package com.example.androidapp.ui.home;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
@@ -20,8 +20,9 @@ import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.User;
 import com.example.androidapp.data.model.UserPreferencesRequest;
-import com.example.androidapp.data.remote.RetrofitClient;
 import com.example.androidapp.data.remote.UserApi;
+import com.example.androidapp.util.BiometricHelper;
+import com.example.androidapp.util.BiometricStatus;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
@@ -40,8 +41,11 @@ public class ProfileFragment extends Fragment {
     UserApi userApi;
     @Inject
     TokenManager tokenManager;
-    private TextView tvNombre, tvEmail, tvTelefono;
+    @Inject
+    BiometricHelper biometricHelper;
+    private TextView tvNombre, tvEmail, tvTelefono, tvBiometricSubtitle;
     private Button btnEditarPerfil, btnPreferencias;
+    private Switch switchBiometric;
     private User currentUser;
 
     @Override
@@ -59,6 +63,8 @@ public class ProfileFragment extends Fragment {
         tvTelefono = view.findViewById(R.id.tvTelefono);
         btnEditarPerfil = view.findViewById(R.id.btnEditarPerfil);
         btnPreferencias = view.findViewById(R.id.btnPreferencias);
+        switchBiometric = view.findViewById(R.id.switchBiometric);
+        tvBiometricSubtitle = view.findViewById(R.id.tvBiometricSubtitle);
 
         btnEditarPerfil.setOnClickListener(v -> {
             Navigation.findNavController(view).navigate(R.id.action_profile_to_editProfile);
@@ -68,7 +74,70 @@ public class ProfileFragment extends Fragment {
             showPreferencesDialog();
         });
 
+        wireBiometricToggle();
         loadUserProfile();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (switchBiometric != null) wireBiometricToggle();
+    }
+
+    private void wireBiometricToggle() {
+        BiometricStatus status = biometricHelper.checkAvailability();
+
+        switch (status) {
+            case AVAILABLE: {
+                switchBiometric.setEnabled(true);
+                switchBiometric.setOnCheckedChangeListener(null);
+                switchBiometric.setChecked(tokenManager.isBiometricEnabled());
+                tvBiometricSubtitle.setText("Activá la biometría para tu próximo ingreso");
+                switchBiometric.setOnCheckedChangeListener((v, isChecked) -> {
+                    if (isChecked) {
+                        biometricHelper.promptForAuth(
+                                requireActivity(),
+                                "Activar huella",
+                                "Confirmá tu huella para activar el ingreso biométrico",
+                                () -> tokenManager.setBiometricEnabled(true),
+                                (code, msg) -> wireBiometricToggle()
+                        );
+                    } else {
+                        tokenManager.setBiometricEnabled(false);
+                    }
+                });
+                break;
+            }
+            case NOT_ENROLLED: {
+                switchBiometric.setEnabled(true);
+                switchBiometric.setOnCheckedChangeListener(null);
+                switchBiometric.setChecked(false);
+                tvBiometricSubtitle.setText("Necesitás enrolar tu huella en el sistema");
+                switchBiometric.setOnCheckedChangeListener((v, isChecked) -> {
+                    if (isChecked) {
+                        switchBiometric.setOnCheckedChangeListener(null);
+                        switchBiometric.setChecked(false);
+                        new AlertDialog.Builder(requireContext())
+                                .setTitle("Enrolá tu huella")
+                                .setMessage("Para usar biometría tenés que enrolar tu huella en Configuración. ¿Vamos ahora?")
+                                .setPositiveButton("Ir", (d, w) -> startActivity(biometricHelper.enrollIntent()))
+                                .setNegativeButton("Cancelar", null)
+                                .show();
+                        wireBiometricToggle();
+                    }
+                });
+                break;
+            }
+            case NO_HARDWARE:
+            case UNAVAILABLE:
+            default: {
+                switchBiometric.setEnabled(false);
+                switchBiometric.setOnCheckedChangeListener(null);
+                switchBiometric.setChecked(false);
+                tvBiometricSubtitle.setText("Tu dispositivo no soporta biometría");
+                break;
+            }
+        }
     }
 
     private void showPreferencesDialog() {
