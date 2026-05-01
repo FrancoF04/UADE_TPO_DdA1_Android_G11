@@ -19,7 +19,7 @@ import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.remote.UserApi;
 
 import dagger.hilt.android.AndroidEntryPoint;
-import jakarta.inject.Inject;
+import javax.inject.Inject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
