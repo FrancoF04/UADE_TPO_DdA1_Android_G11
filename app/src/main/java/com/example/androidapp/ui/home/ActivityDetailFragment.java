@@ -22,6 +22,7 @@ import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
 import com.example.androidapp.util.DateTimeUtils;
+import com.example.androidapp.util.ImageLoader;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -208,8 +209,7 @@ public class ActivityDetailFragment extends Fragment {
             btnReserve.setText("Reservar");
         }
 
-        // Placeholder — no image loading library available (limited knowledge).
-        ivImage.setImageDrawable(null);
+        ImageLoader.load(ivImage, activity.getImageUrl());
     }
 
     private int getSpotsForNextAvailableDate(Activity activity) {
