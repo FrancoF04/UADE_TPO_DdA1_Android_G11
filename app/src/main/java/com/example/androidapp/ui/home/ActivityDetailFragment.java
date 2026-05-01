@@ -1,5 +1,7 @@
 package com.example.androidapp.ui.home;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,7 +38,9 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -203,7 +207,17 @@ public class ActivityDetailFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null
                         && response.body().isSuccess() && response.body().getData() != null) {
-                    displayActivity(response.body().getData());
+                    Activity activity = response.body().getData();
+                    displayActivity(activity);
+
+                    // Si la actividad tiene novedades (precio o cupos cambiados), 
+                    // actualizar los valores de referencia en el backend para resetear los flags.
+                    if (activity.getPriceChanged() || activity.getSpotsChanged()) {
+                        resetNoveltyFlags(activity.getId());
+                        //forzar
+                        activity.setSpotsChanged(false);
+                        activity.setPriceChanged(false);
+                    }
                 } else {
                     tvError.setText(R.string.error_generic);
                     tvError.setVisibility(View.VISIBLE);
@@ -219,6 +233,39 @@ public class ActivityDetailFragment extends Fragment {
                 Log.e("ActivityDetail", "Failed to load detail", t);
             }
         });
+    }
+
+    private void resetNoveltyFlags(String activityId) {
+        // Remover y agregar de nuevo para resetear los flags en el backend
+        favoritesApi.removeFavorite(activityId).enqueue(new Callback<ApiResponse<Void>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                // Fallo silencioso
+            }
+        });
+        // Una vez removido, agregar nuevamente
+        favoritesApi.addFavorite(new FavoriteRequest(activityId)).enqueue(new Callback<ApiResponse<FavoriteResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<FavoriteResponse>> call, Response<ApiResponse<FavoriteResponse>> response) {
+                // Flags reseteados en el servidor
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<FavoriteResponse>> call, Throwable t) {
+                // Fallo silencioso
+            }
+        });
+    }
+
+    private void markNoveltyAsViewed(String activityId) {
+        // Guardar localmente que esta actividad fue vista para ocultar indicador de novedad
+        SharedPreferences prefs = requireContext().getSharedPreferences("favorites_novelty", Context.MODE_PRIVATE);
+        Set<String> viewed = new HashSet<>(prefs.getStringSet("viewed_novelty_ids", new HashSet<>()));
+        viewed.add(activityId);
+        prefs.edit().putStringSet("viewed_novelty_ids", viewed).apply();
     }
 
     private void displayActivity(Activity activity) {

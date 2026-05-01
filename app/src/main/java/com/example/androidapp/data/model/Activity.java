@@ -80,10 +80,10 @@ public class Activity {
     private final Integer spotsAtFavorite;
 
     @SerializedName("priceChanged")
-    private final Boolean priceChanged;
+    private Boolean priceChanged;
 
     @SerializedName("spotsChanged")
-    private final Boolean spotsChanged;
+    private Boolean spotsChanged;
 
     public Activity(String id, String name, String destination, String category,
                     String description, String imageUrl, List<String> galleryUrls,
@@ -162,4 +162,12 @@ public class Activity {
     public Integer getSpotsAtFavorite() { return spotsAtFavorite; }
     public Boolean getPriceChanged() { return priceChanged != null && priceChanged; }
     public Boolean getSpotsChanged() { return spotsChanged != null && spotsChanged; }
+
+    public void setPriceChanged(Boolean priceChanged) {
+        this.priceChanged = priceChanged;
+    }
+
+    public void setSpotsChanged(Boolean spotsChanged) {
+        this.spotsChanged = spotsChanged;
+    }
 }
