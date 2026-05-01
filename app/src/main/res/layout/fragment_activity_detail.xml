@@ -18,16 +18,35 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/ivImage"
+                <!-- Carrusel unificado: imagen principal + galería -->
+                <FrameLayout
+                    android:id="@+id/galleryCarousel"
                     android:layout_width="match_parent"
                     android:layout_height="250dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:scaleType="centerCrop"
-                    android:background="@color/placeholder_2"
-                    android:contentDescription="@string/app_name" />
+                    android:layout_marginTop="16dp">
+
+                    <androidx.viewpager.widget.ViewPager
+                        android:id="@+id/galleryViewPager"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/placeholder_2" />
+
+                    <TextView
+                        android:id="@+id/tvGalleryCounter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|end"
+                        android:layout_margin="8dp"
+                        android:background="#80000000"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:visibility="gone" />
+
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"

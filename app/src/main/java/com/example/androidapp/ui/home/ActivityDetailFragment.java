@@ -6,10 +6,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Button;
+
+import androidx.viewpager.widget.ViewPager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -45,7 +48,6 @@ public class ActivityDetailFragment extends Fragment {
     ActivityApi api;
 
 
-    private ImageView ivImage;
     private TextView tvName;
     private TextView tvDestination;
     private TextView tvCategory;
@@ -61,6 +63,9 @@ public class ActivityDetailFragment extends Fragment {
     private TextView tvError;
     private ProgressBar progressBar;
     private Button btnReserve;
+    private FrameLayout galleryCarousel;
+    private ViewPager galleryViewPager;
+    private TextView tvGalleryCounter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -72,7 +77,6 @@ public class ActivityDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ivImage = view.findViewById(R.id.ivImage);
         tvName = view.findViewById(R.id.tvName);
         tvDestination = view.findViewById(R.id.tvDestination);
         tvCategory = view.findViewById(R.id.tvCategory);
@@ -88,6 +92,9 @@ public class ActivityDetailFragment extends Fragment {
         tvError = view.findViewById(R.id.tvError);
         progressBar = view.findViewById(R.id.progressBar);
         btnReserve = view.findViewById(R.id.btnReserve);
+        galleryCarousel = view.findViewById(R.id.galleryCarousel);
+        galleryViewPager = view.findViewById(R.id.galleryViewPager);
+        tvGalleryCounter = view.findViewById(R.id.tvGalleryCounter);
 
         boolean showReserve = getArguments() == null
                 || getArguments().getBoolean("showReserveButton", true);
@@ -209,7 +216,31 @@ public class ActivityDetailFragment extends Fragment {
             btnReserve.setText("Reservar");
         }
 
-        ImageLoader.load(ivImage, activity.getImageUrl());
+        // Carrusel unificado: imagen principal + galería
+        List<String> allPhotos = new java.util.ArrayList<>();
+        if (activity.getImageUrl() != null && !activity.getImageUrl().isEmpty()) {
+            allPhotos.add(activity.getImageUrl());
+        }
+        List<String> galleryUrls = activity.getGalleryUrls();
+        if (galleryUrls != null) {
+            allPhotos.addAll(galleryUrls);
+        }
+        if (!allPhotos.isEmpty()) {
+            int total = allPhotos.size();
+            if (total > 1) {
+                tvGalleryCounter.setVisibility(View.VISIBLE);
+                tvGalleryCounter.setText("1 / " + total);
+            } else {
+                tvGalleryCounter.setVisibility(View.GONE);
+            }
+            galleryViewPager.setAdapter(new GalleryPagerAdapter(allPhotos));
+            galleryViewPager.addOnPageChangeListener(new androidx.viewpager.widget.ViewPager.SimpleOnPageChangeListener() {
+                @Override
+                public void onPageSelected(int position) {
+                    tvGalleryCounter.setText((position + 1) + " / " + total);
+                }
+            });
+        }
     }
 
     private int getSpotsForNextAvailableDate(Activity activity) {
