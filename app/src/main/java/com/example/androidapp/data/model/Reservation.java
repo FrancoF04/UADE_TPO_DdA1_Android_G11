@@ -77,16 +77,28 @@ public class Reservation {
         return null;
     }
 
+    public String getImageUrl() {
+        return activity != null ? activity.getImageUrl() : null;
+    }
+
     public static class ActivitySummary {
         @SerializedName("name")
         private final String name;
 
+        @SerializedName("imageUrl")
+        private final String imageUrl;
+
         public ActivitySummary(String name) {
             this.name = name;
+            this.imageUrl = null;
         }
 
         public String getName() {
             return name;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
         }
     }
 }

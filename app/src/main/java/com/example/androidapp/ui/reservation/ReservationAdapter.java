@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Reservation;
 
@@ -84,7 +85,12 @@ public class ReservationAdapter extends BaseAdapter {
         }
 
         Reservation reservation = getItem(position);
-        holder.ivActivityImage.setImageDrawable(null);
+        Glide.with(convertView)
+                .load(reservation.getImageUrl())
+                .placeholder(R.drawable.ic_placeholder_activity)
+                .error(R.drawable.ic_placeholder_activity)
+                .centerCrop()
+                .into(holder.ivActivityImage);
         holder.tvActivityName.setText(String.format(reservation.getActivityName()));
 
         String scheduleText = reservation.getSelectedDate();
