@@ -17,7 +17,7 @@
 
         <action
             android:id="@+id/action_news_to_activity_detail"
-            app:destination="@id/activityDetailFragment" />
+            app:destination="@id/activity_nav_graph" />
     </fragment>
 
     <fragment
