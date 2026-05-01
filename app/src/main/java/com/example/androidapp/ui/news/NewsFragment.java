@@ -123,7 +123,9 @@ public class NewsFragment extends Fragment {
     private void onItemClick(News item) {
         if (item == null) return;
         Bundle args = new Bundle();
-        if (item.hasRelatedActivity()) {
+        boolean isNewDestination = "nuevo_destino".equals(item.getCategory())
+                && item.hasRelatedActivity();
+        if (isNewDestination) {
             args.putString("activityId", item.getActivityId());
             args.putBoolean("showReserveButton", true);
             args.putBoolean("showSpotsField", true);
