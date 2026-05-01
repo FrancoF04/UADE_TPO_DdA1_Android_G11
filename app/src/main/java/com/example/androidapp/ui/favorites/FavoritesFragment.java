@@ -1,7 +1,5 @@
 package com.example.androidapp.ui.favorites;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,9 +19,7 @@ import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.remote.FavoritesApi;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -35,16 +31,12 @@ import retrofit2.Response;
 @AndroidEntryPoint
 public class FavoritesFragment extends Fragment implements FavoritosAdapter.OnFavoriteActionListener {
 
-    private static final String PREFS_NAME = "favorites_novelty";
-    private static final String KEY_VIEWED_IDS = "viewed_novelty_ids";
-
     @Inject FavoritesApi favoritesApi;
 
     private ListView listView;
     private ProgressBar progressBar;
     private LinearLayout llEmptyState;
     private FavoritosAdapter adapter;
-    private Set<String> viewedNoveltyIds;
 
     @Nullable
     @Override
@@ -57,15 +49,11 @@ public class FavoritesFragment extends Fragment implements FavoritosAdapter.OnFa
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Cargar IDs de novedades ya vistas desde SharedPreferences
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        viewedNoveltyIds = new HashSet<>(prefs.getStringSet(KEY_VIEWED_IDS, new HashSet<>()));
-
         listView = view.findViewById(R.id.lvFavoritos);
         progressBar = view.findViewById(R.id.pbFavoritos);
         llEmptyState = view.findViewById(R.id.llEmptyFavoritos);
 
-        adapter = new FavoritosAdapter(requireContext(), this, viewedNoveltyIds);
+        adapter = new FavoritosAdapter(requireContext(), this);
         listView.setAdapter(adapter);
 
         loadFavorites();
@@ -81,7 +69,8 @@ public class FavoritesFragment extends Fragment implements FavoritosAdapter.OnFa
         if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
         if (llEmptyState != null) llEmptyState.setVisibility(View.GONE);
 
-        favoritesApi.getFavorites().enqueue(new Callback<ApiResponse<List<Activity>>>() {
+        // Usamos un timestamp para evitar cache y asegurar que vemos el reset del servidor
+        favoritesApi.getFavorites(System.currentTimeMillis()).enqueue(new Callback<ApiResponse<List<Activity>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Activity>>> call, Response<ApiResponse<List<Activity>>> response) {
                 if (!isAdded()) return;

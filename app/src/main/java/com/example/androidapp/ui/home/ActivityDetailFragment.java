@@ -1,7 +1,5 @@
 package com.example.androidapp.ui.home;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -38,6 +36,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,12 +52,16 @@ import retrofit2.Callback;
 import retrofit2.Response;
 @AndroidEntryPoint
 public class ActivityDetailFragment extends Fragment {
+    private static final String TAG = "ActivityDetail";
+
     @Inject
     ActivityApi api;
 
     @Inject
     FavoritesApi favoritesApi;
 
+    private boolean noveltyResetInProgress = false;
+    public static final Set<String> viewedNovelties = Collections.synchronizedSet(new HashSet<>());
     private TextView tvName;
     private TextView tvDestination;
     private TextView tvCategory;
@@ -140,15 +143,34 @@ public class ActivityDetailFragment extends Fragment {
     }
 
     private void checkIfFavorite() {
-        favoritesApi.getFavorites().enqueue(new Callback<ApiResponse<List<Activity>>>() {
+        favoritesApi.getFavorites(System.currentTimeMillis()).enqueue(new Callback<ApiResponse<List<Activity>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Activity>>> call, Response<ApiResponse<List<Activity>>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    List<String> ids = response.body().getData().stream()
-                            .map(Activity::getId)
-                            .collect(Collectors.toList());
-                    isFavorite = ids.contains(currentActivityId);
+                    List<Activity> favorites = response.body().getData();
+                    Activity favoriteVersion = null;
+                    for (Activity f : favorites) {
+                        if (f.getId().equals(currentActivityId)) {
+                            favoriteVersion = f;
+                            break;
+                        }
+                    }
+                    
+                    isFavorite = favoriteVersion != null;
                     updateFavoriteUI();
+
+                    if (isFavorite && favoriteVersion != null) {
+                        boolean hasNovelty = favoriteVersion.getPriceChanged() || favoriteVersion.getSpotsChanged();
+                        Log.d(TAG, "Favorito verificado. Novedad detectada: " + hasNovelty);
+                        
+                        if (hasNovelty) {
+                            viewedNovelties.add(currentActivityId);
+                            resetNoveltyFlags(currentActivityId);
+                        } else {
+                            // Si el servidor ya está limpio, nosotros también
+                            viewedNovelties.remove(currentActivityId);
+                        }
+                    }
                 }
             }
             @Override
@@ -163,6 +185,7 @@ public class ActivityDetailFragment extends Fragment {
                 public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
                     if (response.isSuccessful()) {
                         isFavorite = false;
+                        viewedNovelties.remove(currentActivityId);
                         updateFavoriteUI();
                     }
                 }
@@ -210,13 +233,14 @@ public class ActivityDetailFragment extends Fragment {
                     Activity activity = response.body().getData();
                     displayActivity(activity);
 
-                    // Si la actividad tiene novedades (precio o cupos cambiados), 
-                    // actualizar los valores de referencia en el backend para resetear los flags.
+                    // Si el detalle ya trae flags, disparamos el reset (la guardia evitará duplicados)
                     if (activity.getPriceChanged() || activity.getSpotsChanged()) {
+                        Log.i(TAG, "Novedad detectada en Detail API, reseteando...");
+                        viewedNovelties.add(activity.getId());
                         resetNoveltyFlags(activity.getId());
-                        //forzar
-                        activity.setSpotsChanged(false);
-                        activity.setPriceChanged(false);
+                    } else {
+                        // Limpiamos si ya no hay novedad
+                        viewedNovelties.remove(activity.getId());
                     }
                 } else {
                     tvError.setText(R.string.error_generic);
@@ -236,36 +260,46 @@ public class ActivityDetailFragment extends Fragment {
     }
 
     private void resetNoveltyFlags(String activityId) {
-        // Remover y agregar de nuevo para resetear los flags en el backend
+        if (noveltyResetInProgress || activityId == null || activityId.isEmpty()) return;
+        noveltyResetInProgress = true;
+
+        Log.i(TAG, "Iniciando reset de novedad (Remove -> Add) para: " + activityId);
+        
         favoritesApi.removeFavorite(activityId).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Removido de favoritos para reset. Procediendo a re-agregar...");
+                    
+                    favoritesApi.addFavorite(new FavoriteRequest(activityId)).enqueue(new Callback<ApiResponse<FavoriteResponse>>() {
+                        @Override
+                        public void onResponse(Call<ApiResponse<FavoriteResponse>> call, Response<ApiResponse<FavoriteResponse>> response) {
+                            if (response.isSuccessful()) {
+                                Log.i(TAG, "Reset de novedad completado exitosamente en servidor.");
+                            } else {
+                                Log.e(TAG, "Error al re-agregar favorito post-reset: " + response.code());
+                            }
+                            noveltyResetInProgress = false;
+                        }
 
+                        @Override
+                        public void onFailure(Call<ApiResponse<FavoriteResponse>> call, Throwable t) {
+                            Log.e(TAG, "Fallo de red al re-agregar favorito", t);
+                            noveltyResetInProgress = false;
+                        }
+                    });
+                } else {
+                    Log.e(TAG, "Error al remover favorito para reset: " + response.code());
+                    noveltyResetInProgress = false;
+                }
             }
+
             @Override
             public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
-                // Fallo silencioso
+                Log.e(TAG, "Fallo de red al remover favorito", t);
+                noveltyResetInProgress = false;
             }
         });
-        // Una vez removido, agregar nuevamente
-        favoritesApi.addFavorite(new FavoriteRequest(activityId)).enqueue(new Callback<ApiResponse<FavoriteResponse>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<FavoriteResponse>> call, Response<ApiResponse<FavoriteResponse>> response) {
-                // Flags reseteados en el servidor
-            }
-            @Override
-            public void onFailure(Call<ApiResponse<FavoriteResponse>> call, Throwable t) {
-                // Fallo silencioso
-            }
-        });
-    }
-
-    private void markNoveltyAsViewed(String activityId) {
-        // Guardar localmente que esta actividad fue vista para ocultar indicador de novedad
-        SharedPreferences prefs = requireContext().getSharedPreferences("favorites_novelty", Context.MODE_PRIVATE);
-        Set<String> viewed = new HashSet<>(prefs.getStringSet("viewed_novelty_ids", new HashSet<>()));
-        viewed.add(activityId);
-        prefs.edit().putStringSet("viewed_novelty_ids", viewed).apply();
     }
 
     private void displayActivity(Activity activity) {

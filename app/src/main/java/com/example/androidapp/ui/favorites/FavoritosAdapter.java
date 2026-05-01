@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Activity;
+import com.example.androidapp.ui.home.ActivityDetailFragment;
 import com.example.androidapp.util.ImageLoader;
 
 import java.util.ArrayList;
@@ -24,7 +25,6 @@ public class FavoritosAdapter extends BaseAdapter {
     private final Context context;
     private final List<Activity> favorites;
     private final OnFavoriteActionListener listener;
-    private final Set<String> viewedNoveltyIds;
 
     public interface OnFavoriteActionListener {
         void onRemoveFavorite(Activity activity);
@@ -32,17 +32,23 @@ public class FavoritosAdapter extends BaseAdapter {
         void onItemClick(Activity activity);
     }
 
-    public FavoritosAdapter(Context context, OnFavoriteActionListener listener, Set<String> viewedNoveltyIds) {
+    public FavoritosAdapter(Context context, OnFavoriteActionListener listener) {
         this.context = context;
         this.favorites = new ArrayList<>();
         this.listener = listener;
-        this.viewedNoveltyIds = viewedNoveltyIds;
     }
 
     public void setFavorites(List<Activity> newFavorites) {
         favorites.clear();
         if (newFavorites != null) {
             favorites.addAll(newFavorites);
+            // Si el servidor ya reporta que no hay novedad, limpiamos el estado local "visto"
+            // para que futuras novedades puedan volver a mostrarse.
+            for (Activity activity : newFavorites) {
+                if (!activity.getPriceChanged() && !activity.getSpotsChanged()) {
+                    ActivityDetailFragment.viewedNovelties.remove(activity.getId());
+                }
+            }
         }
         notifyDataSetChanged();
     }
@@ -96,23 +102,13 @@ public class FavoritosAdapter extends BaseAdapter {
 
         ImageLoader.load(holder.ivImage, activity.getCoverUrl());
 
-        // Lógica de Novedades: solo mostrar si NO fue visitada en el detalle
-        // (solución local porque el backend puede no actualizar los flags)
-        boolean hasNovelty = (activity.getPriceChanged() || activity.getSpotsChanged());
-               // && !viewedNoveltyIds.contains(activity.getId());
+        // Lógica de Novedades: basada en el servidor, con override local si ya se visitó el detalle
+        boolean hasNovelty = (activity.getPriceChanged() || activity.getSpotsChanged())
+                && !ActivityDetailFragment.viewedNovelties.contains(activity.getId());
 
         if (hasNovelty) {
             holder.tvNoveltyIndicator.setVisibility(View.VISIBLE);
-            if (activity.getPriceChanged() && activity.getSpotsChanged()) {
-                holder.tvNoveltyIndicator.setText(context.getString(R.string.favorites_novelty_both));
-            } else if (activity.getPriceChanged()) {
-                String oldPriceStr = activity.getPriceAtFavorite() != null ? 
-                        context.getString(R.string.price_format, activity.getPriceAtFavorite()) : "---";
-                holder.tvNoveltyIndicator.setText(context.getString(R.string.favorites_novelty_price, oldPriceStr));
-            } else {
-                int oldSpots = activity.getSpotsAtFavorite() != null ? activity.getSpotsAtFavorite() : 0;
-                holder.tvNoveltyIndicator.setText(context.getString(R.string.favorites_novelty_spots, oldSpots));
-            }
+            holder.tvNoveltyIndicator.setText(context.getString(R.string.favorites_novelty));
         } else {
             holder.tvNoveltyIndicator.setVisibility(View.GONE);
         }

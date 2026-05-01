@@ -118,7 +118,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadFavorites() {
-        favoritesApi.getFavorites().enqueue(new Callback<ApiResponse<List<Activity>>>() {
+        favoritesApi.getFavorites(System.currentTimeMillis()).enqueue(new Callback<ApiResponse<List<Activity>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Activity>>> call, Response<ApiResponse<List<Activity>>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
@@ -126,6 +126,13 @@ public class HomeFragment extends Fragment {
                             .map(Activity::getId)
                             .collect(Collectors.toList());
                     adapter.setFavoriteIds(favoriteIds);
+
+                    // Limpieza de novedades vistas si el servidor ya está actualizado
+                    for (Activity fav : response.body().getData()) {
+                        if (!fav.getPriceChanged() && !fav.getSpotsChanged()) {
+                            ActivityDetailFragment.viewedNovelties.remove(fav.getId());
+                        }
+                    }
                 }
             }
             @Override

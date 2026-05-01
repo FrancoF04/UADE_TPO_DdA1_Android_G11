@@ -96,9 +96,7 @@
     <string name="favorites_error_remove">Error al eliminar de favoritos</string>
 
     <!-- Favorites Novelty -->
-    <string name="favorites_novelty_price">¡NUEVO PRECIO! (Antes %1$s)</string>
-    <string name="favorites_novelty_spots">¡CUPOS ACTUALIZADOS! (Antes %1$d)</string>
-    <string name="favorites_novelty_both">¡PRECIO Y CUPOS ACTUALIZADOS!</string>
+    <string name="favorites_novelty">Hubo cambios</string>
     <string name="favorites_reserve_now">Reservar ahora</string>
 
     <!-- Misc -->

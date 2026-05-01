@@ -10,14 +10,17 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Body;
+import retrofit2.http.Query;
 
 public interface FavoritesApi {
 
+    @Headers("Cache-Control: no-cache")
     @GET("favorites")
-    Call<ApiResponse<List<Activity>>> getFavorites();
+    Call<ApiResponse<List<Activity>>> getFavorites(@Query("t") long timestamp);
 
     @POST("favorites")
     Call<ApiResponse<FavoriteResponse>> addFavorite(@Body FavoriteRequest request);
