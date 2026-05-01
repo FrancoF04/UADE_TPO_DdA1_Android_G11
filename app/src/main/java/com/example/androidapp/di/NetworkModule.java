@@ -5,6 +5,7 @@ import static com.example.androidapp.BuildConfig.API_BASE_URL;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.androidapp.data.local.NewsCache;
 import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.remote.ActivityApi;
 import com.example.androidapp.data.remote.AuthApi;
@@ -30,13 +31,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class NetworkModule {
 
     private static final String TAG = "NetworkModule";
-
-    //agregado un provideTokenManager porque no podia inyectarlo al provideOkHttp sin el
-    @Provides
-    @Singleton
-    public TokenManager provideTokenManager(@ApplicationContext Context context) {
-        return TokenManager.getInstance(context);
-    }
 
     @Provides
     @Singleton
@@ -109,5 +103,11 @@ public class NetworkModule {
     @Singleton
     public NewsApi provideNewsApiService(Retrofit retrofit) {
         return retrofit.create(NewsApi.class);
+    }
+
+    @Provides
+    @Singleton
+    public NewsCache provideNewsCache(@ApplicationContext Context context, Gson gson) {
+        return new NewsCache(context, gson);
     }
 }
