@@ -12,6 +12,7 @@ import com.example.androidapp.data.remote.UserApi;
 import com.example.androidapp.data.remote.RatingsApi;
 import com.example.androidapp.data.remote.FavoritesApi;
 import com.example.androidapp.data.remote.NewsApi;
+import com.google.gson.Gson;
 
 import javax.inject.Singleton;
 
@@ -59,11 +60,17 @@ public class NetworkModule {
 
     @Provides
     @Singleton
-    public Retrofit provideRetrofit(OkHttpClient okHttpClient) {
+    public Gson provideGson() {
+        return new Gson();
+    }
+
+    @Provides
+    @Singleton
+    public Retrofit provideRetrofit(OkHttpClient okHttpClient, Gson gson) {
         return new Retrofit.Builder()
                 .baseUrl(API_BASE_URL)
                 .client(okHttpClient)
-                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
     }
 
