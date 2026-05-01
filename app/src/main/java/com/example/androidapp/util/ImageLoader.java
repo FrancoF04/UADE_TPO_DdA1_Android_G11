@@ -1,6 +1,5 @@
 package com.example.androidapp.util;
 
-import android.graphics.drawable.ColorDrawable;
 import android.text.TextUtils;
 import android.widget.ImageView;
 
@@ -20,19 +19,17 @@ public final class ImageLoader {
 
     public static void load(ImageView imageView, @Nullable String rawImageUrl) {
         String resolvedUrl = resolveUrl(rawImageUrl);
-        ColorDrawable placeholder = new ColorDrawable(
-                ContextCompat.getColor(imageView.getContext(), R.color.placeholder_2));
 
         if (TextUtils.isEmpty(resolvedUrl)) {
-            Glide.with(imageView).clear(imageView);
-            imageView.setImageDrawable(placeholder);
+            imageView.setImageResource(R.drawable.ic_image_placeholder);
+            imageView.setBackgroundColor(ContextCompat.getColor(imageView.getContext(), R.color.placeholder_2));
             return;
         }
 
         Glide.with(imageView)
                 .load(resolvedUrl)
-                .placeholder(placeholder)
-                .error(placeholder)
+                .placeholder(R.drawable.ic_image_placeholder)
+                .error(R.drawable.ic_image_placeholder)
                 .centerCrop()
                 .into(imageView);
     }

@@ -2,6 +2,8 @@ package com.example.androidapp.data.model;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 public class Reservation {
     @SerializedName("id")
     private final String id;
@@ -96,6 +98,11 @@ public class Reservation {
             if (nestedAlternate != null && !nestedAlternate.isEmpty()) {
                 return nestedAlternate;
             }
+
+            List<String> nestedGalleryUrls = activity.getGalleryUrls();
+            if (nestedGalleryUrls != null && !nestedGalleryUrls.isEmpty()) {
+                return nestedGalleryUrls.get(0);
+            }
         }
 
         if (imageUrl != null && !imageUrl.isEmpty()) {
@@ -119,10 +126,14 @@ public class Reservation {
         @SerializedName("image")
         private final String image;
 
+        @SerializedName(value = "galleryUrls", alternate = {"gallery_urls"})
+        private final List<String> galleryUrls;
+
         public ActivitySummary(String name) {
             this.name = name;
             this.imageUrl = null;
             this.image = null;
+            this.galleryUrls = null;
         }
 
         public String getName() {
@@ -135,6 +146,10 @@ public class Reservation {
 
         public String getImage() {
             return image;
+        }
+
+        public List<String> getGalleryUrls() {
+            return galleryUrls;
         }
     }
 }

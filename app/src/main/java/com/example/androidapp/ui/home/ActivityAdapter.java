@@ -78,7 +78,7 @@ public class ActivityAdapter extends BaseAdapter {
             holder.tvPrice.setText(context.getString(R.string.price_format, activity.getPrice()));
         }
 
-        ImageLoader.load(holder.ivImage, activity.getImageUrl());
+        ImageLoader.load(holder.ivImage, activity.getCoverUrl());
 
         return convertView;
     }

@@ -225,22 +225,19 @@ public class ActivityDetailFragment extends Fragment {
         if (galleryUrls != null) {
             allPhotos.addAll(galleryUrls);
         }
-        if (!allPhotos.isEmpty()) {
-            int total = allPhotos.size();
-            if (total > 1) {
-                tvGalleryCounter.setVisibility(View.VISIBLE);
-                tvGalleryCounter.setText("1 / " + total);
-            } else {
-                tvGalleryCounter.setVisibility(View.GONE);
-            }
-            galleryViewPager.setAdapter(new GalleryPagerAdapter(allPhotos));
-            galleryViewPager.addOnPageChangeListener(new androidx.viewpager.widget.ViewPager.SimpleOnPageChangeListener() {
-                @Override
-                public void onPageSelected(int position) {
-                    tvGalleryCounter.setText((position + 1) + " / " + total);
-                }
-            });
+        // Siempre setear adapter — si allPhotos está vacío, el adapter muestra 1 página con placeholder
+        int total = allPhotos.size();
+        tvGalleryCounter.setVisibility(total > 1 ? View.VISIBLE : View.GONE);
+        if (total > 1) {
+            tvGalleryCounter.setText("1 / " + total);
         }
+        galleryViewPager.setAdapter(new GalleryPagerAdapter(allPhotos));
+        galleryViewPager.addOnPageChangeListener(new androidx.viewpager.widget.ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                tvGalleryCounter.setText((position + 1) + " / " + total);
+            }
+        });
     }
 
     private int getSpotsForNextAvailableDate(Activity activity) {
