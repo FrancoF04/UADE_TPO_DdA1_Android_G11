@@ -47,7 +47,6 @@ public class MisReservasFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
-        cargarReservas();
     }
 
     @Override
