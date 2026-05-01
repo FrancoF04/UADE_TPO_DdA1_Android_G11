@@ -11,6 +11,7 @@
     <include app:graph="@navigation/mis_reservas_nav_graph"/>
     <include app:graph="@navigation/historial_nav_graph" />
     <include app:graph="@navigation/news_nav_graph" />
+    <include app:graph="@navigation/favoritos_nav_graph" />
 
     <fragment
         android:id="@+id/profileFragment"
@@ -38,9 +39,4 @@
         android:id="@+id/preferencesFragment"
         android:name="com.example.androidapp.ui.profile.PreferencesFragment"
         android:label="Preferencias"/>
-
-    <fragment
-        android:id="@+id/favoritesFragment"
-        android:name="com.example.androidapp.ui.favorites.FavoritesFragment"
-        android:label="Favoritos"/>
 </navigation>

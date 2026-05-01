@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/favoritos_nav_graph"
+    app:startDestination="@id/favoritesFragment">
+
+    <fragment
+        android:id="@+id/favoritesFragment"
+        android:name="com.example.androidapp.ui.favorites.FavoritesFragment"
+        android:label="Mis Favoritos"
+        tools:layout="@layout/fragment_mis_favoritos">
+
+        <!-- Acción para ir al detalle de la actividad -->
+        <action
+            android:id="@+id/action_favorites_to_detail"
+            app:destination="@id/activity_nav_graph" />
+
+        <!-- Acción para ir directo al formulario de reserva -->
+        <action
+            android:id="@+id/action_favorites_to_reservation"
+            app:destination="@id/reservation_form_nav_graph" />
+    </fragment>
+
+</navigation>

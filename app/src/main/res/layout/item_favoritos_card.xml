@@ -30,10 +30,24 @@
             android:padding="12dp"
             android:background="@drawable/pill_background"
             android:src="@drawable/ic_favoritos"
-            android:contentDescription="Favorito"
+            android:contentDescription="Quitar de favoritos"
             android:focusable="false"
             android:focusableInTouchMode="false"
             app:tint="@color/price_color" />
+
+        <!-- Indicador de Novedad -->
+        <TextView
+            android:id="@+id/tvNoveltyIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="8dp"
+            android:background="@drawable/chip_noticia"
+            android:text="¡NOVEDAD!"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
     </FrameLayout>
 
     <LinearLayout
@@ -73,6 +87,16 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/price_color" />
+
+        <Button
+            android:id="@+id/btnReserveNow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Reservar ahora"
+            android:textColor="@android:color/white"
+            android:focusable="false"
+            android:focusableInTouchMode="false" />
 
     </LinearLayout>
 </LinearLayout>

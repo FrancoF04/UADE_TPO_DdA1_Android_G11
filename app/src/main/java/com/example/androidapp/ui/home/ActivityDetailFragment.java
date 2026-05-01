@@ -7,9 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.viewpager.widget.ViewPager;
 
@@ -21,8 +23,11 @@ import androidx.navigation.Navigation;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.model.FavoriteRequest;
+import com.example.androidapp.data.model.FavoriteResponse;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
+import com.example.androidapp.data.remote.FavoritesApi;
 import com.example.androidapp.util.DateTimeUtils;
 
 import java.time.LocalDate;
@@ -31,9 +36,13 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -43,9 +52,16 @@ import retrofit2.Callback;
 import retrofit2.Response;
 @AndroidEntryPoint
 public class ActivityDetailFragment extends Fragment {
+    private static final String TAG = "ActivityDetail";
+
     @Inject
     ActivityApi api;
 
+    @Inject
+    FavoritesApi favoritesApi;
+
+    private boolean noveltyResetInProgress = false;
+    public static final Set<String> viewedNovelties = Collections.synchronizedSet(new HashSet<>());
     private TextView tvName;
     private TextView tvDestination;
     private TextView tvCategory;
@@ -61,9 +77,13 @@ public class ActivityDetailFragment extends Fragment {
     private TextView tvError;
     private ProgressBar progressBar;
     private Button btnReserve;
+    private ImageButton btnFavorite;
     private FrameLayout galleryCarousel;
     private ViewPager galleryViewPager;
     private TextView tvGalleryCounter;
+
+    private boolean isFavorite = false;
+    private String currentActivityId;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -90,6 +110,7 @@ public class ActivityDetailFragment extends Fragment {
         tvError = view.findViewById(R.id.tvError);
         progressBar = view.findViewById(R.id.progressBar);
         btnReserve = view.findViewById(R.id.btnReserve);
+        btnFavorite = view.findViewById(R.id.btnFavorite);
         galleryCarousel = view.findViewById(R.id.galleryCarousel);
         galleryViewPager = view.findViewById(R.id.galleryViewPager);
         tvGalleryCounter = view.findViewById(R.id.tvGalleryCounter);
@@ -109,13 +130,96 @@ public class ActivityDetailFragment extends Fragment {
             Navigation.findNavController(v).navigate(R.id.action_activityDetail_to_reservationForm, bundle);
         });
 
-        String activityId = getArguments() != null
+        currentActivityId = getArguments() != null
                 ? getArguments().getString("activityId", "")
                 : "";
 
-        if (!activityId.isEmpty()) {
-            loadActivityDetail(activityId);
+        if (!currentActivityId.isEmpty()) {
+            loadActivityDetail(currentActivityId);
+            checkIfFavorite();
         }
+
+        btnFavorite.setOnClickListener(v -> toggleFavorite());
+    }
+
+    private void checkIfFavorite() {
+        favoritesApi.getFavorites(System.currentTimeMillis()).enqueue(new Callback<ApiResponse<List<Activity>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Activity>>> call, Response<ApiResponse<List<Activity>>> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    List<Activity> favorites = response.body().getData();
+                    Activity favoriteVersion = null;
+                    for (Activity f : favorites) {
+                        if (f.getId().equals(currentActivityId)) {
+                            favoriteVersion = f;
+                            break;
+                        }
+                    }
+                    
+                    isFavorite = favoriteVersion != null;
+                    updateFavoriteUI();
+
+                    if (isFavorite && favoriteVersion != null) {
+                        boolean hasNovelty = favoriteVersion.getPriceChanged() || favoriteVersion.getSpotsChanged();
+                        Log.d(TAG, "Favorito verificado. Novedad detectada: " + hasNovelty);
+                        
+                        if (hasNovelty) {
+                            viewedNovelties.add(currentActivityId);
+                            resetNoveltyFlags(currentActivityId);
+                        } else {
+                            // Si el servidor ya está limpio, nosotros también
+                            viewedNovelties.remove(currentActivityId);
+                        }
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<List<Activity>>> call, Throwable t) {}
+        });
+    }
+
+    private void toggleFavorite() {
+        if (isFavorite) {
+            favoritesApi.removeFavorite(currentActivityId).enqueue(new Callback<ApiResponse<Void>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                    if (!isAdded()) return;
+                    if (response.isSuccessful()) {
+                        isFavorite = false;
+                        viewedNovelties.remove(currentActivityId);
+                        updateFavoriteUI();
+                    }
+                }
+                @Override
+                public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                    if (!isAdded()) return;
+                    Toast.makeText(getContext(), R.string.favorites_error_remove, Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            favoritesApi.addFavorite(new FavoriteRequest(currentActivityId)).enqueue(new Callback<ApiResponse<FavoriteResponse>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<FavoriteResponse>> call, Response<ApiResponse<FavoriteResponse>> response) {
+                    if (!isAdded()) return;
+                    if (response.isSuccessful()) {
+                        isFavorite = true;
+                        updateFavoriteUI();
+                    }
+                }
+                @Override
+                public void onFailure(Call<ApiResponse<FavoriteResponse>> call, Throwable t) {
+                    if (!isAdded()) return;
+                    Toast.makeText(getContext(), R.string.favorites_error_add, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    private void updateFavoriteUI() {
+        btnFavorite.setColorFilter(isFavorite ?
+                requireContext().getColor(R.color.price_color) :
+                requireContext().getColor(android.R.color.darker_gray));
     }
 
     private void loadActivityDetail(String activityId) {
@@ -131,7 +235,18 @@ public class ActivityDetailFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null
                         && response.body().isSuccess() && response.body().getData() != null) {
-                    displayActivity(response.body().getData());
+                    Activity activity = response.body().getData();
+                    displayActivity(activity);
+
+                    // Si el detalle ya trae flags, disparamos el reset (la guardia evitará duplicados)
+                    if (activity.getPriceChanged() || activity.getSpotsChanged()) {
+                        Log.i(TAG, "Novedad detectada en Detail API, reseteando...");
+                        viewedNovelties.add(activity.getId());
+                        resetNoveltyFlags(activity.getId());
+                    } else {
+                        // Limpiamos si ya no hay novedad
+                        viewedNovelties.remove(activity.getId());
+                    }
                 } else {
                     tvError.setText(R.string.error_generic);
                     tvError.setVisibility(View.VISIBLE);
@@ -145,6 +260,49 @@ public class ActivityDetailFragment extends Fragment {
                 tvError.setText(R.string.error_network);
                 tvError.setVisibility(View.VISIBLE);
                 Log.e("ActivityDetail", "Failed to load detail", t);
+            }
+        });
+    }
+
+    private void resetNoveltyFlags(String activityId) {
+        if (noveltyResetInProgress || activityId == null || activityId.isEmpty()) return;
+        noveltyResetInProgress = true;
+
+        Log.i(TAG, "Iniciando reset de novedad (Remove -> Add) para: " + activityId);
+        
+        favoritesApi.removeFavorite(activityId).enqueue(new Callback<ApiResponse<Void>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Removido de favoritos para reset. Procediendo a re-agregar...");
+                    
+                    favoritesApi.addFavorite(new FavoriteRequest(activityId)).enqueue(new Callback<ApiResponse<FavoriteResponse>>() {
+                        @Override
+                        public void onResponse(Call<ApiResponse<FavoriteResponse>> call, Response<ApiResponse<FavoriteResponse>> response) {
+                            if (response.isSuccessful()) {
+                                Log.i(TAG, "Reset de novedad completado exitosamente en servidor.");
+                            } else {
+                                Log.e(TAG, "Error al re-agregar favorito post-reset: " + response.code());
+                            }
+                            noveltyResetInProgress = false;
+                        }
+
+                        @Override
+                        public void onFailure(Call<ApiResponse<FavoriteResponse>> call, Throwable t) {
+                            Log.e(TAG, "Fallo de red al re-agregar favorito", t);
+                            noveltyResetInProgress = false;
+                        }
+                    });
+                } else {
+                    Log.e(TAG, "Error al remover favorito para reset: " + response.code());
+                    noveltyResetInProgress = false;
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                Log.e(TAG, "Fallo de red al remover favorito", t);
+                noveltyResetInProgress = false;
             }
         });
     }
@@ -202,9 +360,9 @@ public class ActivityDetailFragment extends Fragment {
         boolean hasUpcomingDates = hasUpcomingSchedules(activity);
         btnReserve.setEnabled(hasUpcomingDates);
         if (!hasUpcomingDates) {
-            btnReserve.setText("Sin fechas disponibles");
+            btnReserve.setText(R.string.detail_no_dates);
         } else {
-            btnReserve.setText("Reservar");
+            btnReserve.setText(R.string.detail_reserve);
         }
 
         List<String> allPhotos = new ArrayList<>();

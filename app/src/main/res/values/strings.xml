@@ -66,6 +66,8 @@
     <string name="detail_duration">Duracion: %1$s</string>
     <string name="detail_rating">%1$.1f ★</string>
     <string name="detail_language_value">Idioma: %1$s</string>
+    <string name="detail_no_dates">No hay fechas disponibles</string>
+    <string name="detail_reserve">Reservar</string>
     <string name="back">Volver</string>
 
     <!-- Profile -->
@@ -90,6 +92,12 @@
     <string name="error_generic">Ocurrio un error. Intenta de nuevo.</string>
     <string name="error_network">Error de conexion. Verifica tu internet.</string>
     <string name="error_field_required">Completa todos los campos</string>
+    <string name="favorites_error_add">Error al agregar a favoritos</string>
+    <string name="favorites_error_remove">Error al eliminar de favoritos</string>
+
+    <!-- Favorites Novelty -->
+    <string name="favorites_novelty">Hubo cambios</string>
+    <string name="favorites_reserve_now">Reservar ahora</string>
 
     <!-- Misc -->
     <string name="free_label">Gratis</string>
