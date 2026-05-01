@@ -25,15 +25,6 @@
                 android:text="Mi Perfil"
                 android:layout_marginBottom="24dp" />
 
-            <ImageView
-                android:id="@+id/ivFotoPerfil"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="24dp"
-                android:src="@android:drawable/ic_menu_gallery"
-                android:contentDescription="Foto de Perfil" />
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
