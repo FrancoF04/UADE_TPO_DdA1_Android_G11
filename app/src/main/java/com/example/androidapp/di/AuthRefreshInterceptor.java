@@ -42,9 +42,9 @@ public class AuthRefreshInterceptor implements Interceptor {
         String accessToken = tokenManager.getToken();
 
         Request original = chain.request();
-        Request authed = original.newBuilder()
-                .header("Authorization", accessToken != null ? "Bearer " + accessToken : "")
-                .build();
+        Request authed = accessToken != null
+                ? original.newBuilder().header("Authorization", "Bearer " + accessToken).build()
+                : original;
         Response response = chain.proceed(authed);
 
         if (response.code() != 401) {

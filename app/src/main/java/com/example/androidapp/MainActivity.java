@@ -42,6 +42,13 @@ public class MainActivity extends AppCompatActivity implements SessionExpiredLis
         NavInflater inflater = navController.getNavInflater();
         NavGraph graph = inflater.inflate(R.navigation.nav_graph);
 
+        boolean hasLegacyTokenOnly = tokenManager.getToken() != null
+                && tokenManager.getRefreshToken() == null
+                && tokenManager.getAccessExpiresAt() == 0L;
+        if (hasLegacyTokenOnly) {
+            tokenManager.clearSession();
+        }
+
         if (tokenManager.getToken() == null) {
             graph.setStartDestination(R.id.auth_nav_graph);
             navController.setGraph(graph);
