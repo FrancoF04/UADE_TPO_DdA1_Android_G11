@@ -30,7 +30,21 @@
         <action
             android:id="@+id/action_home_to_profile"
             app:destination="@id/profileFragment" />
+
+        <action
+            android:id="@+id/action_home_to_filters"
+            app:destination="@id/filtersFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/filtersFragment"
+        android:name="com.example.androidapp.ui.home.FiltersFragment"
+        android:label="Filtros"/>
+
+    <fragment
+        android:id="@+id/preferencesFragment"
+        android:name="com.example.androidapp.ui.profile.PreferencesFragment"
+        android:label="Preferencias"/>
 
     <fragment
         android:id="@+id/searchFragment"
