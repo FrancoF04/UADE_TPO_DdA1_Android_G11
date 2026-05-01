@@ -73,7 +73,7 @@ public class CancelReservationFragment extends Fragment {
             idSchedule = args.getString("idSchedule");
         }else{
             Toast.makeText(requireContext(), "Error al cargar la actividad", Toast.LENGTH_SHORT).show();
-            requireActivity().onBackPressed();
+            requireActivity().getOnBackPressedDispatcher().onBackPressed();
         }
 
         btnCancelar.setOnClickListener(v -> Navigation.findNavController(requireView()).navigateUp());
