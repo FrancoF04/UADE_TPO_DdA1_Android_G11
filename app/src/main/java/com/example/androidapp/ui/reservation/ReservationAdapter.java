@@ -87,7 +87,7 @@ public class ReservationAdapter extends BaseAdapter {
 
         Reservation reservation = getItem(position);
         ImageLoader.load(holder.ivActivityImage, reservation.getActivityImageUrl());
-        holder.tvActivityName.setText(String.format(reservation.getActivityName()));
+        holder.tvActivityName.setText(reservation.getActivityName());
 
         String scheduleText = reservation.getSelectedDate();
         if (scheduleText != null) {
