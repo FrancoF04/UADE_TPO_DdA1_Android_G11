@@ -8,13 +8,12 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Activity;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import dagger.hilt.android.AndroidEntryPoint;
 
 public class ActivityAdapter extends BaseAdapter {
 
@@ -77,8 +76,12 @@ public class ActivityAdapter extends BaseAdapter {
             holder.tvPrice.setText(context.getString(R.string.price_format, activity.getPrice()));
         }
 
-        // Placeholder — no image loading library available (limited knowledge).
-        holder.ivImage.setImageDrawable(null);
+        Glide.with(convertView)
+                .load(activity.getImageUrl())
+                .placeholder(R.drawable.ic_placeholder_activity)
+                .error(R.drawable.ic_placeholder_activity)
+                .centerCrop()
+                .into(holder.ivImage);
 
         return convertView;
     }
