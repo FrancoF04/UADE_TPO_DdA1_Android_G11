@@ -7,9 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.viewpager.widget.ViewPager;
 
@@ -21,8 +23,11 @@ import androidx.navigation.Navigation;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.model.FavoriteRequest;
+import com.example.androidapp.data.model.FavoriteResponse;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
+import com.example.androidapp.data.remote.FavoritesApi;
 import com.example.androidapp.util.DateTimeUtils;
 
 import java.time.LocalDate;
@@ -34,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -45,6 +51,9 @@ import retrofit2.Response;
 public class ActivityDetailFragment extends Fragment {
     @Inject
     ActivityApi api;
+
+    @Inject
+    FavoritesApi favoritesApi;
 
     private TextView tvName;
     private TextView tvDestination;
@@ -61,9 +70,13 @@ public class ActivityDetailFragment extends Fragment {
     private TextView tvError;
     private ProgressBar progressBar;
     private Button btnReserve;
+    private ImageButton btnFavorite;
     private FrameLayout galleryCarousel;
     private ViewPager galleryViewPager;
     private TextView tvGalleryCounter;
+
+    private boolean isFavorite = false;
+    private String currentActivityId;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -90,6 +103,7 @@ public class ActivityDetailFragment extends Fragment {
         tvError = view.findViewById(R.id.tvError);
         progressBar = view.findViewById(R.id.progressBar);
         btnReserve = view.findViewById(R.id.btnReserve);
+        btnFavorite = view.findViewById(R.id.btnFavorite);
         galleryCarousel = view.findViewById(R.id.galleryCarousel);
         galleryViewPager = view.findViewById(R.id.galleryViewPager);
         tvGalleryCounter = view.findViewById(R.id.tvGalleryCounter);
@@ -109,13 +123,71 @@ public class ActivityDetailFragment extends Fragment {
             Navigation.findNavController(v).navigate(R.id.action_activityDetail_to_reservationForm, bundle);
         });
 
-        String activityId = getArguments() != null
+        currentActivityId = getArguments() != null
                 ? getArguments().getString("activityId", "")
                 : "";
 
-        if (!activityId.isEmpty()) {
-            loadActivityDetail(activityId);
+        if (!currentActivityId.isEmpty()) {
+            loadActivityDetail(currentActivityId);
+            checkIfFavorite();
         }
+
+        btnFavorite.setOnClickListener(v -> toggleFavorite());
+    }
+
+    private void checkIfFavorite() {
+        favoritesApi.getFavorites().enqueue(new Callback<ApiResponse<List<Activity>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Activity>>> call, Response<ApiResponse<List<Activity>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    List<String> ids = response.body().getData().stream()
+                            .map(Activity::getId)
+                            .collect(Collectors.toList());
+                    isFavorite = ids.contains(currentActivityId);
+                    updateFavoriteUI();
+                }
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<List<Activity>>> call, Throwable t) {}
+        });
+    }
+
+    private void toggleFavorite() {
+        if (isFavorite) {
+            favoritesApi.removeFavorite(currentActivityId).enqueue(new Callback<ApiResponse<Void>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                    if (response.isSuccessful()) {
+                        isFavorite = false;
+                        updateFavoriteUI();
+                    }
+                }
+                @Override
+                public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                    Toast.makeText(getContext(), R.string.favorites_error_remove, Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            favoritesApi.addFavorite(new FavoriteRequest(currentActivityId)).enqueue(new Callback<ApiResponse<FavoriteResponse>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<FavoriteResponse>> call, Response<ApiResponse<FavoriteResponse>> response) {
+                    if (response.isSuccessful()) {
+                        isFavorite = true;
+                        updateFavoriteUI();
+                    }
+                }
+                @Override
+                public void onFailure(Call<ApiResponse<FavoriteResponse>> call, Throwable t) {
+                    Toast.makeText(getContext(), R.string.favorites_error_add, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    private void updateFavoriteUI() {
+        btnFavorite.setColorFilter(isFavorite ?
+                requireContext().getColor(R.color.price_color) :
+                requireContext().getColor(android.R.color.darker_gray));
     }
 
     private void loadActivityDetail(String activityId) {
@@ -202,9 +274,9 @@ public class ActivityDetailFragment extends Fragment {
         boolean hasUpcomingDates = hasUpcomingSchedules(activity);
         btnReserve.setEnabled(hasUpcomingDates);
         if (!hasUpcomingDates) {
-            btnReserve.setText("Sin fechas disponibles");
+            btnReserve.setText(R.string.detail_no_dates);
         } else {
-            btnReserve.setText("Reservar");
+            btnReserve.setText(R.string.detail_reserve);
         }
 
         List<String> allPhotos = new ArrayList<>();

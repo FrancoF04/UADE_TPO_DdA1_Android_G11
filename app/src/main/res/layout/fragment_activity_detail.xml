@@ -56,8 +56,7 @@
                         android:padding="12dp"
                         android:background="@drawable/pill_background"
                         android:src="@drawable/ic_favoritos"
-                        android:contentDescription="Favorito"
-                        app:tint="@color/price_color" />
+                        android:contentDescription="Favorito" />
 
                 </FrameLayout>
 
