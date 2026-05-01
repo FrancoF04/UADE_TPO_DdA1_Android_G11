@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.local.TokenManager;
@@ -21,7 +22,11 @@ import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.AuthResponse;
 import com.example.androidapp.data.model.LoginRequest;
 import com.example.androidapp.data.remote.AuthApi;
-import com.example.androidapp.data.remote.RetrofitClient;
+import com.example.androidapp.util.BiometricHelper;
+import com.example.androidapp.util.BiometricStatus;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -29,19 +34,23 @@ import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
 @AndroidEntryPoint
 public class LoginFragment extends Fragment {
 
-    @Inject
-    TokenManager tokenManager;
-    @Inject
-    AuthApi authApi;
+    private static final long DEFAULT_ACCESS_TTL_MS = 60L * 60L * 1000L;
+    private static final long DEFAULT_REFRESH_TTL_MS = 7L * 24L * 60L * 60L * 1000L;
+
+    @Inject TokenManager tokenManager;
+    @Inject AuthApi authApi;
+    @Inject BiometricHelper biometricHelper;
 
     private EditText etUsername;
     private EditText etPassword;
     private Button btnLogin;
     private ProgressBar progressBar;
     private TextView tvError;
+    private TextView tvSessionExpired;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -58,6 +67,7 @@ public class LoginFragment extends Fragment {
         btnLogin = view.findViewById(R.id.btnLogin);
         progressBar = view.findViewById(R.id.progressBar);
         tvError = view.findViewById(R.id.tvError);
+        tvSessionExpired = view.findViewById(R.id.tvSessionExpired);
 
         TextView tvOtpLink = view.findViewById(R.id.tvOtpLink);
         TextView tvRegisterLink = view.findViewById(R.id.tvRegisterLink);
@@ -69,6 +79,23 @@ public class LoginFragment extends Fragment {
 
         tvRegisterLink.setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.action_login_to_register));
+
+        boolean autoPromptBiometric = getArguments() != null && getArguments().getBoolean("autoPromptBiometric", false);
+        boolean forceUserPass = getArguments() != null && getArguments().getBoolean("forceUserPass", false);
+
+        if (forceUserPass && tvSessionExpired != null) {
+            tvSessionExpired.setVisibility(View.VISIBLE);
+        }
+
+        if (autoPromptBiometric && biometricHelper.checkAvailability() == BiometricStatus.AVAILABLE) {
+            biometricHelper.promptForAuth(
+                    requireActivity(),
+                    "Ingresar a XploreNow",
+                    "Autenticate con tu huella",
+                    this::onBiometricSuccess,
+                    (code, msg) -> { /* dejar pantalla normal visible */ }
+            );
+        }
     }
 
     private void attemptLogin(View view) {
@@ -87,8 +114,6 @@ public class LoginFragment extends Fragment {
 
         LoginRequest request = new LoginRequest(username, password);
 
-
-
         authApi.login(request).enqueue(new Callback<ApiResponse<AuthResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<AuthResponse>> call,
@@ -98,12 +123,11 @@ public class LoginFragment extends Fragment {
                 btnLogin.setEnabled(true);
 
                 if (response.isSuccessful() && response.body() != null
-                        && response.body().isSuccess()) {
-                    // Obtener token y guardarlo de forma segura
-                    String token = response.body().getData().getToken();
-                    //Ahora el token se va inyectar en el header de cada request
-                    tokenManager.saveToken(token);
-
+                        && response.body().isSuccess()
+                        && response.body().getData() != null) {
+                    AuthResponse data = response.body().getData();
+                    persistSession(data);
+                    maybeShowOptInDialog();
                     navigateToHome(view, username);
                 } else {
                     tvError.setText(R.string.error_generic);
@@ -121,6 +145,58 @@ public class LoginFragment extends Fragment {
                 Log.e("LoginFragment", "Login failed", t);
             }
         });
+    }
+
+    private void persistSession(AuthResponse data) {
+        long now = System.currentTimeMillis();
+        String accessToken = data.getToken();
+        String refreshToken = data.getRefreshToken() != null ? data.getRefreshToken() : accessToken;
+        long accessExpiresAt = parseIsoToEpoch(data.getExpiresAt(), now + DEFAULT_ACCESS_TTL_MS);
+        long refreshExpiresAt = parseIsoToEpoch(data.getRefreshExpiresAt(), now + DEFAULT_REFRESH_TTL_MS);
+        tokenManager.saveSession(accessToken, refreshToken, accessExpiresAt, refreshExpiresAt);
+    }
+
+    private void maybeShowOptInDialog() {
+        if (biometricHelper.checkAvailability() == BiometricStatus.AVAILABLE
+                && !tokenManager.isBiometricEnabled()
+                && !tokenManager.isBiometricOptInDismissed()) {
+            BiometricOptInDialog.show(requireContext(), tokenManager, () -> {});
+        }
+    }
+
+    private void onBiometricSuccess() {
+        String refresh = tokenManager.getRefreshToken();
+        if (refresh == null) return;
+
+        Map<String, String> body = new HashMap<>();
+        body.put("refreshToken", refresh);
+
+        authApi.refresh(body).enqueue(new Callback<ApiResponse<AuthResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<AuthResponse>> call,
+                                   Response<ApiResponse<AuthResponse>> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    persistSession(response.body().getData());
+                    NavHostFragment.findNavController(LoginFragment.this)
+                            .navigate(R.id.action_login_to_home);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<AuthResponse>> call, Throwable t) {
+                // dejar pantalla normal visible
+            }
+        });
+    }
+
+    private static long parseIsoToEpoch(String iso, long fallback) {
+        if (iso == null || iso.trim().isEmpty()) return fallback;
+        try {
+            return java.time.Instant.parse(iso).toEpochMilli();
+        } catch (Exception e) {
+            return fallback;
+        }
     }
 
     private void navigateToHome(View view, String username) {

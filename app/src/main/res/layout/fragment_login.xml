@@ -29,6 +29,17 @@
             android:textSize="20sp"
             android:layout_marginBottom="32dp" />
 
+        <TextView
+            android:id="@+id/tvSessionExpired"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="Tu sesión expiró, ingresá con tu usuario y contraseña"
+            android:textColor="#B91C1C"
+            android:padding="12dp"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
         <EditText
             android:id="@+id/etUsername"
             android:layout_width="match_parent"
