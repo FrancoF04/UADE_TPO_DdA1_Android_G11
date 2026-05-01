@@ -131,6 +131,15 @@
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:text="@string/profile_preferences_button" />
 
+            <Button
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:text="Cerrar sesión"
+                android:textColor="#B91C1C" />
+
         </LinearLayout>
     </ScrollView>
 

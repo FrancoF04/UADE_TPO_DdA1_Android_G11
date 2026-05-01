@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
@@ -20,6 +21,7 @@ import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.User;
 import com.example.androidapp.data.model.UserPreferencesRequest;
+import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.UserApi;
 import com.example.androidapp.util.BiometricHelper;
 import com.example.androidapp.util.BiometricStatus;
@@ -40,11 +42,13 @@ public class ProfileFragment extends Fragment {
     @Inject
     UserApi userApi;
     @Inject
+    AuthApi authApi;
+    @Inject
     TokenManager tokenManager;
     @Inject
     BiometricHelper biometricHelper;
     private TextView tvNombre, tvEmail, tvTelefono, tvBiometricSubtitle;
-    private Button btnEditarPerfil, btnPreferencias;
+    private Button btnEditarPerfil, btnPreferencias, btnLogout;
     private Switch switchBiometric;
     private User currentUser;
 
@@ -63,6 +67,7 @@ public class ProfileFragment extends Fragment {
         tvTelefono = view.findViewById(R.id.tvTelefono);
         btnEditarPerfil = view.findViewById(R.id.btnEditarPerfil);
         btnPreferencias = view.findViewById(R.id.btnPreferencias);
+        btnLogout = view.findViewById(R.id.btnLogout);
         switchBiometric = view.findViewById(R.id.switchBiometric);
         tvBiometricSubtitle = view.findViewById(R.id.tvBiometricSubtitle);
 
@@ -74,8 +79,43 @@ public class ProfileFragment extends Fragment {
             showPreferencesDialog();
         });
 
+        btnLogout.setOnClickListener(v -> confirmLogout(view));
+
         wireBiometricToggle();
         loadUserProfile();
+    }
+
+    private void confirmLogout(View view) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Cerrar sesión")
+                .setMessage("¿Querés cerrar tu sesión en este dispositivo?")
+                .setPositiveButton("Cerrar sesión", (d, w) -> performLogout(view))
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void performLogout(View view) {
+        btnLogout.setEnabled(false);
+        authApi.logout().enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                finishLogout(view);
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                finishLogout(view);
+            }
+        });
+    }
+
+    private void finishLogout(View view) {
+        tokenManager.clearAll();
+        if (!isAdded()) return;
+        NavOptions options = new NavOptions.Builder()
+                .setPopUpTo(R.id.home_nav_graph, true)
+                .build();
+        Navigation.findNavController(view).navigate(R.id.auth_nav_graph, null, options);
     }
 
     @Override
