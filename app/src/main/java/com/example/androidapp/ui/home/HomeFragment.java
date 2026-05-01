@@ -41,6 +41,8 @@ public class HomeFragment extends Fragment {
     ActivityApi api;
     @Inject
     UserApi userApi;
+    @Inject
+    TokenManager tokenManager;
     private TextView tvWelcome;
     private TextView tvEmpty;
     private ListView listView;
@@ -148,7 +150,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadWelcomeFromProfile() {
-        String token = TokenManager.getInstance(requireContext()).getToken();
+        String token = tokenManager.getToken();
         if (token == null || token.trim().isEmpty()) {
             return;
         }

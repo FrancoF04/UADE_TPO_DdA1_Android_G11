@@ -38,6 +38,8 @@ public class ProfileFragment extends Fragment {
 
     @Inject
     UserApi userApi;
+    @Inject
+    TokenManager tokenManager;
     private TextView tvNombre, tvEmail, tvTelefono;
     private Button btnEditarPerfil, btnPreferencias;
     private User currentUser;
@@ -129,7 +131,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void loadUserProfile() {
-        String rawToken = TokenManager.getInstance(requireContext()).getToken();
+        String rawToken = tokenManager.getToken();
 
         if (rawToken == null) {
             Toast.makeText(getContext(), "Sesión no válida", Toast.LENGTH_SHORT).show();
