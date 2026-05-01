@@ -69,7 +69,9 @@ public class MainActivity extends AppCompatActivity implements SessionExpiredLis
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(focus.getWindowToken(), 0);
             }
-            if (destination.getId() == R.id.homeFragment || destination.getId() == R.id.reservasFragment) {
+            if (destination.getId() == R.id.homeFragment
+                    || destination.getId() == R.id.reservasFragment
+                    || destination.getId() == R.id.newsFragment) {
                 bottomNav.setVisibility(View.VISIBLE);
                 bottomNav.post(() -> navHostView.setPadding(0, 0, 0, bottomNav.getHeight()));
             } else {
