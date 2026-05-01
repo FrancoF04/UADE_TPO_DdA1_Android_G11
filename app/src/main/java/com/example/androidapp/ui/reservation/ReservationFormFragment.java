@@ -22,11 +22,14 @@ import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
+import com.example.androidapp.data.local.OfflineBookingCache;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.model.OfflineBundle;
 import com.example.androidapp.data.model.ReservationRequest;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
+import com.example.androidapp.data.remote.BookingsApi;
 import com.example.androidapp.data.remote.UserApi;
 import com.example.androidapp.util.DateTimeUtils;
 
@@ -50,6 +53,10 @@ public class ReservationFormFragment extends Fragment {
     ActivityApi activityApi;
     @Inject
     UserApi userApi;
+    @Inject
+    BookingsApi bookingsApi;
+    @Inject
+    OfflineBookingCache offlineBookingCache;
 
     private String activityId;
 
@@ -153,6 +160,7 @@ public class ReservationFormFragment extends Fragment {
                     if (!isAdded()) return;
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(requireContext(), "Reserva guardada", Toast.LENGTH_SHORT).show();
+                        refreshOfflineCache();
 
                         NavController navController = Navigation.findNavController(requireView());
                         navController.navigate(R.id.home_nav_graph, null,
@@ -438,5 +446,23 @@ public class ReservationFormFragment extends Fragment {
         }
 
         return null;
+    }
+
+    private void refreshOfflineCache() {
+        bookingsApi.getOfflineBundle().enqueue(new Callback<ApiResponse<OfflineBundle>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<OfflineBundle>> call,
+                                   Response<ApiResponse<OfflineBundle>> response) {
+                if (response.isSuccessful() && response.body() != null
+                        && response.body().isSuccess() && response.body().getData() != null) {
+                    offlineBookingCache.save(response.body().getData());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<OfflineBundle>> call, Throwable t) {
+                // cache refresh is best-effort
+            }
+        });
     }
 }

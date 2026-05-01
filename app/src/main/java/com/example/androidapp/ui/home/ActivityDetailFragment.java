@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
+import com.example.androidapp.data.local.OfflineBookingCache;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.Schedule;
@@ -45,6 +46,8 @@ import retrofit2.Response;
 public class ActivityDetailFragment extends Fragment {
     @Inject
     ActivityApi api;
+    @Inject
+    OfflineBookingCache offlineBookingCache;
 
     private TextView tvName;
     private TextView tvDestination;
@@ -142,8 +145,13 @@ public class ActivityDetailFragment extends Fragment {
             public void onFailure(Call<ApiResponse<Activity>> call, Throwable t) {
                 if (!isAdded()) return;
                 progressBar.setVisibility(View.GONE);
-                tvError.setText(R.string.error_network);
-                tvError.setVisibility(View.VISIBLE);
+                Activity cached = offlineBookingCache.getActivityById(activityId);
+                if (cached != null) {
+                    displayActivity(cached);
+                } else {
+                    tvError.setText(R.string.error_network);
+                    tvError.setVisibility(View.VISIBLE);
+                }
                 Log.e("ActivityDetail", "Failed to load detail", t);
             }
         });
