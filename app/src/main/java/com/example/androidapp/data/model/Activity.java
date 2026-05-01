@@ -69,12 +69,41 @@ public class Activity {
     @SerializedName("featured")
     private final boolean featured;
 
+    // Campos adicionales para favoritos (pueden ser nulos)
+    @SerializedName("favoriteCreatedAt")
+    private final String favoriteCreatedAt;
+
+    @SerializedName("priceAtFavorite")
+    private final Double priceAtFavorite;
+
+    @SerializedName("spotsAtFavorite")
+    private final Integer spotsAtFavorite;
+
+    @SerializedName("priceChanged")
+    private final Boolean priceChanged;
+
+    @SerializedName("spotsChanged")
+    private final Boolean spotsChanged;
+
     public Activity(String id, String name, String destination, String category,
                     String description, String imageUrl, List<String> galleryUrls,
                     String duration, double price, String currency,
                     int availableSpots, int totalSpots, List<Schedule> schedules, List<String> date,
                     MeetingPoint meetingPoint, Guide guide, String language,
                     List<String> included, String cancellationPolicy, boolean featured) {
+        this(id, name, destination, category, description, imageUrl, galleryUrls, duration, price,
+                currency, availableSpots, totalSpots, schedules, date, meetingPoint, guide, language,
+                included, cancellationPolicy, featured, null, null, null, null, null);
+    }
+
+    public Activity(String id, String name, String destination, String category,
+                    String description, String imageUrl, List<String> galleryUrls,
+                    String duration, double price, String currency,
+                    int availableSpots, int totalSpots, List<Schedule> schedules, List<String> date,
+                    MeetingPoint meetingPoint, Guide guide, String language,
+                    List<String> included, String cancellationPolicy, boolean featured,
+                    String favoriteCreatedAt, Double priceAtFavorite, Integer spotsAtFavorite,
+                    Boolean priceChanged, Boolean spotsChanged) {
         this.id = id;
         this.name = name;
         this.destination = destination;
@@ -95,6 +124,11 @@ public class Activity {
         this.included = included;
         this.cancellationPolicy = cancellationPolicy;
         this.featured = featured;
+        this.favoriteCreatedAt = favoriteCreatedAt;
+        this.priceAtFavorite = priceAtFavorite;
+        this.spotsAtFavorite = spotsAtFavorite;
+        this.priceChanged = priceChanged;
+        this.spotsChanged = spotsChanged;
     }
 
     public String getId() { return id; }
@@ -104,11 +138,11 @@ public class Activity {
     public String getDescription() { return description; }
     public String getImageUrl() { return imageUrl; }
     public List<String> getGalleryUrls() { return galleryUrls; }
-        public String getCoverUrl() {
-            if (imageUrl != null && !imageUrl.isEmpty()) return imageUrl;
-            if (galleryUrls != null && !galleryUrls.isEmpty()) return galleryUrls.get(0);
-            return null;
-        }
+    public String getCoverUrl() {
+        if (imageUrl != null && !imageUrl.isEmpty()) return imageUrl;
+        if (galleryUrls != null && !galleryUrls.isEmpty()) return galleryUrls.get(0);
+        return null;
+    }
     public String getDuration() { return duration; }
     public double getPrice() { return price; }
     public String getCurrency() { return currency; }
@@ -122,4 +156,10 @@ public class Activity {
     public List<String> getIncluded() { return included; }
     public String getCancellationPolicy() { return cancellationPolicy; }
     public boolean isFeatured() { return featured; }
+
+    public String getFavoriteCreatedAt() { return favoriteCreatedAt; }
+    public Double getPriceAtFavorite() { return priceAtFavorite; }
+    public Integer getSpotsAtFavorite() { return spotsAtFavorite; }
+    public Boolean getPriceChanged() { return priceChanged != null && priceChanged; }
+    public Boolean getSpotsChanged() { return spotsChanged != null && spotsChanged; }
 }
