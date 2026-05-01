@@ -146,6 +146,7 @@ public class ActivityDetailFragment extends Fragment {
         favoritesApi.getFavorites(System.currentTimeMillis()).enqueue(new Callback<ApiResponse<List<Activity>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Activity>>> call, Response<ApiResponse<List<Activity>>> response) {
+                if (!isAdded()) return;
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     List<Activity> favorites = response.body().getData();
                     Activity favoriteVersion = null;
@@ -183,6 +184,7 @@ public class ActivityDetailFragment extends Fragment {
             favoritesApi.removeFavorite(currentActivityId).enqueue(new Callback<ApiResponse<Void>>() {
                 @Override
                 public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                    if (!isAdded()) return;
                     if (response.isSuccessful()) {
                         isFavorite = false;
                         viewedNovelties.remove(currentActivityId);
@@ -191,6 +193,7 @@ public class ActivityDetailFragment extends Fragment {
                 }
                 @Override
                 public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                    if (!isAdded()) return;
                     Toast.makeText(getContext(), R.string.favorites_error_remove, Toast.LENGTH_SHORT).show();
                 }
             });
@@ -198,6 +201,7 @@ public class ActivityDetailFragment extends Fragment {
             favoritesApi.addFavorite(new FavoriteRequest(currentActivityId)).enqueue(new Callback<ApiResponse<FavoriteResponse>>() {
                 @Override
                 public void onResponse(Call<ApiResponse<FavoriteResponse>> call, Response<ApiResponse<FavoriteResponse>> response) {
+                    if (!isAdded()) return;
                     if (response.isSuccessful()) {
                         isFavorite = true;
                         updateFavoriteUI();
@@ -205,6 +209,7 @@ public class ActivityDetailFragment extends Fragment {
                 }
                 @Override
                 public void onFailure(Call<ApiResponse<FavoriteResponse>> call, Throwable t) {
+                    if (!isAdded()) return;
                     Toast.makeText(getContext(), R.string.favorites_error_add, Toast.LENGTH_SHORT).show();
                 }
             });

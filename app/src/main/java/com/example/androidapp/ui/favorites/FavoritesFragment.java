@@ -102,6 +102,7 @@ public class FavoritesFragment extends Fragment implements FavoritosAdapter.OnFa
         favoritesApi.removeFavorite(activity.getId()).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                if (!isAdded()) return;
                 if (response.isSuccessful()) {
                     loadFavorites();
                 }
@@ -109,6 +110,7 @@ public class FavoritesFragment extends Fragment implements FavoritosAdapter.OnFa
 
             @Override
             public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                if (!isAdded()) return;
                 Toast.makeText(getContext(), "Error al eliminar", Toast.LENGTH_SHORT).show();
             }
         });

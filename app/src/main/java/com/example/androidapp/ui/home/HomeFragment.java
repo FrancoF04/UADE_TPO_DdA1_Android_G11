@@ -121,6 +121,7 @@ public class HomeFragment extends Fragment {
         favoritesApi.getFavorites(System.currentTimeMillis()).enqueue(new Callback<ApiResponse<List<Activity>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Activity>>> call, Response<ApiResponse<List<Activity>>> response) {
+                if (!isAdded()) return;
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     favoriteIds = response.body().getData().stream()
                             .map(Activity::getId)
@@ -154,6 +155,7 @@ public class HomeFragment extends Fragment {
         favoritesApi.addFavorite(new FavoriteRequest(activityId)).enqueue(new Callback<ApiResponse<FavoriteResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<FavoriteResponse>> call, Response<ApiResponse<FavoriteResponse>> response) {
+                if (!isAdded()) return;
                 if (response.isSuccessful()) {
                     loadFavorites();
                 }
@@ -161,6 +163,7 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onFailure(Call<ApiResponse<FavoriteResponse>> call, Throwable t) {
+                if (!isAdded()) return;
                 Toast.makeText(getContext(), "Error al agregar a favoritos", Toast.LENGTH_SHORT).show();
             }
         });
@@ -170,12 +173,14 @@ public class HomeFragment extends Fragment {
         favoritesApi.removeFavorite(activityId).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                if (!isAdded()) return;
                 if (response.isSuccessful()) {
                     loadFavorites();
                 }
             }
             @Override
             public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                if (!isAdded()) return;
                 Toast.makeText(getContext(), "Error al eliminar favorito", Toast.LENGTH_SHORT).show();
             }
         });
