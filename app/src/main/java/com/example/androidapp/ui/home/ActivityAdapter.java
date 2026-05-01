@@ -33,6 +33,13 @@ public class ActivityAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public void append(List<Activity> moreActivities) {
+        if (moreActivities != null && !moreActivities.isEmpty()) {
+            activities.addAll(moreActivities);
+            notifyDataSetChanged();
+        }
+    }
+
     @Override
     public int getCount() {
         return activities.size();
