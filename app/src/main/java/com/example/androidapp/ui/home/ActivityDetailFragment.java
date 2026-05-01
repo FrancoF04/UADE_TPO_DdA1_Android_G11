@@ -1,39 +1,36 @@
 package com.example.androidapp.ui.home;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Button;
+
+import androidx.viewpager.widget.ViewPager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
-import com.bumptech.glide.Glide;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
-import com.example.androidapp.data.model.MeetingPoint;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
 import com.example.androidapp.util.DateTimeUtils;
-import com.example.androidapp.util.MapIntentLauncher;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,11 +45,7 @@ import retrofit2.Response;
 public class ActivityDetailFragment extends Fragment {
     @Inject
     ActivityApi api;
-    @Inject
-    MapIntentLauncher mapIntentLauncher;
 
-
-    private ImageView ivImage;
     private TextView tvName;
     private TextView tvDestination;
     private TextView tvCategory;
@@ -66,11 +59,11 @@ public class ActivityDetailFragment extends Fragment {
     private TextView tvIncluded;
     private TextView tvCancellation;
     private TextView tvError;
-    private TextView tvGalleryHeader;
-    private LinearLayout galleryContainer;
     private ProgressBar progressBar;
     private Button btnReserve;
-    private Button btnOpenMap;
+    private FrameLayout galleryCarousel;
+    private ViewPager galleryViewPager;
+    private TextView tvGalleryCounter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -82,7 +75,6 @@ public class ActivityDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ivImage = view.findViewById(R.id.ivImage);
         tvName = view.findViewById(R.id.tvName);
         tvDestination = view.findViewById(R.id.tvDestination);
         tvCategory = view.findViewById(R.id.tvCategory);
@@ -96,11 +88,11 @@ public class ActivityDetailFragment extends Fragment {
         tvIncluded = view.findViewById(R.id.tvIncluded);
         tvCancellation = view.findViewById(R.id.tvCancellation);
         tvError = view.findViewById(R.id.tvError);
-        tvGalleryHeader = view.findViewById(R.id.tvGalleryHeader);
-        galleryContainer = view.findViewById(R.id.galleryContainer);
         progressBar = view.findViewById(R.id.progressBar);
         btnReserve = view.findViewById(R.id.btnReserve);
-        btnOpenMap = view.findViewById(R.id.btnOpenMap);
+        galleryCarousel = view.findViewById(R.id.galleryCarousel);
+        galleryViewPager = view.findViewById(R.id.galleryViewPager);
+        tvGalleryCounter = view.findViewById(R.id.tvGalleryCounter);
 
         boolean showReserve = getArguments() == null
                 || getArguments().getBoolean("showReserveButton", true);
@@ -109,7 +101,6 @@ public class ActivityDetailFragment extends Fragment {
         btnReserve.setVisibility(showReserve ? View.VISIBLE : View.GONE);
         tvSpots.setVisibility(showSpots ? View.VISIBLE : View.GONE);
 
-        // Click en boton reservar para navegar al formulario de reserva
         btnReserve.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
             bundle.putString("activityId", getArguments() != null
@@ -118,7 +109,6 @@ public class ActivityDetailFragment extends Fragment {
             Navigation.findNavController(v).navigate(R.id.action_activityDetail_to_reservationForm, bundle);
         });
 
-        // Leer el argumento activityId que viene del HomeFragment via Bundle
         String activityId = getArguments() != null
                 ? getArguments().getString("activityId", "")
                 : "";
@@ -131,8 +121,6 @@ public class ActivityDetailFragment extends Fragment {
     private void loadActivityDetail(String activityId) {
         progressBar.setVisibility(View.VISIBLE);
         tvError.setVisibility(View.GONE);
-
-
 
         api.getActivityById(activityId).enqueue(new Callback<ApiResponse<Activity>>() {
             @Override
@@ -174,12 +162,21 @@ public class ActivityDetailFragment extends Fragment {
             tvPrice.setText(getString(R.string.price_format, activity.getPrice()));
         }
 
-        // Mostrar cupos de la fecha más reciente si la info viene en las fechas, sino fallback a availableSpots
         int spotsToShow = getSpotsForNextAvailableDate(activity);
         tvSpots.setText(getString(R.string.detail_spots, spotsToShow));
         tvDescription.setText(activity.getDescription());
         if (activity.getMeetingPoint() != null) {
             tvMeetingPoint.setText(activity.getMeetingPoint().toDisplayString());
+            double lat = activity.getMeetingPoint().getLatitude();
+            double lng = activity.getMeetingPoint().getLongitude();
+            if (lat != 0 || lng != 0) {
+                View mapContainer = requireView().findViewById(R.id.mapContainer);
+                mapContainer.setVisibility(View.VISIBLE);
+                getChildFragmentManager().beginTransaction()
+                        .replace(R.id.mapContainer, MapFragment.newInstance(
+                                lat, lng, activity.getMeetingPoint().getAddress(), 15.0f))
+                        .commitAllowingStateLoss();
+            }
         }
 
         if (activity.getGuide() != null) {
@@ -188,7 +185,6 @@ public class ActivityDetailFragment extends Fragment {
             tvGuide.setText(guideText);
         }
 
-        // Mostrar lista de "que incluye" como texto con viñetas
         List<String> included = activity.getIncluded();
         if (included != null && !included.isEmpty()) {
             StringBuilder sb = new StringBuilder();
@@ -198,7 +194,6 @@ public class ActivityDetailFragment extends Fragment {
             tvIncluded.setText(sb.toString().trim());
         }
 
-        // Mostrar politica de cancelacion
         String cancellation = activity.getCancellationPolicy();
         if (cancellation != null && !cancellation.isEmpty()) {
             tvCancellation.setText(cancellation);
@@ -212,70 +207,26 @@ public class ActivityDetailFragment extends Fragment {
             btnReserve.setText("Reservar");
         }
 
-        Glide.with(this)
-                .load(activity.getImageUrl())
-                .placeholder(R.drawable.ic_placeholder_activity)
-                .error(R.drawable.ic_placeholder_activity)
-                .centerCrop()
-                .into(ivImage);
-
-        renderGallery(activity.getGalleryUrls());
-        wireMapButton(activity.getMeetingPoint());
-    }
-
-    private void renderGallery(java.util.List<String> gallery) {
-        galleryContainer.removeAllViews();
-        if (gallery == null || gallery.isEmpty()) {
-            tvGalleryHeader.setVisibility(View.GONE);
-            return;
+        List<String> allPhotos = new ArrayList<>();
+        if (activity.getImageUrl() != null && !activity.getImageUrl().isEmpty()) {
+            allPhotos.add(activity.getImageUrl());
         }
-
-        tvGalleryHeader.setVisibility(View.VISIBLE);
-        int marginPx = (int) (8 * getResources().getDisplayMetrics().density);
-        int heightPx = (int) (220 * getResources().getDisplayMetrics().density);
-
-        for (String url : gallery) {
-            ImageView iv = new ImageView(requireContext());
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    heightPx
-            );
-            params.topMargin = marginPx;
-            iv.setLayoutParams(params);
-            iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            iv.setBackgroundResource(R.drawable.ic_placeholder_activity);
-
-            Glide.with(this)
-                    .load(url)
-                    .placeholder(R.drawable.ic_placeholder_activity)
-                    .error(R.drawable.ic_placeholder_activity)
-                    .centerCrop()
-                    .into(iv);
-
-            iv.setOnClickListener(v -> {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
-                    startActivity(intent);
-                }
-            });
-
-            galleryContainer.addView(iv);
+        List<String> galleryUrls = activity.getGalleryUrls();
+        if (galleryUrls != null) {
+            allPhotos.addAll(galleryUrls);
         }
-    }
-
-    private void wireMapButton(MeetingPoint mp) {
-        if (mp == null || (mp.getLatitude() == 0 && mp.getLongitude() == 0)) {
-            btnOpenMap.setVisibility(View.GONE);
-            btnOpenMap.setOnClickListener(null);
-            return;
+        int total = allPhotos.size();
+        tvGalleryCounter.setVisibility(total > 1 ? View.VISIBLE : View.GONE);
+        if (total > 1) {
+            tvGalleryCounter.setText("1 / " + total);
         }
-        btnOpenMap.setVisibility(View.VISIBLE);
-        btnOpenMap.setOnClickListener(v -> mapIntentLauncher.openMap(
-                requireContext(),
-                mp.getLatitude(),
-                mp.getLongitude(),
-                mp.getAddress()
-        ));
+        galleryViewPager.setAdapter(new GalleryPagerAdapter(allPhotos));
+        galleryViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                tvGalleryCounter.setText((position + 1) + " / " + total);
+            }
+        });
     }
 
     private int getSpotsForNextAvailableDate(Activity activity) {
@@ -376,14 +327,6 @@ public class ActivityDetailFragment extends Fragment {
             return parseDateTime(firstDate).isBefore(parseDateTime(secondDate));
         } catch (RuntimeException ignored) {
             return firstDate.compareTo(secondDate) < 0;
-        }
-    }
-
-    private boolean isAfter(String firstDate, String secondDate) {
-        try {
-            return parseDateTime(firstDate).isAfter(parseDateTime(secondDate));
-        } catch (RuntimeException ignored) {
-            return firstDate.compareTo(secondDate) > 0;
         }
     }
 

@@ -10,9 +10,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Reservation;
+import com.example.androidapp.util.ImageLoader;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -85,12 +85,7 @@ public class ReservationAdapter extends BaseAdapter {
         }
 
         Reservation reservation = getItem(position);
-        Glide.with(convertView)
-                .load(reservation.getImageUrl())
-                .placeholder(R.drawable.ic_placeholder_activity)
-                .error(R.drawable.ic_placeholder_activity)
-                .centerCrop()
-                .into(holder.ivActivityImage);
+        ImageLoader.load(holder.ivActivityImage, reservation.getActivityImageUrl());
         holder.tvActivityName.setText(String.format(reservation.getActivityName()));
 
         String scheduleText = reservation.getSelectedDate();
@@ -111,8 +106,8 @@ public class ReservationAdapter extends BaseAdapter {
         holder.tvStatus.setText(String.format("Estado: %s", reservation.getStatus()));
         holder.tvQuantity.setText(String.format("Cantidad: %d", reservation.getQuantity()));
 
-        // Mostrar botón cancelar solo para reservas activas (no canceladas y fecha futura)
-        boolean isActive = !isCancelled(reservation.getStatus()) && !isPast(reservation.getSelectedDate());
+        // Mostrar botón cancelar solo para reservas activas (estado activo y fecha futura)
+        boolean isActive = isActiveStatus(reservation.getStatus()) && !isPast(reservation.getSelectedDate());
         if (isActive) {
             holder.btnCancelar.setVisibility(View.VISIBLE);
             holder.btnCancelar.setOnClickListener(v -> {
@@ -132,9 +127,12 @@ public class ReservationAdapter extends BaseAdapter {
         return convertView;
     }
 
-    private boolean isCancelled(String status) {
-        if (status == null) return false;
-        return status.trim().toLowerCase().contains("cancel");
+    private boolean isActiveStatus(String status) {
+        if (status == null) {
+            return false;
+        }
+        String normalized = status.trim().toLowerCase();
+        return "confirmed".equals(normalized) || "active".equals(normalized);
     }
 
     private boolean isPast(String selectedDate) {

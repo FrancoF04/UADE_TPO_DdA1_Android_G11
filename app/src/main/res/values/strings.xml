@@ -56,6 +56,7 @@
     <string name="search_empty">No se encontraron actividades</string>
 
     <!-- Detail -->
+    <string name="detail_gallery">Galería de fotos</string>
     <string name="detail_description">Descripcion</string>
     <string name="detail_included">Que incluye</string>
     <string name="detail_meeting_point">Punto de encuentro</string>
@@ -113,4 +114,6 @@
     <string name="historial_destino">Destino: %1$s</string>
     <string name="historial_guia">Guía: %1$s</string>
     <string name="historial_duracion">Duración: %1$s</string>
+    <string name="c_mo_llegar">Cómo llegar</string>
+    <string name="navegar">Navegar</string>
 </resources>

@@ -66,4 +66,5 @@ dependencies {
     implementation(libs.glide)
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation(libs.kotlinx.serialization.core)
+    implementation(libs.osmdroid.android)
 }
