@@ -14,7 +14,12 @@ public class UserPreferencesRequest {
 
     public UserPreferencesRequest(List<String> categories) {
         this.categories = categories;
-        this.destinations = new ArrayList<>(); // Por ahora mandamos destinos vacío
+        this.destinations = new ArrayList<>();
+    }
+
+    public UserPreferencesRequest(List<String> categories, List<String> destinations) {
+        this.categories = categories != null ? categories : new ArrayList<>();
+        this.destinations = destinations != null ? destinations : new ArrayList<>();
     }
 
     public List<String> getCategories() {

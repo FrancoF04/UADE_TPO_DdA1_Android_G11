@@ -20,7 +20,7 @@ import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.RegisterRequest;
 import com.example.androidapp.data.model.User;
 import com.example.androidapp.data.remote.AuthApi;
-import com.example.androidapp.data.remote.RetrofitClient;
+import com.example.androidapp.util.ApiErrorParser;
 
 import javax.inject.Inject;
 
@@ -115,11 +115,7 @@ public class RegisterFragment extends Fragment {
                             .setCancelable(false)
                             .show();
                 } else {
-                    String errorMsg = "Error desconocido";
-                    if (response.body() != null && response.body().getError() != null) {
-                        errorMsg = response.body().getError();
-                    }
-                    tvError.setText(errorMsg);
+                    tvError.setText(ApiErrorParser.extractMessage(response));
                     tvError.setVisibility(View.VISIBLE);
                 }
             }

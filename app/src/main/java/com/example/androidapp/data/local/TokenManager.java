@@ -15,8 +15,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext;
 @Singleton
 public class TokenManager {
     private static final String PREF_NAME = "secure_user_prefs";
+
     private static final String KEY_AUTH_TOKEN = "auth_token";
-    private static TokenManager instance;
+    private static final String KEY_REFRESH_TOKEN = "refresh_token";
+    private static final String KEY_ACCESS_EXPIRES_AT = "access_expires_at";
+    private static final String KEY_REFRESH_EXPIRES_AT = "refresh_expires_at";
+    private static final String KEY_BIOMETRIC_ENABLED = "biometric_enabled";
+    private static final String KEY_BIOMETRIC_OPT_IN_DISMISSED = "biometric_opt_in_dismissed";
+
     private SharedPreferences sharedPreferences;
 
     @Inject
@@ -35,28 +41,86 @@ public class TokenManager {
             );
         } catch (GeneralSecurityException | IOException e) {
             e.printStackTrace();
-            // Fallback to regular SharedPreferences if encryption fails (optional, but safer for the app not to crash)
-            //TODO: chequear esto despues si es neceario, y el resto de este archivo, ver si separar lo de encrypted en un fragment aparte como en el repositorio
             sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         }
     }
 
-    public static synchronized TokenManager getInstance(Context context) {
-        if (instance == null) {
-            instance = new TokenManager(context.getApplicationContext());
-        }
-        return instance;
-    }
+    // --- Tokens ---
 
-    public void saveToken(String token) {
-        sharedPreferences.edit().putString(KEY_AUTH_TOKEN, token).apply();
+    public void saveSession(String accessToken,
+                            String refreshToken,
+                            long accessExpiresAtEpochMs,
+                            long refreshExpiresAtEpochMs) {
+        sharedPreferences.edit()
+                .putString(KEY_AUTH_TOKEN, accessToken)
+                .putString(KEY_REFRESH_TOKEN, refreshToken)
+                .putLong(KEY_ACCESS_EXPIRES_AT, accessExpiresAtEpochMs)
+                .putLong(KEY_REFRESH_EXPIRES_AT, refreshExpiresAtEpochMs)
+                .apply();
     }
 
     public String getToken() {
         return sharedPreferences.getString(KEY_AUTH_TOKEN, null);
     }
 
+    public String getRefreshToken() {
+        return sharedPreferences.getString(KEY_REFRESH_TOKEN, null);
+    }
+
+    public long getAccessExpiresAt() {
+        return sharedPreferences.getLong(KEY_ACCESS_EXPIRES_AT, 0L);
+    }
+
+    public long getRefreshExpiresAt() {
+        return sharedPreferences.getLong(KEY_REFRESH_EXPIRES_AT, 0L);
+    }
+
+    public boolean isAccessTokenValid() {
+        String token = getToken();
+        return token != null && System.currentTimeMillis() < getAccessExpiresAt();
+    }
+
+    public boolean isRefreshTokenValid() {
+        String token = getRefreshToken();
+        return token != null && System.currentTimeMillis() < getRefreshExpiresAt();
+    }
+
+    public void clearSession() {
+        sharedPreferences.edit()
+                .remove(KEY_AUTH_TOKEN)
+                .remove(KEY_REFRESH_TOKEN)
+                .remove(KEY_ACCESS_EXPIRES_AT)
+                .remove(KEY_REFRESH_EXPIRES_AT)
+                .apply();
+    }
+
+    public void clearAll() {
+        sharedPreferences.edit().clear().apply();
+    }
+
+    public void saveToken(String token) {
+        sharedPreferences.edit().putString(KEY_AUTH_TOKEN, token).apply();
+    }
+
     public void clearToken() {
         sharedPreferences.edit().remove(KEY_AUTH_TOKEN).apply();
+    }
+
+    // --- Biometric flags ---
+
+    public boolean isBiometricEnabled() {
+        return sharedPreferences.getBoolean(KEY_BIOMETRIC_ENABLED, false);
+    }
+
+    public void setBiometricEnabled(boolean enabled) {
+        sharedPreferences.edit().putBoolean(KEY_BIOMETRIC_ENABLED, enabled).apply();
+    }
+
+    public boolean isBiometricOptInDismissed() {
+        return sharedPreferences.getBoolean(KEY_BIOMETRIC_OPT_IN_DISMISSED, false);
+    }
+
+    public void setBiometricOptInDismissed(boolean dismissed) {
+        sharedPreferences.edit().putBoolean(KEY_BIOMETRIC_OPT_IN_DISMISSED, dismissed).apply();
     }
 }

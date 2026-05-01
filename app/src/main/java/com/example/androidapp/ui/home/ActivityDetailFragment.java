@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Button;
@@ -25,13 +24,13 @@ import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.Schedule;
 import com.example.androidapp.data.remote.ActivityApi;
 import com.example.androidapp.util.DateTimeUtils;
-import com.example.androidapp.util.ImageLoader;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,7 +45,6 @@ import retrofit2.Response;
 public class ActivityDetailFragment extends Fragment {
     @Inject
     ActivityApi api;
-
 
     private TextView tvName;
     private TextView tvDestination;
@@ -103,7 +101,6 @@ public class ActivityDetailFragment extends Fragment {
         btnReserve.setVisibility(showReserve ? View.VISIBLE : View.GONE);
         tvSpots.setVisibility(showSpots ? View.VISIBLE : View.GONE);
 
-        // Click en boton reservar para navegar al formulario de reserva
         btnReserve.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
             bundle.putString("activityId", getArguments() != null
@@ -112,7 +109,6 @@ public class ActivityDetailFragment extends Fragment {
             Navigation.findNavController(v).navigate(R.id.action_activityDetail_to_reservationForm, bundle);
         });
 
-        // Leer el argumento activityId que viene del HomeFragment via Bundle
         String activityId = getArguments() != null
                 ? getArguments().getString("activityId", "")
                 : "";
@@ -125,8 +121,6 @@ public class ActivityDetailFragment extends Fragment {
     private void loadActivityDetail(String activityId) {
         progressBar.setVisibility(View.VISIBLE);
         tvError.setVisibility(View.GONE);
-
-
 
         api.getActivityById(activityId).enqueue(new Callback<ApiResponse<Activity>>() {
             @Override
@@ -168,7 +162,6 @@ public class ActivityDetailFragment extends Fragment {
             tvPrice.setText(getString(R.string.price_format, activity.getPrice()));
         }
 
-        // Mostrar cupos de la fecha más reciente si la info viene en las fechas, sino fallback a availableSpots
         int spotsToShow = getSpotsForNextAvailableDate(activity);
         tvSpots.setText(getString(R.string.detail_spots, spotsToShow));
         tvDescription.setText(activity.getDescription());
@@ -192,7 +185,6 @@ public class ActivityDetailFragment extends Fragment {
             tvGuide.setText(guideText);
         }
 
-        // Mostrar lista de "que incluye" como texto con viñetas
         List<String> included = activity.getIncluded();
         if (included != null && !included.isEmpty()) {
             StringBuilder sb = new StringBuilder();
@@ -202,7 +194,6 @@ public class ActivityDetailFragment extends Fragment {
             tvIncluded.setText(sb.toString().trim());
         }
 
-        // Mostrar politica de cancelacion
         String cancellation = activity.getCancellationPolicy();
         if (cancellation != null && !cancellation.isEmpty()) {
             tvCancellation.setText(cancellation);
@@ -216,8 +207,7 @@ public class ActivityDetailFragment extends Fragment {
             btnReserve.setText("Reservar");
         }
 
-        // Carrusel unificado: imagen principal + galería
-        List<String> allPhotos = new java.util.ArrayList<>();
+        List<String> allPhotos = new ArrayList<>();
         if (activity.getImageUrl() != null && !activity.getImageUrl().isEmpty()) {
             allPhotos.add(activity.getImageUrl());
         }
@@ -225,14 +215,13 @@ public class ActivityDetailFragment extends Fragment {
         if (galleryUrls != null) {
             allPhotos.addAll(galleryUrls);
         }
-        // Siempre setear adapter — si allPhotos está vacío, el adapter muestra 1 página con placeholder
         int total = allPhotos.size();
         tvGalleryCounter.setVisibility(total > 1 ? View.VISIBLE : View.GONE);
         if (total > 1) {
             tvGalleryCounter.setText("1 / " + total);
         }
         galleryViewPager.setAdapter(new GalleryPagerAdapter(allPhotos));
-        galleryViewPager.addOnPageChangeListener(new androidx.viewpager.widget.ViewPager.SimpleOnPageChangeListener() {
+        galleryViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
                 tvGalleryCounter.setText((position + 1) + " / " + total);
@@ -338,14 +327,6 @@ public class ActivityDetailFragment extends Fragment {
             return parseDateTime(firstDate).isBefore(parseDateTime(secondDate));
         } catch (RuntimeException ignored) {
             return firstDate.compareTo(secondDate) < 0;
-        }
-    }
-
-    private boolean isAfter(String firstDate, String secondDate) {
-        try {
-            return parseDateTime(firstDate).isAfter(parseDateTime(secondDate));
-        } catch (RuntimeException ignored) {
-            return firstDate.compareTo(secondDate) > 0;
         }
     }
 

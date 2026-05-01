@@ -15,8 +15,6 @@ import com.example.androidapp.util.ImageLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-import dagger.hilt.android.AndroidEntryPoint;
-
 public class ActivityAdapter extends BaseAdapter {
 
     private final Context context;
@@ -33,6 +31,13 @@ public class ActivityAdapter extends BaseAdapter {
             activities.addAll(newActivities);
         }
         notifyDataSetChanged();
+    }
+
+    public void append(List<Activity> moreActivities) {
+        if (moreActivities != null && !moreActivities.isEmpty()) {
+            activities.addAll(moreActivities);
+            notifyDataSetChanged();
+        }
     }
 
     @Override

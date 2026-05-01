@@ -9,6 +9,16 @@
         android:name="com.example.androidapp.ui.auth.LoginFragment"
         android:label="Login">
 
+        <argument
+            android:name="autoPromptBiometric"
+            app:argType="boolean"
+            android:defaultValue="false" />
+
+        <argument
+            android:name="forceUserPass"
+            app:argType="boolean"
+            android:defaultValue="false" />
+
         <action
             android:id="@+id/action_login_to_home"
             app:destination="@id/home_nav_graph"

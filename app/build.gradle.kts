@@ -62,4 +62,9 @@ dependencies {
     implementation(libs.hilt.android)
     annotationProcessor(libs.hilt.compiler)   // Java usa annotationProcessor (no kapt)
     implementation(libs.okhttp)
+    implementation(libs.biometric)
+    implementation(libs.glide)
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    implementation(libs.kotlinx.serialization.core)
+    implementation(libs.osmdroid.android)
 }

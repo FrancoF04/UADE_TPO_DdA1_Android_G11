@@ -1,31 +1,29 @@
 package com.example.androidapp.ui.home;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.User;
-import com.example.androidapp.data.model.UserPreferencesRequest;
-import com.example.androidapp.data.remote.RetrofitClient;
+import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.UserApi;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.example.androidapp.util.BiometricHelper;
+import com.example.androidapp.util.BiometricStatus;
 
 import javax.inject.Inject;
 
@@ -38,8 +36,15 @@ public class ProfileFragment extends Fragment {
 
     @Inject
     UserApi userApi;
-    private TextView tvNombre, tvEmail, tvTelefono;
-    private Button btnEditarPerfil, btnPreferencias;
+    @Inject
+    AuthApi authApi;
+    @Inject
+    TokenManager tokenManager;
+    @Inject
+    BiometricHelper biometricHelper;
+    private TextView tvNombre, tvEmail, tvTelefono, tvBiometricSubtitle;
+    private Button btnEditarPerfil, btnPreferencias, btnLogout;
+    private Switch switchBiometric;
     private User currentUser;
 
     @Override
@@ -57,79 +62,120 @@ public class ProfileFragment extends Fragment {
         tvTelefono = view.findViewById(R.id.tvTelefono);
         btnEditarPerfil = view.findViewById(R.id.btnEditarPerfil);
         btnPreferencias = view.findViewById(R.id.btnPreferencias);
+        btnLogout = view.findViewById(R.id.btnLogout);
+        switchBiometric = view.findViewById(R.id.switchBiometric);
+        tvBiometricSubtitle = view.findViewById(R.id.tvBiometricSubtitle);
 
         btnEditarPerfil.setOnClickListener(v -> {
             Navigation.findNavController(view).navigate(R.id.action_profile_to_editProfile);
         });
 
-        btnPreferencias.setOnClickListener(v -> {
-            showPreferencesDialog();
-        });
+        btnPreferencias.setOnClickListener(v ->
+                Navigation.findNavController(view).navigate(R.id.preferencesFragment));
 
+        btnLogout.setOnClickListener(v -> confirmLogout(view));
+
+        wireBiometricToggle();
         loadUserProfile();
     }
 
-    private void showPreferencesDialog() {
-        String[] items = getResources().getStringArray(R.array.travel_categories);
-        boolean[] checkedItems = new boolean[items.length];
-
-        // Marcar los que ya tiene el usuario
-        if (currentUser != null && currentUser.getPreferences() != null && currentUser.getPreferences().getCategories() != null) {
-            List<String> userCategories = currentUser.getPreferences().getCategories();
-            for (int i = 0; i < items.length; i++) {
-                for (String userCat : userCategories) {
-                    if (userCat.equalsIgnoreCase(items[i])) {
-                        checkedItems[i] = true;
-                        break;
-                    }
-                }
-            }
-        }
-        
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Selecciona tus intereses")
-                .setMultiChoiceItems(items, checkedItems, (dialog, which, isChecked) -> {
-                    checkedItems[which] = isChecked;
-                })
-                .setPositiveButton("Guardar", (dialog, which) -> {
-                    List<String> selected = new ArrayList<>();
-                    for (int i = 0; i < items.length; i++) {
-                        if (checkedItems[i]) {
-                            selected.add(items[i].toLowerCase());
-                        }
-                    }
-                    savePreferences(selected);
-                })
+    private void confirmLogout(View view) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Cerrar sesión")
+                .setMessage("¿Querés cerrar tu sesión en este dispositivo?")
+                .setPositiveButton("Cerrar sesión", (d, w) -> performLogout(view))
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
 
-    private void savePreferences(List<String> categories) {
-
-        UserPreferencesRequest request = new UserPreferencesRequest(categories);
-
-
-        userApi.updatePreferences(request).enqueue(new Callback<ApiResponse<User.UserResponse>>() {
+    private void performLogout(View view) {
+        btnLogout.setEnabled(false);
+        authApi.logout().enqueue(new Callback<ApiResponse<Object>>() {
             @Override
-            public void onResponse(Call<ApiResponse<User.UserResponse>> call, Response<ApiResponse<User.UserResponse>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    // Actualizar el usuario local con la respuesta del servidor
-                    currentUser = response.body().getData().getUser();
-                    Toast.makeText(getContext(), "Preferencias actualizadas", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "Error al guardar preferencias", Toast.LENGTH_SHORT).show();
-                }
+            public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                finishLogout(view);
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<User.UserResponse>> call, Throwable t) {
-                Toast.makeText(getContext(), "Error de red", Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                finishLogout(view);
             }
         });
     }
 
+    private void finishLogout(View view) {
+        tokenManager.clearAll();
+        if (!isAdded()) return;
+        NavOptions options = new NavOptions.Builder()
+                .setPopUpTo(R.id.home_nav_graph, true)
+                .build();
+        Navigation.findNavController(view).navigate(R.id.auth_nav_graph, null, options);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (switchBiometric != null) wireBiometricToggle();
+    }
+
+    private void wireBiometricToggle() {
+        BiometricStatus status = biometricHelper.checkAvailability();
+
+        switch (status) {
+            case AVAILABLE: {
+                switchBiometric.setEnabled(true);
+                switchBiometric.setOnCheckedChangeListener(null);
+                switchBiometric.setChecked(tokenManager.isBiometricEnabled());
+                tvBiometricSubtitle.setText("Activá la biometría para tu próximo ingreso");
+                switchBiometric.setOnCheckedChangeListener((v, isChecked) -> {
+                    if (isChecked) {
+                        biometricHelper.promptForAuth(
+                                requireActivity(),
+                                "Activar huella",
+                                "Confirmá tu huella para activar el ingreso biométrico",
+                                () -> tokenManager.setBiometricEnabled(true),
+                                (code, msg) -> wireBiometricToggle()
+                        );
+                    } else {
+                        tokenManager.setBiometricEnabled(false);
+                    }
+                });
+                break;
+            }
+            case NOT_ENROLLED: {
+                switchBiometric.setEnabled(true);
+                switchBiometric.setOnCheckedChangeListener(null);
+                switchBiometric.setChecked(false);
+                tvBiometricSubtitle.setText("Necesitás enrolar tu huella en el sistema");
+                switchBiometric.setOnCheckedChangeListener((v, isChecked) -> {
+                    if (isChecked) {
+                        switchBiometric.setOnCheckedChangeListener(null);
+                        switchBiometric.setChecked(false);
+                        new AlertDialog.Builder(requireContext())
+                                .setTitle("Enrolá tu huella")
+                                .setMessage("Para usar biometría tenés que enrolar tu huella en Configuración. ¿Vamos ahora?")
+                                .setPositiveButton("Ir", (d, w) -> startActivity(biometricHelper.enrollIntent()))
+                                .setNegativeButton("Cancelar", null)
+                                .show();
+                        wireBiometricToggle();
+                    }
+                });
+                break;
+            }
+            case NO_HARDWARE:
+            case UNAVAILABLE:
+            default: {
+                switchBiometric.setEnabled(false);
+                switchBiometric.setOnCheckedChangeListener(null);
+                switchBiometric.setChecked(false);
+                tvBiometricSubtitle.setText("Tu dispositivo no soporta biometría");
+                break;
+            }
+        }
+    }
+
     private void loadUserProfile() {
-        String rawToken = TokenManager.getInstance(requireContext()).getToken();
+        String rawToken = tokenManager.getToken();
 
         if (rawToken == null) {
             Toast.makeText(getContext(), "Sesión no válida", Toast.LENGTH_SHORT).show();

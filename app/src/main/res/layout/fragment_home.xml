@@ -26,19 +26,69 @@
             android:layout_marginBottom="12dp">
 
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/home_activities_title"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+        </LinearLayout>
 
-            <Button
-                android:id="@+id/btnSearch"
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/home_search_button" />
-        </LinearLayout>
+                android:orientation="horizontal"
+                android:padding="4dp">
+                <Button
+                    android:id="@+id/chipFeatured"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Destacadas"
+                    android:textSize="12sp"
+                    android:layout_marginEnd="6dp"/>
+                <Button
+                    android:id="@+id/chipForYou"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Para vos"
+                    android:textSize="12sp"
+                    android:layout_marginEnd="6dp"/>
+                <Button
+                    android:id="@+id/chipAll"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Todas"
+                    android:textSize="12sp"
+                    android:layout_marginEnd="6dp"/>
+                <Button
+                    android:id="@+id/chipFilters"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Filtros: fecha, precio…"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/chip_background_active"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:layout_marginStart="6dp"/>
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <TextView
+            android:id="@+id/tvEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:gravity="center"
+            android:padding="24dp"
+            android:textColor="#666666"/>
 
         <ListView
             android:id="@+id/listView"
@@ -59,14 +109,6 @@
             android:visibility="gone" />
 
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btnPerfil"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Perfil"
-        android:layout_gravity="top|end"
-        android:layout_margin="16dp" />
 
     <ProgressBar
         android:id="@+id/progressBar"
