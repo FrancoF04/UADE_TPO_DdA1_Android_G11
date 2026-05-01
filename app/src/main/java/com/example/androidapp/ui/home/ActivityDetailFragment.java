@@ -166,6 +166,16 @@ public class ActivityDetailFragment extends Fragment {
         tvDescription.setText(activity.getDescription());
         if (activity.getMeetingPoint() != null) {
             tvMeetingPoint.setText(activity.getMeetingPoint().toDisplayString());
+            double lat = activity.getMeetingPoint().getLatitude();
+            double lng = activity.getMeetingPoint().getLongitude();
+            if (lat != 0 || lng != 0) {
+                View mapContainer = requireView().findViewById(R.id.mapContainer);
+                mapContainer.setVisibility(View.VISIBLE);
+                getChildFragmentManager().beginTransaction()
+                        .replace(R.id.mapContainer, MapFragment.newInstance(
+                                lat, lng, activity.getMeetingPoint().getAddress(), 15.0f))
+                        .commitAllowingStateLoss();
+            }
         }
 
         if (activity.getGuide() != null) {

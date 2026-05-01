@@ -113,4 +113,6 @@
     <string name="historial_destino">Destino: %1$s</string>
     <string name="historial_guia">Guía: %1$s</string>
     <string name="historial_duracion">Duración: %1$s</string>
+    <string name="c_mo_llegar">Cómo llegar</string>
+    <string name="navegar">Navegar</string>
 </resources>
