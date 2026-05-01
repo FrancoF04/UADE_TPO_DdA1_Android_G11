@@ -5,11 +5,13 @@ import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.HistorialItem;
 
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.QueryMap;
 
 public interface ActivityApi {
 
@@ -17,6 +19,12 @@ public interface ActivityApi {
     Call<ApiResponse<List<Activity>>> getActivities(
             @Query("page") int page,
             @Query("limit") int limit);
+
+    @GET("activities")
+    Call<ApiResponse<List<Activity>>> getActivitiesFiltered(
+            @Query("page") int page,
+            @Query("limit") int limit,
+            @QueryMap Map<String, String> filters);
 
     @GET("activities")
     Call<ApiResponse<List<Activity>>> searchActivities(
