@@ -78,6 +78,7 @@ public class ReservationAdapter extends BaseAdapter {
             holder.tvSchedule = convertView.findViewById(R.id.tvSchedule);
             holder.tvQuantity = convertView.findViewById(R.id.tvQuantity);
             holder.tvStatus = convertView.findViewById(R.id.tvStatus);
+            holder.tvCancelHours = convertView.findViewById(R.id.tvCancelHours);
             holder.btnCancelar = convertView.findViewById(R.id.btnCancelar);
             convertView.setTag(holder);
         } else {
@@ -105,6 +106,7 @@ public class ReservationAdapter extends BaseAdapter {
         holder.tvSchedule.setText(String.format("Horario: %s", scheduleText));
         holder.tvStatus.setText(String.format("Estado: %s", reservation.getStatus()));
         holder.tvQuantity.setText(String.format("Cantidad: %d", reservation.getQuantity()));
+        holder.tvCancelHours.setText(String.format("Antelación para cancelar: %d hs", reservation.getCancellationHours()));
 
         // Mostrar botón cancelar solo para reservas activas (estado activo y fecha futura)
         boolean isActive = isActiveStatus(reservation.getStatus()) && !isPast(reservation.getSelectedDate());
@@ -192,6 +194,7 @@ public class ReservationAdapter extends BaseAdapter {
         TextView tvSchedule;
         TextView tvStatus;
         TextView tvQuantity;
+        TextView tvCancelHours;
         Button btnCancelar;
     }
 }
