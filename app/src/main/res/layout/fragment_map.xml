@@ -14,7 +14,9 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:text="@string/c_mo_llegar"
+        android:textColor="@android:color/white"
         android:contentDescription="@string/navegar"
-        app:icon="@android:drawable/ic_menu_directions"
+        app:backgroundTint="?attr/colorPrimary"
+        app:icon="@drawable/ic_directions"
         xmlns:app="http://schemas.android.com/apk/res-auto" />
 </FrameLayout>

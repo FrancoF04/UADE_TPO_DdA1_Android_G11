@@ -73,7 +73,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="12dp"
-        android:text="Guardar"
-        android:backgroundTint="#2563EB"
-        android:textColor="#FFFFFF"/>
+        android:text="Guardar"/>
 </LinearLayout>

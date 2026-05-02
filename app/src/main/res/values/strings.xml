@@ -103,6 +103,7 @@
     <string name="free_label">Gratis</string>
     <string name="price_format">$%1$,.0f</string>
     <string name="mis_actividades">Mis actividades</string>
+    <string name="mis_reservas_empty">No hay actividades reservadas</string>
     <string name="actividades_proximas">Actividades proximas</string>
     <string name="actividades_pasadas">Actividades pasadas</string>
     <string name="cancelar_reserva">Cancelar reserva</string>
