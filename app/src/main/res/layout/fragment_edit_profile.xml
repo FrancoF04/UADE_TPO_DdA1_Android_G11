@@ -25,19 +25,7 @@
                 android:text="Editar Perfil"
                 android:layout_marginBottom="24dp" />
 
-            <ImageView
-                android:id="@+id/ivFotoPerfilEditar"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="16dp"
-                android:src="@android:drawable/ic_menu_gallery"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
-                android:contentDescription="Cambiar Foto de Perfil" />
-
-            <TextView
+<TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Nombre Completo"
