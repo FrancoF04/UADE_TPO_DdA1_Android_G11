@@ -19,6 +19,7 @@ import androidx.navigation.Navigation;
 import com.example.androidapp.R;
 import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.model.BookingsSummary;
 import com.example.androidapp.data.model.User;
 import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.UserApi;
@@ -43,6 +44,7 @@ public class ProfileFragment extends Fragment {
     @Inject
     BiometricHelper biometricHelper;
     private TextView tvNombre, tvEmail, tvTelefono, tvBiometricSubtitle;
+    private TextView tvCountReservas, tvCountRealizadas;
     private Button btnEditarPerfil, btnPreferencias, btnLogout;
     private Switch switchBiometric;
     private User currentUser;
@@ -65,6 +67,8 @@ public class ProfileFragment extends Fragment {
         btnLogout = view.findViewById(R.id.btnLogout);
         switchBiometric = view.findViewById(R.id.switchBiometric);
         tvBiometricSubtitle = view.findViewById(R.id.tvBiometricSubtitle);
+        tvCountReservas = view.findViewById(R.id.tvCountReservas);
+        tvCountRealizadas = view.findViewById(R.id.tvCountRealizadas);
 
         btnEditarPerfil.setOnClickListener(v -> {
             Navigation.findNavController(view).navigate(R.id.action_profile_to_editProfile);
@@ -75,8 +79,38 @@ public class ProfileFragment extends Fragment {
 
         btnLogout.setOnClickListener(v -> confirmLogout(view));
 
+        view.findViewById(R.id.layoutReservas).setOnClickListener(v ->
+                Navigation.findNavController(view).navigate(R.id.mis_reservas_nav_graph));
+
+        view.findViewById(R.id.layoutHistorial).setOnClickListener(v ->
+                Navigation.findNavController(view).navigate(R.id.historial_nav_graph));
+
         wireBiometricToggle();
         loadUserProfile();
+        loadSummaryData();
+    }
+
+    private void loadSummaryData() {
+        userApi.getBookingsSummary().enqueue(new Callback<ApiResponse<BookingsSummary>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<BookingsSummary>> call, @NonNull Response<ApiResponse<BookingsSummary>> response) {
+                if (isAdded() && response.isSuccessful() && response.body() != null) {
+                    BookingsSummary data = response.body().getData();
+                    if (data != null && data.getSummary() != null) {
+                        int upcoming = data.getSummary().getUpcomingBookings();
+                        int finalized = data.getSummary().getFinalizedBookings();
+
+                        tvCountReservas.setText(String.valueOf(upcoming));
+                        tvCountRealizadas.setText(String.valueOf(finalized));
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<BookingsSummary>> call, @NonNull Throwable t) {
+                // Silently fail for summary
+            }
+        });
     }
 
     private void confirmLogout(View view) {
@@ -116,6 +150,8 @@ public class ProfileFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (switchBiometric != null) wireBiometricToggle();
+        loadUserProfile();
+        loadSummaryData();
     }
 
     private void wireBiometricToggle() {
