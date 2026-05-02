@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -35,7 +34,6 @@ public class EditProfileFragment extends Fragment {
     @Inject
     UserApi userApi;
 
-    private ImageView ivFotoPerfil;
     private EditText etFullName;
     private EditText etEmail;
     private EditText etPhoneNumber;
@@ -54,7 +52,6 @@ public class EditProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ivFotoPerfil = view.findViewById(R.id.ivFotoPerfilEditar);
         etFullName = view.findViewById(R.id.etNombre);
         etEmail = view.findViewById(R.id.etEmail);
         etPhoneNumber = view.findViewById(R.id.etTelefono);
