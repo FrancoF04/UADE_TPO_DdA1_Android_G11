@@ -79,6 +79,9 @@
     <string name="profile_no_phone">No especificado</string>
     <string name="profile_error_load">Error al cargar datos</string>
     <string name="profile_preferences_button">Seleccionar Intereses</string>
+    <string name="profile_summary_title">Resumen de Actividad</string>
+    <string name="profile_summary_reservas">Reservas</string>
+    <string name="profile_summary_realizadas">Realizadas</string>
 
     <string-array name="travel_categories">
         <item>Aventura</item>

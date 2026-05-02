@@ -12,31 +12,5 @@
     <include app:graph="@navigation/historial_nav_graph" />
     <include app:graph="@navigation/news_nav_graph" />
     <include app:graph="@navigation/favoritos_nav_graph" />
-
-    <fragment
-        android:id="@+id/profileFragment"
-        android:name="com.example.androidapp.ui.home.ProfileFragment"
-        android:label="Perfil">
-
-        <action
-            android:id="@+id/action_profile_to_editProfile"
-            app:destination="@id/editProfileFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/editProfileFragment"
-        android:name="com.example.androidapp.ui.home.EditProfileFragment"
-        android:label="EditarPerfil">
-
-        <action
-            android:id="@+id/action_editProfile_to_profile"
-            app:destination="@+id/profileFragment"
-            app:popUpTo="@id/profileFragment"
-            app:popUpToInclusive="true"/>
-    </fragment>
-
-    <fragment
-        android:id="@+id/preferencesFragment"
-        android:name="com.example.androidapp.ui.profile.PreferencesFragment"
-        android:label="Preferencias"/>
+    <include app:graph="@navigation/profile_nav_graph" />
 </navigation>
