@@ -25,7 +25,7 @@ public interface UserApi {
     @GET("profile")
     Call<ApiResponse<User.UserResponse>> getUser();
 
-    @PATCH("profile")
+    @PUT("users/me")
     Call<ApiResponse<User.UserResponse>> updateUser(@Body UserUpdate user);
 
     @GET("profile/preferences")
