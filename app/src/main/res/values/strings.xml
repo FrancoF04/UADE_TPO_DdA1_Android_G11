@@ -116,4 +116,8 @@
     <string name="historial_duracion">Duración: %1$s</string>
     <string name="c_mo_llegar">Cómo llegar</string>
     <string name="navegar">Navegar</string>
+    <string name="offline_banner">Sin conexión — mostrando datos guardados.</string>
+    <string name="offline_conexion_restaurada">Conexión restaurada</string>
+    <string name="offline_sin_conexion">Sin conexión — mostrando datos guardados</string>
+    <string name="reserva_no_identificada">No se pudo identificar la reserva a cancelar</string>
 </resources>

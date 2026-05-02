@@ -74,14 +74,14 @@ public class MisReservasFragment extends Fragment implements NetworkMonitor.OnNe
     @Override
     public void onNetworkAvailable() {
         if (!isAdded() || !isResumed()) return;
-        Toast.makeText(requireContext(), "Conexión restaurada", Toast.LENGTH_SHORT).show();
+        Toast.makeText(requireContext(), R.string.offline_conexion_restaurada, Toast.LENGTH_SHORT).show();
         cargarDesdeRed();
     }
 
     @Override
     public void onNetworkLost() {
         if (!isAdded() || !isResumed()) return;
-        Toast.makeText(requireContext(), "Sin conexión — mostrando datos guardados", Toast.LENGTH_SHORT).show();
+        Toast.makeText(requireContext(), R.string.offline_sin_conexion, Toast.LENGTH_SHORT).show();
         cargarDesdeCache();
     }
 
@@ -155,7 +155,7 @@ public class MisReservasFragment extends Fragment implements NetworkMonitor.OnNe
 
     private void onCancelReservation(Reservation reservation) {
         if (reservation == null || reservation.getId() == null || reservation.getId().isEmpty()) {
-            Toast.makeText(requireContext(), "No se pudo identificar la reserva a cancelar", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), R.string.reserva_no_identificada, Toast.LENGTH_SHORT).show();
             return;
         }
 
