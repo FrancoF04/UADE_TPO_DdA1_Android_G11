@@ -1,6 +1,7 @@
 package com.example.androidapp.data.remote;
 
 import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.model.BookingsSummary;
 import com.example.androidapp.data.model.ReservationRequest;
 import com.example.androidapp.data.model.Reservation;
 import com.example.androidapp.data.model.User;
@@ -34,7 +35,7 @@ public interface UserApi {
     Call<ApiResponse<User.UserResponse>> updatePreferences(@Body UserPreferencesRequest preferences);
 
     @GET("profile/bookings-summary")
-    Call<ApiResponse<Object>> getBookingsSummary();
+    Call<ApiResponse<BookingsSummary>> getBookingsSummary();
 
     @GET("users/reservations")
     Call<ApiResponse<List<Reservation>>> getReservations();
