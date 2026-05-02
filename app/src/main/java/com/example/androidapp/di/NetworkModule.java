@@ -5,8 +5,10 @@ import static com.example.androidapp.BuildConfig.API_BASE_URL;
 import android.content.Context;
 
 import com.example.androidapp.data.local.NewsCache;
+import com.example.androidapp.data.local.OfflineBookingCache;
 import com.example.androidapp.data.remote.ActivityApi;
 import com.example.androidapp.data.remote.AuthApi;
+import com.example.androidapp.data.remote.BookingsApi;
 import com.example.androidapp.data.remote.UserApi;
 import com.example.androidapp.data.remote.RatingsApi;
 import com.example.androidapp.data.remote.FavoritesApi;
@@ -92,5 +94,17 @@ public class NetworkModule {
     @Singleton
     public NewsCache provideNewsCache(@ApplicationContext Context context, Gson gson) {
         return new NewsCache(context, gson);
+    }
+
+    @Provides
+    @Singleton
+    public BookingsApi provideBookingsApiService(Retrofit retrofit) {
+        return retrofit.create(BookingsApi.class);
+    }
+
+    @Provides
+    @Singleton
+    public OfflineBookingCache provideOfflineBookingCache(@ApplicationContext Context context, Gson gson) {
+        return new OfflineBookingCache(context, gson);
     }
 }

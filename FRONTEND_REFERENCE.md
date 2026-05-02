@@ -9,6 +9,7 @@
 > URL de producción: `https://uadetpodda1backend-production.up.railway.app`
 > Repo backend: `UADE_TPO_DdA1_Backend` (este repo)
 > Repo frontend Android: separado (Java)
+> Archivos subidos (fotos de perfil): `<base_url>/uploads/users/<filename>` — prefijar base URL siempre.
 
 ---
 
@@ -150,6 +151,7 @@ src/
 ```json
 {
   "id": "n1",
+  "category": "promocion",
   "image": "https://...",
   "title": "Promo especial en Buenos Aires",
   "description": "Descuentos en actividades...",
@@ -158,6 +160,8 @@ src/
   "createdAt": "2026-04-01T10:00:00Z"
 }
 ```
+
+> `category`: string. Default `"noticia"`. Valores en datos pre-cargados: `"promocion"`, `"destino"`, `"novedad"`. Presente tanto en el listado como en el detalle.
 
 ### Favorito (respuesta)
 
@@ -235,11 +239,20 @@ Todas las respuestas usan el mismo formato:
 El token **NO es un JWT estándar**. Es un objeto JSON codificado en base64url:
 
 ```json
-{ "userId": "u1", "fullName": "Juan Perez", "jti": "<uuid>" }
+{
+  "userId": "u1",
+  "fullName": "Juan Perez",
+  "type": "access",
+  "issuedAt": "2026-05-01T10:00:00.000Z",
+  "jti": "<uuid>",
+  "expiresAt": "2026-05-01T11:00:00.000Z"
+}
 ```
 
 - Se envía en el header: `Authorization: Bearer <token>`
-- Dura **24 horas** desde que se crea la sesión
+- El **access token** dura **60 minutos** por defecto (env var `SESSION_TTL_MINUTES`, mínimo 5 min)
+- El **refresh token** dura **7 días** (env var `REFRESH_TOKEN_TTL_DAYS`)
+- El campo `expiresAt` está en el payload — se puede leer para hacer refresh proactivo antes de que expire
 - Las sesiones viven en memoria: si el servidor se reinicia, el token deja de funcionar
 
 ### Flujo OTP (recomendado para onboarding)
@@ -251,7 +264,7 @@ El token **NO es un JWT estándar**. Es un objeto JSON codificado en base64url:
 2. POST /api/auth/otp/verify    { "email": "...", "code": "123456" }
    → Si el usuario no existe, se crea automáticamente
      username = email.split('@')[0]
-   → Retorna token
+   → Retorna { token, accessToken, refreshToken }
 
 3. (Opcional) POST /api/auth/otp/resend  { "email": "..." }
    → Invalida OTPs anteriores y genera uno nuevo
@@ -262,7 +275,7 @@ El token **NO es un JWT estándar**. Es un objeto JSON codificado en base64url:
 ```
 POST /api/auth/login
 Body: { "username": "juanperez", "password": "password123" }
-→ Retorna token
+→ Retorna { token, accessToken, refreshToken }
 ```
 
 ### Flujo Registro Completo
@@ -276,8 +289,20 @@ Body: {
   "fullName": "Juan Perez",
   "phoneNumber": "+5491112345678"
 }
-→ Retorna token (201)
+→ Retorna { token, accessToken, refreshToken }  (201)
 ```
+
+> `token` y `accessToken` son el mismo valor — aliases del access token. Guardar ambos o solo uno (son iguales).
+
+### Refresh de Token
+
+```
+POST /api/auth/refresh
+Body: { "refreshToken": "..." }   (o via Authorization: Bearer <refreshToken>)
+→ Retorna { token, accessToken, refreshToken }   (nuevo par, el refreshToken viejo queda invalidado)
+```
+
+**Cuándo usarlo:** cuando el servidor retorna 401, intentar primero un refresh. Si el refresh también retorna 401, llevar al usuario al login.
 
 ### Logout
 
@@ -305,10 +330,11 @@ GET /health
 | Método | Path | Auth | Body | Respuesta |
 |--------|------|------|------|-----------|
 | POST | `/otp/request` | No | `{ email }` | `{ message }` |
-| POST | `/otp/verify` | No | `{ email, code }` | `{ token }` |
+| POST | `/otp/verify` | No | `{ email, code }` | `{ token, accessToken, refreshToken }` |
 | POST | `/otp/resend` | No | `{ email }` | `{ message }` |
-| POST | `/register` | No | `{ email, username, password, fullName, phoneNumber }` | `{ token }` 201 |
-| POST | `/login` | No | `{ username, password }` | `{ token }` |
+| POST | `/register` | No | `{ email, username, password, fullName, phoneNumber }` | `{ token, accessToken, refreshToken }` 201 |
+| POST | `/login` | No | `{ username, password }` | `{ token, accessToken, refreshToken }` |
+| POST | `/refresh` | No | `{ refreshToken }` (o Bearer) | `{ token, accessToken, refreshToken }` |
 | POST | `/logout` | **Sí** | — | `{ message }` |
 
 ---
@@ -337,6 +363,7 @@ Ruta alternativa y más flexible para operaciones de perfil. Acepta nombres de c
 |--------|------|------|------|-----------|
 | GET | `/` o `/me` | **Sí** | — | `{ user: { id, name, fullName, email, phone, phoneNumber, profilePhotoUrl, photoUrl, preferences } }` |
 | PATCH | `/` o `/me` | **Sí** | `{ name?, fullName?, phone?, phoneNumber?, photoUrl?, profilePhotoUrl? }` | `{ user }` |
+| POST | `/photo` | **Sí** | `multipart/form-data`, campo `photo` | `{ user, photoUrl }` |
 | GET | `/preferences` | **Sí** | — | `{ preferences: { categories, destinations } }` |
 | PUT | `/preferences` | **Sí** | `{ categories: [] }` | `{ user }` |
 | GET | `/bookings-summary` | **Sí** | — | `{ summary }` |
@@ -352,12 +379,20 @@ Ruta alternativa y más flexible para operaciones de perfil. Acepta nombres de c
     "upcomingBookings": 2,
     "completedBookings": 0,
     "totalSpent": 8000,
-    "byStatus": { "active": 2, "cancelled": 1 }
+    "byStatus": { "confirmed": 2, "cancelled": 1 }
   }
 }
 ```
 
 > **Nota:** `/api/profile` y `/api/users` coexisten. `/api/profile` acepta aliases (`name` → `fullName`, `phone` → `phoneNumber`, `photoUrl` → `profilePhotoUrl`) y usa PATCH en lugar de PUT.
+
+**`POST /api/profile/photo` — upload de foto de perfil:**
+- Content-Type: `multipart/form-data`
+- Campo del archivo: `photo`
+- Formatos aceptados: JPEG, PNG, GIF, WebP
+- Tamaño máximo: **5 MB** (413 si se excede)
+- La URL guardada es **relativa**: `/uploads/users/<filename>` — hay que prefijar la base URL del servidor para mostrarla: `https://uadetpodda1backend-production.up.railway.app/uploads/users/<filename>`
+- Respuesta: `{ user: { ...perfil }, photoUrl: "/uploads/users/<filename>" }`
 
 ---
 
@@ -442,7 +477,7 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
       "selectedDate": "2026-04-10T10:00:00.000Z",
       "selectedScheduleId": "a1-s1",
       "quantity": 1,
-      "status": "active",
+      "status": "confirmed",
       "voucherCode": "...",
       "cancellationPolicy": "Cancelacion gratuita hasta 24 horas antes",
       "createdAt": "...",
@@ -578,6 +613,7 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 ```json
 {
   "id": "n1",
+  "category": "promocion",
   "image": "https://...",
   "title": "Promo especial en Buenos Aires",
   "description": "Descuentos en actividades...",
@@ -589,11 +625,11 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 **`GET /api/news/:id` agrega `content`** (texto largo completo).
 
 **Noticias pre-cargadas:**
-| ID | Título | activityId |
-|----|--------|------------|
-| n1 | Promo especial en Buenos Aires | a1 |
-| n2 | Ofertas en experiencias de vino | a7 |
-| n3 | Destino destacado: Salta | null |
+| ID | Título | category | activityId |
+|----|--------|----------|------------|
+| n1 | Promo especial en Buenos Aires | promocion | a1 |
+| n2 | Ofertas en experiencias de vino | promocion | a7 |
+| n3 | Destino destacado: Salta | destino | null |
 
 ---
 
@@ -647,9 +683,23 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 
 ## Consideraciones para el frontend
 
-1. **Guardar el token**: persistirlo en `SharedPreferences` o equivalente. Se necesita en casi todas las pantallas post-login.
+1. **Guardar ambos tokens**: persistir `token` (access) y `refreshToken` en `SharedPreferences`. El access token expira en **60 minutos**; el refresh token dura **7 días**.
 
-2. **El token no tiene firma criptográfica**: no lo valides localmente, confía en el servidor. Si el servidor retorna 401, el token expiró o el server se reinició.
+2. **Manejo de 401 con refresh**: cuando cualquier endpoint retorna 401, intentar `POST /api/auth/refresh` con el `refreshToken` guardado. Si el refresh también retorna 401, llevar al usuario al login. No invalidar la sesión local ante el primer 401 — intentar el refresh primero.
+
+   ```java
+   // Flujo sugerido en el interceptor OkHttp
+   if (response.code() == 401) {
+       String newToken = tryRefresh(savedRefreshToken); // POST /api/auth/refresh
+       if (newToken != null) {
+           // guardar nuevo par y reintentar el request original
+       } else {
+           // refreshToken expirado → navigate to login
+       }
+   }
+   ```
+
+3. **El token no tiene firma criptográfica**: no lo valides localmente, confía en el servidor. El campo `expiresAt` en el payload es legible (base64url decode) y se puede usar para hacer refresh proactivo antes de que expire.
 
 3. **CORS habilitado**: el backend acepta requests desde cualquier origen.
 
@@ -675,11 +725,17 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 
 14. **No hay endpoints para crear/editar/borrar actividades** desde el frontend.
 
-15. **Sesiones en memoria**: en desarrollo, el server puede reiniciarse y los tokens dejan de funcionar. Implementar manejo de 401 que lleve al login.
+15. **Sesiones en memoria**: en desarrollo, el server puede reiniciarse y los tokens dejan de funcionar. El manejo de 401 debe intentar refresh primero; si falla, llevar al login.
 
 16. **OTP se imprime en consola del server** (no hay envío de email real). Para desarrollo, revisar los logs del backend.
 
-17. **Foto de perfil**: `PUT /api/users/me` NO acepta `profilePhotoUrl`. Para actualizar la foto usar `PATCH /api/profile/me` con el campo `photoUrl` o `profilePhotoUrl`. No hay endpoint de upload — se guarda como URL string externa.
+17. **Foto de perfil — dos opciones:**
+    - **URL externa (string):** `PATCH /api/profile/me` con campo `photoUrl` o `profilePhotoUrl`. Sirve si ya tenés la URL de la imagen.
+    - **Upload real de archivo:** `POST /api/profile/photo` con `multipart/form-data`, campo `photo` (JPEG/PNG/GIF/WebP, máx 5 MB). La URL retornada es relativa (`/uploads/users/<filename>`); hay que prefijar la base URL del servidor para mostrarla en Android:
+      ```java
+      String fullUrl = BASE_URL + photoUrl; // ej: "https://...railway.app/uploads/users/foto.jpg"
+      ```
+    - `PUT /api/users/me` NO acepta foto — solo acepta `username`, `email`, `fullName`, `phoneNumber`.
 
 18. **Offline bundle**: `GET /api/bookings/offline-bundle` retorna reservas con `status === "confirmed"` (las activas no finalizadas ni canceladas). Es correcto — filtra exactamente las reservas vigentes.
 

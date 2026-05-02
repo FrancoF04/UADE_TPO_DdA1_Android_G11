@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
@@ -13,6 +14,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.androidapp.data.local.TokenManager;
+import com.example.androidapp.util.NetworkMonitor;
 import com.example.androidapp.util.SessionEventBus;
 import com.example.androidapp.util.SessionExpiredListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -22,17 +24,22 @@ import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class MainActivity extends AppCompatActivity implements SessionExpiredListener {
+public class MainActivity extends AppCompatActivity
+        implements SessionExpiredListener, NetworkMonitor.OnNetworkChangeListener {
 
     @Inject TokenManager tokenManager;
     @Inject SessionEventBus sessionEventBus;
+    @Inject NetworkMonitor networkMonitor;
 
     private NavController navController;
+    private TextView tvOfflineBanner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        tvOfflineBanner = findViewById(R.id.tvOfflineBanner);
 
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.nav_host_fragment);
@@ -88,18 +95,39 @@ public class MainActivity extends AppCompatActivity implements SessionExpiredLis
                 navHostView.setPadding(0, 0, 0, 0);
             }
         });
+
+        updateOfflineBanner(networkMonitor.isConnected());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         sessionEventBus.register(this);
+        networkMonitor.register(this);
+        updateOfflineBanner(networkMonitor.isConnected());
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         sessionEventBus.unregister(this);
+        networkMonitor.unregister(this);
+    }
+
+    @Override
+    public void onNetworkAvailable() {
+        updateOfflineBanner(true);
+    }
+
+    @Override
+    public void onNetworkLost() {
+        updateOfflineBanner(false);
+    }
+
+    private void updateOfflineBanner(boolean isOnline) {
+        if (tvOfflineBanner != null) {
+            tvOfflineBanner.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+        }
     }
 
     @Override
