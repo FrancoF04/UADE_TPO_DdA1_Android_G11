@@ -32,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="48dp"
-            android:text="No hay actividades"
+            android:text="@string/mis_reservas_empty"
             android:textSize="16sp"
             android:gravity="center"
             android:visibility="gone" />
