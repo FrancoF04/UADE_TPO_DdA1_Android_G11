@@ -202,9 +202,12 @@ public class HomeFragment extends Fragment {
         chipAll.setBackgroundResource(currentChip == ChipMode.ALL ? R.drawable.chip_background_active : R.drawable.chip_background);
         chipFeatured.setBackgroundResource(currentChip == ChipMode.FEATURED ? R.drawable.chip_background_active : R.drawable.chip_background);
         chipForYou.setBackgroundResource(currentChip == ChipMode.FOR_YOU ? R.drawable.chip_background_active : R.drawable.chip_background);
-        chipAll.setTextColor(currentChip == ChipMode.ALL ? 0xFFFFFFFF : 0xFF334155);
-        chipFeatured.setTextColor(currentChip == ChipMode.FEATURED ? 0xFFFFFFFF : 0xFF334155);
-        chipForYou.setTextColor(currentChip == ChipMode.FOR_YOU ? 0xFFFFFFFF : 0xFF334155);
+        chipAll.setTextColor(currentChip == ChipMode.ALL ? 0xFFFFFFFF : 0xFFE2E8F0);
+        chipFeatured.setTextColor(currentChip == ChipMode.FEATURED ? 0xFFFFFFFF : 0xFFE2E8F0);
+        chipForYou.setTextColor(currentChip == ChipMode.FOR_YOU ? 0xFFFFFFFF : 0xFFE2E8F0);
+        chipAll.setTypeface(null, currentChip == ChipMode.ALL ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        chipFeatured.setTypeface(null, currentChip == ChipMode.FEATURED ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        chipForYou.setTypeface(null, currentChip == ChipMode.FOR_YOU ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
     }
 
     private void setupFiltersResultListener() {
