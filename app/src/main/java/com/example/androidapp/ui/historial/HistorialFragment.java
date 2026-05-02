@@ -17,6 +17,7 @@ import androidx.navigation.Navigation;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.local.TokenManager;
+import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.HistorialItem;
 import com.example.androidapp.data.remote.ActivityApi;
@@ -27,6 +28,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -164,6 +166,34 @@ public class HistorialFragment extends Fragment {
         tvEmpty.setVisibility(allItems.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
+    private void enrichWithImages(List<HistorialItem> items) {
+        if (items == null || items.isEmpty()) return;
+        AtomicInteger pending = new AtomicInteger(items.size());
+        for (HistorialItem item : items) {
+            activityApi.getActivityById(item.getActivityId()).enqueue(new retrofit2.Callback<ApiResponse<Activity>>() {
+                @Override
+                public void onResponse(retrofit2.Call<ApiResponse<Activity>> call, retrofit2.Response<ApiResponse<Activity>> response) {
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        Activity activity = response.body().getData();
+                        if (activity != null && activity.getImageUrl() != null) {
+                            item.setImageUrl(activity.getImageUrl());
+                        }
+                    }
+                    if (pending.decrementAndGet() == 0 && isAdded()) {
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+
+                @Override
+                public void onFailure(retrofit2.Call<ApiResponse<Activity>> call, Throwable t) {
+                    if (pending.decrementAndGet() == 0 && isAdded()) {
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            });
+        }
+    }
+
     private void cargarHistorial() {
         progressBar.setVisibility(View.VISIBLE);
         tvEmpty.setVisibility(View.GONE);
@@ -185,6 +215,7 @@ public class HistorialFragment extends Fragment {
 
                 adapter.setItems(allItems);
                 tvEmpty.setVisibility(allItems.isEmpty() ? View.VISIBLE : View.GONE);
+                enrichWithImages(allItems);
             }
 
             @Override
