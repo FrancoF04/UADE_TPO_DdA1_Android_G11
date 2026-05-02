@@ -35,6 +35,7 @@ public class HistorialItem {
     public String getDuration() { return duration != null ? duration : ""; }
     public String getSelectedDate() { return date; }
     public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String url) { this.imageUrl = url; }
 
     public String getGuideName() {
         return guide != null && guide.getName() != null ? guide.getName() : "";

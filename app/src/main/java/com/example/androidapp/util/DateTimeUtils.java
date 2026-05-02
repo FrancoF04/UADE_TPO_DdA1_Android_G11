@@ -45,7 +45,11 @@ public final class DateTimeUtils {
     public static boolean isFutureOrNow(String raw) {
         if (raw == null || raw.trim().isEmpty()) return false;
         Instant instant = parseToInstant(raw);
-        return instant != null && !instant.isBefore(Instant.now());
+        if (instant == null) return false;
+        ZoneId argZone = ZoneId.of("America/Argentina/Buenos_Aires");
+        LocalDate activityDate = instant.atZone(argZone).toLocalDate();
+        LocalDate today = LocalDate.now(argZone);
+        return !activityDate.isBefore(today);
     }
 
     public static String extractDateKey(String rawDate) {

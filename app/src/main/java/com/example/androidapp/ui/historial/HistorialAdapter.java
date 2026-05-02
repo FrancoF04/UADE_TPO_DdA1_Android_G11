@@ -9,9 +9,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.HistorialItem;
+import com.example.androidapp.util.ImageLoader;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -72,12 +72,7 @@ public class HistorialAdapter extends BaseAdapter {
         }
 
         HistorialItem item = getItem(position);
-        Glide.with(convertView)
-                .load(item.getImageUrl())
-                .placeholder(R.drawable.ic_placeholder_activity)
-                .error(R.drawable.ic_placeholder_activity)
-                .centerCrop()
-                .into(holder.ivImage);
+        ImageLoader.load(holder.ivImage, item.getImageUrl());
         holder.tvName.setText(item.getActivityName());
         holder.tvDestination.setText(item.getDestination());
         holder.tvCategory.setText(formatDate(item.getSelectedDate()));
