@@ -67,4 +67,11 @@ dependencies {
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.osmdroid.android)
+    // CameraX: captura de video frame a frame para el analizador de QR
+    implementation(libs.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    // ML Kit: reconocimiento de códigos de barras/QR sin servidor externo
+    implementation(libs.mlkit.barcode)
 }
