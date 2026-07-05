@@ -53,9 +53,11 @@ El backend ya está hecho y deployado. El trabajo es exclusivamente el **fronten
 - Layouts XML en `app/src/main/res/layout/`
 - Navegación declarada en `app/src/main/res/navigation/` (múltiples nav graphs anidados)
 - UI construida con ConstraintLayout, ListView y Views estándar de Android
-- **Inyección de dependencias con Hilt** — `@HiltAndroidApp` en `MyApp`, `@AndroidEntryPoint` en Activities y Fragments, módulo en `di/NetworkModule.java`
+- **Inyección de dependencias con Hilt** — `@HiltAndroidApp` en `MyApp`, `@AndroidEntryPoint` en Activities y Fragments (y en `NotificationPollingService`, ver nota abajo), módulo en `di/NetworkModule.java`
 - Sin ViewModel ni LiveData (no habilitados por la cátedra)
 - **Siempre usar `javax.inject.Inject`**, nunca `jakarta.inject.Inject` — causa crash en runtime en Android
+
+> **Nota sobre `@AndroidEntryPoint` en `Service`**: `PROJECT_CONTEXT.md` (Clase 5) solo menciona explícitamente Activities y Fragments porque es lo que se vio en clase, pero Hilt soporta `@AndroidEntryPoint` oficialmente también en `Service`, `BroadcastReceiver` y `View` — es la misma herramienta ya habilitada, no una técnica nueva. Se usó en `NotificationPollingService` (Feature 12.29) para poder inyectar `NotificationsApi`, `TokenManager` y `NetworkMonitor` sin duplicar lógica de construcción manual. Decisión consultada y confirmada con el usuario.
 
 ### Estructura de paquetes
 
