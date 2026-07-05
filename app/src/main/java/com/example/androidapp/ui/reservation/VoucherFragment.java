@@ -61,6 +61,19 @@ public class VoucherFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        networkMonitor.register(this);
+        cargarReservas();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        networkMonitor.unregister(this);
+    }
+    
     private void loadVoucherDetails(String activityId) {
         progressBar.setVisibility(View.VISIBLE);
 
