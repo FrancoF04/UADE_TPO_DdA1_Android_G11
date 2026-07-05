@@ -646,6 +646,31 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 
 ---
 
+### Notificaciones — `/api/notifications` (alias: `/notifications`)
+
+| Método | Path | Auth | Respuesta |
+|--------|------|------|-----------|
+| GET | `/poll` | **Sí** | `{ events: [...] }` (200) o sin body (204) |
+
+**Contrato de Long Polling**: el servidor retiene la respuesta hasta que haya novedades para el usuario autenticado o se cumplan **~25 segundos**, lo que ocurra primero. Si no hubo novedades, responde `204 No Content` (sin body) — el cliente debe volver a pedir de inmediato. Si hay novedades, responde `200` con `{ "success": true, "data": { "events": [...] } }`.
+
+**Forma de un evento `reminder_24h`** (Feature 12.29 — recordatorio 24hs antes de la actividad):
+```json
+{
+  "type": "reminder_24h",
+  "bookingId": "b-...",
+  "activityId": "a1",
+  "activityName": "Walking Tour por San Telmo",
+  "selectedDate": "2026-04-10T10:00:00.000Z",
+  "voucherCode": "VCH-..."
+}
+```
+
+- Se dispara una única vez por reserva `confirmed`, cuando faltan 24hs o menos para `selectedDate` (y no se disparó antes — el backend guarda un flag `reminderSentAt` en el propio booking, en memoria).
+- El campo `type` es un discriminador pensado para reusarse: otros tipos de evento (ej. cancelación/reprogramación de la Feature 12.30) pueden agregarse a futuro sin cambiar el contrato del endpoint ni el cliente existente — cada consumidor del lado Android simplemente ignora los `type` que no reconoce.
+
+---
+
 ## Datos pre-cargados
 
 ### Usuarios de prueba

@@ -53,9 +53,11 @@ El backend ya está hecho y deployado. El trabajo es exclusivamente el **fronten
 - Layouts XML en `app/src/main/res/layout/`
 - Navegación declarada en `app/src/main/res/navigation/` (múltiples nav graphs anidados)
 - UI construida con ConstraintLayout, ListView y Views estándar de Android
-- **Inyección de dependencias con Hilt** — `@HiltAndroidApp` en `MyApp`, `@AndroidEntryPoint` en Activities y Fragments, módulo en `di/NetworkModule.java`
+- **Inyección de dependencias con Hilt** — `@HiltAndroidApp` en `MyApp`, `@AndroidEntryPoint` en Activities y Fragments (y en `NotificationPollingService`, ver nota abajo), módulo en `di/NetworkModule.java`
 - Sin ViewModel ni LiveData (no habilitados por la cátedra)
 - **Siempre usar `javax.inject.Inject`**, nunca `jakarta.inject.Inject` — causa crash en runtime en Android
+
+> **Nota sobre `@AndroidEntryPoint` en `Service`**: `PROJECT_CONTEXT.md` (Clase 5) solo menciona explícitamente Activities y Fragments porque es lo que se vio en clase, pero Hilt soporta `@AndroidEntryPoint` oficialmente también en `Service`, `BroadcastReceiver` y `View` — es la misma herramienta ya habilitada, no una técnica nueva. Se usó en `NotificationPollingService` (Feature 12.29) para poder inyectar `NotificationsApi`, `TokenManager` y `NetworkMonitor` sin duplicar lógica de construcción manual. Decisión consultada y confirmada con el usuario.
 
 ### Estructura de paquetes
 
@@ -65,9 +67,11 @@ com.example.androidapp/
 │   ├── local/         TokenManager, NewsCache, PreferencesStore, SpotAdjustmentManager
 │   ├── model/         POJOs con @SerializedName de Gson
 │   │                  Activity, Reservation, Rating, RatingRequest, RatingData,
-│   │                  News, NewsDetail, Filters, UserPreferencesRequest, Schedule, etc.
-│   └── remote/        ActivityApi, AuthApi, UserApi, RatingsApi, NewsApi, FavoritesApi
-├── di/                NetworkModule, AuthRefreshInterceptor
+│   │                  News, NewsDetail, Filters, UserPreferencesRequest, Schedule,
+│   │                  NotificationItem, etc.
+│   └── remote/        ActivityApi, AuthApi, UserApi, RatingsApi, NewsApi, FavoritesApi,
+│                      NotificationsApi
+├── di/                NetworkModule, AuthRefreshInterceptor, LongPolling (qualifier)
 ├── ui/
 │   ├── auth/          LoginFragment, OtpRequestFragment, OtpVerifyFragment,
 │   │                  RegisterFragment, BiometricOptInDialog
@@ -83,7 +87,8 @@ com.example.androidapp/
 ├── util/
 │   │   DateTimeUtils, ImageLoader, FilterQueryBuilder, ApiErrorParser,
 │   │   BiometricHelper, BiometricCanAuthMapper, BiometricStatus,
-│   │   SessionEventBus, SessionExpiredListener, OtpResendCooldown
+│   │   SessionEventBus, SessionExpiredListener, OtpResendCooldown, NetworkMonitor,
+│   │   NotificationPollingService, NotificationHelper, NotificationActionReceiver
 ├── MainActivity.java
 └── MyApp.java
 ```
@@ -156,6 +161,7 @@ Todas gestionadas a través de `gradle/libs.versions.toml`:
 | Mapa / Punto de encuentro | ✅ Funciona | osmdroid en `ActivityDetailFragment`; solo si hay coordenadas |
 | Modo sin conexión | ⚠️ Parcial | `NewsCache` en storage interno; `/api/bookings/offline-bundle` disponible pero no integrado en UI |
 | Imágenes | ✅ Funciona | `ImageLoader.load()` con Glide en todas las listas y detalle |
+| Recordatorio 24hs (Feature 12.29) | ⚠️ Parcial | Long polling + Foreground Service funcionando; botón "Ver Voucher" es no-op (Toast) hasta que exista la pantalla de voucher (Feature 11) |
 
 ## Bugs conocidos / cosas a revisar
 
@@ -177,5 +183,6 @@ Todas gestionadas a través de `gradle/libs.versions.toml`:
 - **Comparación de fechas**: usar siempre `DateTimeUtils.isFutureOrNow(String)` o `Instant` UTC directamente. Nunca `LocalDate.now()` contra ISO con hora
 - **Ventana de calificación**: `RatingFragment` necesita tanto `activityDate` como `activityDuration` (nav args desde `HistorialFragment`) para calcular el deadline de 48hs desde la finalización real de la actividad. Si se agrega otro punto de entrada a `RatingFragment`, pasar ambos argumentos — el cálculo replica el parseo de duración del backend (`parseDurationMs` en `data.js`)
 - **Botones en ListView**: agregar `android:focusable="false"` a todo `Button` dentro de un `item_*.xml`
+- **Notificaciones (Long Polling)**: `NotificationPollingService` (Foreground Service, `util/`) sondea `GET /api/notifications/poll` reusando `AuthRefreshInterceptor` vía un `OkHttpClient`/`Retrofit` separado calificados con `@LongPolling` (`di/LongPolling.java`) — necesitan un read timeout largo (~35s) que no debe aplicarse al resto de las Api. El service se arranca de forma idempotente desde `MainActivity` (en el listener de navegación existente y en `onResume()`) y se detiene en exactamente dos lugares: `MainActivity.onSessionExpired()` y `ProfileFragment.finishLogout()`. Requiere el permiso runtime `POST_NOTIFICATIONS` (API 33+, patrón `ActivityResultContracts.RequestPermission()` ya usado en el proyecto). El botón "Ver Voucher" de la notificación de recordatorio apunta a `NotificationActionReceiver`, que hoy solo muestra un Toast — es la plomería lista para cuando exista la pantalla de voucher (Feature 11)
 - **Session expired**: si un request falla con 401 irrecuperable, `AuthRefreshInterceptor` dispara `SessionEventBus` → `MainActivity` escucha y navega al login. No manejar 401 manualmente en los fragments
 - **Parseo de errores**: usar `ApiErrorParser.getMessage(response)` para extraer el string de error del body en lugar de hardcodear mensajes
