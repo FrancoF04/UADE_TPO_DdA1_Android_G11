@@ -28,6 +28,8 @@ import androidx.fragment.app.Fragment;
 import com.example.androidapp.R;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
+import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
@@ -36,6 +38,7 @@ import org.json.JSONObject;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class QrScanFragment extends Fragment {
 
@@ -75,6 +78,17 @@ public class QrScanFragment extends Fragment {
                     }
                 }
         );
+
+
+
+        // ML Kit: configurado solo para QR, descarta otros formatos y es más rápido
+        BarcodeScannerOptions opciones = new BarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                .build();
+        barcodeScanner = BarcodeScanning.getClient(opciones);
+
+        // Un solo hilo de análisis es suficiente; más hilos no aumentan la velocidad de lectura
+        cameraExecutor = Executors.newSingleThreadExecutor();
 
     }
 
