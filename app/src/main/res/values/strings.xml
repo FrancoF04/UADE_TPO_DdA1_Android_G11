@@ -47,6 +47,7 @@
     <string name="home_activities_title">Actividades</string>
     <string name="home_empty">No hay actividades disponibles</string>
     <string name="home_search_button">Buscar</string>
+    <string name="home_qr_scanner_description">Escanear asistencia</string>
 
     <!-- Search -->
     <string name="search_title">Buscar Actividades</string>
