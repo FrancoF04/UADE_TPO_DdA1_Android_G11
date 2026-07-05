@@ -30,6 +30,8 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
@@ -53,9 +55,12 @@ public class RatingFragment extends Fragment {
     private TextView tvMessage;
     private ProgressBar progressBar;
 
+    private static final Pattern DURATION_HOURS_PATTERN = Pattern.compile("([\\d.]+)\\s*horas?", Pattern.CASE_INSENSITIVE);
+
     private String bookingId;
     private String activityName;
     private String activityDate;
+    private String activityDuration;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -80,6 +85,7 @@ public class RatingFragment extends Fragment {
             bookingId = args.getString("bookingId", "");
             activityName = args.getString("activityName", "");
             activityDate = args.getString("activityDate", "");
+            activityDuration = args.getString("activityDuration", "");
         }
 
         tvActivityName.setText(activityName);
@@ -237,10 +243,24 @@ public class RatingFragment extends Fragment {
         if (activityDate == null || activityDate.isEmpty()) return true;
         try {
             Instant activityInstant = Instant.parse(activityDate);
-            Instant deadline = activityInstant.plus(48, ChronoUnit.HOURS);
+            Instant finalization = activityInstant.plus(parseDurationMinutes(activityDuration), ChronoUnit.MINUTES);
+            Instant deadline = finalization.plus(48, ChronoUnit.HOURS);
             return Instant.now().isBefore(deadline);
         } catch (Exception e) {
             return true;
+        }
+    }
+
+    // Replica el parseo de duración del backend ("2.5 horas" -> minutos) para que el deadline coincida
+    private long parseDurationMinutes(String duration) {
+        if (duration == null || duration.isEmpty()) return 0;
+        Matcher matcher = DURATION_HOURS_PATTERN.matcher(duration);
+        if (!matcher.find()) return 0;
+        try {
+            double hours = Double.parseDouble(matcher.group(1));
+            return Math.round(hours * 60);
+        } catch (NumberFormatException e) {
+            return 0;
         }
     }
 

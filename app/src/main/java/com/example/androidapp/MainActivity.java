@@ -1,12 +1,19 @@
 package com.example.androidapp;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.NavGraph;
 import androidx.navigation.NavInflater;
@@ -15,6 +22,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.util.NetworkMonitor;
+import com.example.androidapp.util.NotificationPollingService;
 import com.example.androidapp.util.SessionEventBus;
 import com.example.androidapp.util.SessionExpiredListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -33,10 +41,14 @@ public class MainActivity extends AppCompatActivity
 
     private NavController navController;
     private TextView tvOfflineBanner;
+    private ActivityResultLauncher<String> notificationPermissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        notificationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                granted -> { if (granted) maybeStartNotificationPolling(); });
         setContentView(R.layout.activity_main);
 
         tvOfflineBanner = findViewById(R.id.tvOfflineBanner);
@@ -90,6 +102,7 @@ public class MainActivity extends AppCompatActivity
                     || destination.getId() == R.id.profileFragment) {
                 bottomNav.setVisibility(View.VISIBLE);
                 bottomNav.post(() -> navHostView.setPadding(0, 0, 0, bottomNav.getHeight()));
+                maybeStartNotificationPolling();
             } else {
                 bottomNav.setVisibility(View.GONE);
                 navHostView.setPadding(0, 0, 0, 0);
@@ -105,6 +118,20 @@ public class MainActivity extends AppCompatActivity
         sessionEventBus.register(this);
         networkMonitor.register(this);
         updateOfflineBanner(networkMonitor.isConnected());
+        maybeStartNotificationPolling();
+    }
+
+    private void maybeStartNotificationPolling() {
+        if (!tokenManager.isAccessTokenValid() && !tokenManager.isRefreshTokenValid()) {
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= 33
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            return;
+        }
+        ContextCompat.startForegroundService(this, new Intent(this, NotificationPollingService.class));
     }
 
     @Override
@@ -132,6 +159,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onSessionExpired() {
+        stopService(new Intent(this, NotificationPollingService.class));
         runOnUiThread(() -> {
             Bundle args = new Bundle();
             args.putBoolean("forceUserPass", true);

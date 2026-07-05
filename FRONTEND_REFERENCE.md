@@ -122,7 +122,7 @@ src/
 - Cada actividad genera **4 fechas** separadas por **7 días** desde la fecha base
 - `dateTimes` = versión split de `dates` en `{ date: "YYYY-MM-DD", time: "HH:mm" }` (conveniente para UI)
 - `meetingPoint` siempre retorna objeto con `latitude`, `longitude`, `address` (nunca string)
-- `itineraryPoints` = array de paradas (solo algunas actividades tienen datos, las demás retornan `[]`)
+- `itineraryPoints` = array de paradas (solo algunas actividades tienen datos, las demás retornan `[]`). Cada parada: `{ name, description, latitude, longitude }`
 - `userRating` se incluye en `GET /api/activities/:id` si el usuario está autenticado y ya calificó
 
 ### Booking (Reserva)
@@ -161,7 +161,7 @@ src/
 }
 ```
 
-> `category`: string. Default `"noticia"`. Valores en datos pre-cargados: `"promocion"`, `"destino"`, `"novedad"`. Presente tanto en el listado como en el detalle.
+> `category`: string. Default `"noticia"`. Valores en datos pre-cargados: `"promocion"`, `"descuento"`, `"nuevo_destino"`, `"noticia"`. Presente tanto en el listado como en el detalle.
 
 ### Favorito (respuesta)
 
@@ -348,10 +348,12 @@ GET /health
 | GET | `/activities` | **Sí** | — | `{ detailedActivities: [{...},...] }` |
 | POST | `/activities` | **Sí** | `{ activityId, selectedDate?, selectedScheduleId?, quantity? }` | `{ detailedActivities }` 201 |
 | PUT | `/preferences` | **Sí** | `{ categories: [], destinations: [] }` | `{ user }` |
+| DELETE | `/activities/:activityId/:selectedScheduleId` | **Sí** | — | 200 sin body |
 
 **Notas:**
 - `PUT /me` solo actualiza los campos presentes en el body
 - `PUT /preferences` reemplaza el objeto preferences completo
+- `DELETE /activities/:activityId/:selectedScheduleId` es un mecanismo de cancelación legacy sobre `user.activities` (por índice de schedule), independiente de `DELETE /api/bookings/:id`. Para cancelar reservas usar siempre `DELETE /api/bookings/:id` o `POST /api/bookings/:id/cancel` — son la vía recomendada y la que devuelve `cancellationPolicy` en la respuesta
 
 ---
 
@@ -406,6 +408,7 @@ Ruta alternativa y más flexible para operaciones de perfil. Acepta nombres de c
 | GET | `/filters` | No | — | `{ destinations: [], categories: [], dates: [] }` |
 | GET | `/history` | **Sí** | `fecha_desde?`, `fecha_hasta?`, `destination?`, `page`, `limit` | `[historyItems]` + `meta` |
 | GET | `/:id` | No* | — | `{ activity }` (incluye `userRating` si está autenticado) |
+| POST | `/:id/image` | **Sí** | `multipart/form-data`, campo `image` | `{ activity, imageUrl }` |
 
 **Filtros en `GET /api/activities`:**
 - Todos son opcionales y se combinan con AND
@@ -426,6 +429,13 @@ Ruta alternativa y más flexible para operaciones de perfil. Acepta nombres de c
 }
 ```
 > Para obtener la calificación de un item del historial: `GET /api/ratings/:bookingId` (usando el `bookingId` del item).
+
+**`POST /api/activities/:id/image` — upload de imagen principal de actividad:**
+- Content-Type: `multipart/form-data`
+- Campo del archivo: `image`
+- Formatos aceptados: JPEG, PNG, GIF, WebP; tamaño máximo **5 MB** (413 si se excede) — mismas reglas que el upload de foto de perfil
+- La URL guardada es relativa: `/uploads/activities/<filename>` — prefijar la base URL del servidor para mostrarla
+- Reemplaza el `imageUrl` de la actividad (no es una galería, es la imagen principal)
 
 **`GET /api/activities/:id` — campos extra:**
 - `meetingPoint`: siempre objeto `{ latitude, longitude, address }` (nunca string)
@@ -585,8 +595,8 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 **Reglas de calificación:**
 - `activityRating` y `guideRating`: enteros entre 1 y 5 (obligatorios)
 - `comment`: string, máximo 300 caracteres (opcional, puede ser `null`)
-- Solo se puede calificar después de que la actividad haya ocurrido
-- La ventana de calificación es de **48 horas** desde `selectedDate + duración de la actividad`
+- Solo se puede calificar cuando la reserva ya está `finalized` (el backend recalcula el status en cada lectura)
+- La ventana de calificación es de **48 horas** desde la **finalización** de la actividad (`selectedDate + duración`), consistente con la lógica de transición `confirmed`→`finalized`
 - Cada reserva solo puede calificarse **una vez**
 
 **Errores:**
@@ -628,8 +638,56 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 | ID | Título | category | activityId |
 |----|--------|----------|------------|
 | n1 | Promo especial en Buenos Aires | promocion | a1 |
-| n2 | Ofertas en experiencias de vino | promocion | a7 |
-| n3 | Destino destacado: Salta | destino | null |
+| n2 | 20% off en experiencias de vino | descuento | a7 |
+| n3 | Nuevo destino: Salta | nuevo_destino | a12 |
+| n4 | XploreNow renueva su catálogo de actividades | noticia | null |
+| n5 | 15% off en aventura patagónica | descuento | a4 |
+| n6 | Nuevo destino: Córdoba | nuevo_destino | a11 |
+
+---
+
+### Notificaciones — `/api/notifications` (alias: `/notifications`)
+
+| Método | Path | Auth | Respuesta |
+|--------|------|------|-----------|
+| GET | `/poll` | **Sí** | `{ events: [...] }` (200) o sin body (204) |
+
+**Contrato de Long Polling**: el servidor retiene la respuesta hasta que haya novedades para el usuario autenticado o se cumplan **~25 segundos**, lo que ocurra primero. Si no hubo novedades, responde `204 No Content` (sin body) — el cliente debe volver a pedir de inmediato. Si hay novedades, responde `200` con `{ "success": true, "data": { "events": [...] } }`.
+
+**Forma de un evento `reminder_24h`** (Feature 12.29 — recordatorio 24hs antes de la actividad):
+```json
+{
+  "type": "reminder_24h",
+  "bookingId": "b-...",
+  "activityId": "a1",
+  "activityName": "Walking Tour por San Telmo",
+  "selectedDate": "2026-04-10T10:00:00.000Z",
+  "voucherCode": "VCH-..."
+}
+```
+
+- Se dispara una única vez por reserva `confirmed`, cuando faltan 24hs o menos para `selectedDate` (y no se disparó antes — el backend guarda un flag `reminderSentAt` en el propio booking, en memoria).
+- El campo `type` es un discriminador pensado para reusarse: otros tipos de evento (ej. cancelación/reprogramación de la Feature 12.30) pueden agregarse a futuro sin cambiar el contrato del endpoint ni el cliente existente — cada consumidor del lado Android simplemente ignora los `type` que no reconoce.
+
+**`GET /api/bookings/sync/poll`** (Feature 12.30 — avisos de cancelación/reprogramación): mismo contrato de Long Polling que `/api/notifications/poll`, pero clon de `POST /api/bookings/sync` — devuelve `{ since, serverTime, changes }` en vez de `{ events }`. Requiere auth. Query param opcional `since` (ISO string; si se omite, devuelve todos los cambios existentes). `changes[].changeType` puede ser `cancelled`, `finalized` o `updated` (una reprogramación de horario también cae en `updated` — comparar `selectedDate`/`selectedScheduleId` contra lo que tenga cacheado el cliente para detectarla).
+
+> ⚠️ Nota de implementación: `getSyncChangesSince` (usada tanto por `/sync` como por `/sync/poll`) no filtra por usuario — devuelve cambios de reservas de **todos** los usuarios del sistema, no solo las del que llama. Es un comportamiento preexistente del endpoint `/sync` original, no introducido por `/sync/poll`; queda así a propósito (proyecto académico, no es necesario resolverlo).
+
+### Operador — `/api/operator` (alias: `/operator`)
+
+Endpoints de simulación para la Feature 12.30 (avisos de cancelación/reprogramación "por la operadora"). **Sin autenticación** — no existe un rol admin real en el backend, son una herramienta de testing/demo para poder disparar estos cambios manualmente (ej. desde curl/Postman o una mini-app aparte) mientras corre el server.
+
+Operan sobre un **schedule completo de una actividad** (no sobre una reserva puntual), fiel al enunciado ("se cancela/reprograma la actividad") — afectan a todas las reservas `confirmed` que compartan ese `selectedScheduleId`, no a una sola.
+
+| Método | Path | Auth | Body | Respuesta |
+|--------|------|------|------|-----------|
+| POST | `/activities/:activityId/schedules/:scheduleId/cancel` | No | — | `{ affectedBookings: [...] }` |
+| POST | `/activities/:activityId/schedules/:scheduleId/reschedule` | No | `{ toScheduleId }` | `{ affectedBookings: [...] }` |
+
+- Cancelar: marca como `cancelled` todas las reservas confirmadas de ese `scheduleId` (equivalente a lo que hace el usuario con `DELETE /api/bookings/:id`, pero sin las validaciones de plazo — el operador puede cancelar en cualquier momento, y afecta a todos los que reservaron ese horario, no solo a uno).
+- Reprogramar: mueve todas esas reservas a otro `toScheduleId` **ya existente** de la misma actividad (no crea horarios nuevos) y resetea `reminderSentAt` de cada una para que el recordatorio de 24hs se recalcule contra la nueva fecha.
+- `affectedBookings` puede ser un array vacío (`[]`) si no había reservas confirmadas para ese schedule — no es un error, es un 200 normal. 404 solo si la actividad (o el schedule destino, en el reschedule) no existen.
+- Ambos cambios quedan reflejados en `booking.updatedAt` de cada reserva afectada, por lo que `GET /api/bookings/sync/poll` los detecta automáticamente sin necesitar ningún mecanismo adicional.
 
 ---
 
@@ -642,30 +700,33 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 | juan@example.com | juanperez | password123 |
 | maria@example.com | mariagarcia | password456 |
 
-### Actividades (15 pre-cargadas)
+### Actividades (16 pre-cargadas)
 
 | ID | Nombre | Destino | Categoría | Precio | Featured |
 |----|--------|---------|-----------|--------|----------|
 | a1 | Walking Tour por San Telmo | Buenos Aires | free_tour | 0 | ✓ |
-| a2 | Free Tour por La Boca | Buenos Aires | free_tour | 0 | ✗ |
-| a3 | Visita Guiada al Colón | Buenos Aires | guided_visit | 3500 | ✓ |
-| a4 | Excursión Cataratas del Iguazú | Bariloche | excursion | 45000 | ✓ |
-| a5 | Degustación de Vinos | Mendoza | gastronomic | 8000 | ✓ |
-| a6 | Trekking Glaciar Perito Moreno | Bariloche | adventure | 35000 | ✗ |
-| a7 | Tour Fin del Mundo | Ushuaia | guided_visit | 12000 | ✗ |
-| a8 | Visita Bodega Premium | Mendoza | gastronomic | 15000 | ✗ |
-| a9 | City Tour Córdoba | Córdoba | guided_visit | 5000 | ✗ |
-| a10 | Tour de Salinas Grandes | Salta | excursion | 22000 | ✓ |
-| a11 | Kayak en el Nahuel Huapi | Bariloche | adventure | 18000 | ✗ |
-| a12 | Free Tour Barrio de Palermo | Buenos Aires | free_tour | 0 | ✗ |
-| a13 | Tren de las Nubes | Salta | excursion | 28000 | ✓ |
-| a14 | Paragliding en las Sierras | Córdoba | adventure | 25000 | ✗ |
-| a15 | Asado y Folclore en Salta | Salta | gastronomic | 9500 | ✗ |
+| a2 | Free Tour por La Boca | Buenos Aires | free_tour | 0 | ✓ |
+| a3 | Visita Guiada al Teatro Colón | Buenos Aires | guided_visit | 8000 | ✓ |
+| a4 | Recorrido por el Museo MALBA | Buenos Aires | guided_visit | 6000 | ✗ |
+| a5 | Excursión Glaciar Perito Moreno | Ushuaia | excursion | 45000 | ✓ |
+| a6 | Trekking en Cerro Catedral | Bariloche | excursion | 25000 | ✗ |
+| a7 | Tour de Vinos en Mendoza | Mendoza | gastronomic | 35000 | ✓ |
+| a8 | Experiencia de Asado Argentino | Buenos Aires | gastronomic | 28000 | ✗ |
+| a9 | Rafting en el Río Mendoza | Mendoza | adventure | 30000 | ✓ |
+| a10 | Tirolesa en Bariloche | Bariloche | adventure | 22000 | ✗ |
+| a11 | Tour Histórico por Córdoba | Córdoba | guided_visit | 5000 | ✗ |
+| a12 | Tren a las Nubes en Salta | Salta | excursion | 50000 | ✓ |
+| a13 | Navegación por el Canal Beagle | Ushuaia | excursion | 32000 | ✗ |
+| a14 | Cabalgata en la Quebrada de las Flechas | Salta | adventure | 20000 | ✗ |
+| a15 | Degustación de Empanadas en Salta | Salta | gastronomic | 15000 | ✓ |
+| a16 | Free Tour por Nuñez | Buenos Aires | free_tour | 0 | ✓ |
+
+> Nota: `a5` (Excursión Glaciar Perito Moreno) tiene `destination: "Ushuaia"` en los datos pre-cargados aunque su `meetingPoint` real (Terminal de buses de El Calafate) corresponde geográficamente a Santa Cruz — inconsistencia propia de los datos de prueba del backend, no del frontend.
 
 **Actividades con itineraryPoints** (resto retorna `[]`):
-- `a13` (Tren de las Nubes): Isla de los Lobos, Isla de los Pájaros, Faro Les Eclaireurs
-- `a14` (Paragliding): Angastaco, Quebrada de las Flechas
-- `a12` (Free Tour Palermo): Salinas Grandes, Viaducto La Polvorilla
+- `a12` (Tren a las Nubes en Salta): Salinas Grandes, Viaducto La Polvorilla
+- `a13` (Navegación por el Canal Beagle): Isla de los Lobos, Isla de los Pájaros, Faro Les Eclaireurs
+- `a14` (Cabalgata en la Quebrada de las Flechas): Angastaco, Quebrada de las Flechas
 
 ---
 

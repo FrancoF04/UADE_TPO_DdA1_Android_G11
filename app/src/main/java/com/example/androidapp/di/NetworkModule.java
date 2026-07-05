@@ -13,7 +13,10 @@ import com.example.androidapp.data.remote.UserApi;
 import com.example.androidapp.data.remote.RatingsApi;
 import com.example.androidapp.data.remote.FavoritesApi;
 import com.example.androidapp.data.remote.NewsApi;
+import com.example.androidapp.data.remote.NotificationsApi;
 import com.google.gson.Gson;
+
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
@@ -106,5 +109,34 @@ public class NetworkModule {
     @Singleton
     public OfflineBookingCache provideOfflineBookingCache(@ApplicationContext Context context, Gson gson) {
         return new OfflineBookingCache(context, gson);
+    }
+
+    // Cliente/Retrofit dedicados al long polling de notificaciones: necesitan un read timeout
+    // largo (el server retiene la respuesta ~25s) sin afectar el timeout corto del resto de las Api.
+    @Provides
+    @Singleton
+    @LongPolling
+    public OkHttpClient providePollingOkHttp(AuthRefreshInterceptor authInterceptor) {
+        return new OkHttpClient.Builder()
+                .addInterceptor(authInterceptor)
+                .readTimeout(35, TimeUnit.SECONDS)
+                .build();
+    }
+
+    @Provides
+    @Singleton
+    @LongPolling
+    public Retrofit providePollingRetrofit(@LongPolling OkHttpClient okHttpClient, Gson gson) {
+        return new Retrofit.Builder()
+                .baseUrl(API_BASE_URL)
+                .client(okHttpClient)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+    }
+
+    @Provides
+    @Singleton
+    public NotificationsApi provideNotificationsApiService(@LongPolling Retrofit retrofit) {
+        return retrofit.create(NotificationsApi.class);
     }
 }

@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +26,7 @@ import com.example.androidapp.data.remote.AuthApi;
 import com.example.androidapp.data.remote.UserApi;
 import com.example.androidapp.util.BiometricHelper;
 import com.example.androidapp.util.BiometricStatus;
+import com.example.androidapp.util.NotificationPollingService;
 
 import javax.inject.Inject;
 
@@ -138,6 +140,9 @@ public class ProfileFragment extends Fragment {
     }
 
     private void finishLogout(View view) {
+        if (getContext() != null) {
+            getContext().stopService(new Intent(getContext(), NotificationPollingService.class));
+        }
         tokenManager.clearAll();
         if (!isAdded()) return;
         NavOptions options = new NavOptions.Builder()
