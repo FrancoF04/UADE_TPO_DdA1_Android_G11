@@ -596,7 +596,7 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 - `activityRating` y `guideRating`: enteros entre 1 y 5 (obligatorios)
 - `comment`: string, máximo 300 caracteres (opcional, puede ser `null`)
 - Solo se puede calificar cuando la reserva ya está `finalized` (el backend recalcula el status en cada lectura)
-- La ventana de calificación es de **48 horas** desde `selectedDate` de la reserva — **no** se suma la duración de la actividad (a diferencia de la lógica de transición `confirmed`→`finalized`, que sí la suma)
+- La ventana de calificación es de **48 horas** desde la **finalización** de la actividad (`selectedDate + duración`), consistente con la lógica de transición `confirmed`→`finalized`
 - Cada reserva solo puede calificarse **una vez**
 
 **Errores:**
