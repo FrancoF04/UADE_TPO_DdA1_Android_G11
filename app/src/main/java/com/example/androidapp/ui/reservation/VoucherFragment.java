@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,13 +34,18 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import com.example.androidapp.util.NetworkMonitor;
+
 @AndroidEntryPoint
-public class VoucherFragment extends Fragment {
+public class VoucherFragment extends Fragment implements NetworkMonitor.OnNetworkChangeListener {
     @Inject
     ActivityApi activityApi;
 
     @Inject
     OfflineBookingCache offlineBookingCache;
+
+    @Inject
+    NetworkMonitor networkMonitor;
 
     // UI elements
     private FrameLayout galleryCarousel;
@@ -58,6 +64,7 @@ public class VoucherFragment extends Fragment {
     // Error and progress UI elements
     private ProgressBar progressBar;
     private TextView tvError;
+    private TextView tvOfflineBanner;
 
     // params
     private String currentActivityId;
@@ -88,6 +95,7 @@ public class VoucherFragment extends Fragment {
 
         progressBar = view.findViewById(R.id.progressBar);
         tvError = view.findViewById(R.id.tvError);
+        tvOfflineBanner = view.findViewById(R.id.tvOfflineBanner);
 
         Bundle args = getArguments();
         if (args != null) {
@@ -104,6 +112,40 @@ public class VoucherFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        networkMonitor.register(this);
+        // recargar en base al estado de la red
+        if (currentActivityId != null && !currentActivityId.isEmpty()) {
+            loadVoucherDetails(currentActivityId);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        networkMonitor.unregister(this);
+    }
+
+    @Override
+    public void onNetworkAvailable() {
+        if(!isAdded() || !isResumed()) return;
+        Toast.makeText(requireContext(), R.string.network_available, Toast.LENGTH_SHORT).show();
+        updateOfflineBanner(true);
+        if (currentActivityId != null && !currentActivityId.isEmpty()) {
+            loadVoucherDetails(currentActivityId);
+        }
+    }
+
+    @Override
+    public void onNetworkLost() {
+        if(!isAdded() || !isResumed()) return;
+        Toast.makeText(requireContext(), R.string.network_lost, Toast.LENGTH_SHORT).show();
+        updateOfflineBanner(false);
+        loadFromCache();
+    }
+
     private void loadVoucherDetails(String activityId) {
         progressBar.setVisibility(View.VISIBLE);
 
@@ -118,8 +160,7 @@ public class VoucherFragment extends Fragment {
                         Activity activity = response.body().getData();
                         displayVoucher(activity);
                 } else {
-                    tvError.setText(R.string.error_generic);
-                    tvError.setVisibility(View.VISIBLE);
+                    loadFromCache();
                 }
             }
 
@@ -127,16 +168,21 @@ public class VoucherFragment extends Fragment {
             public void onFailure(Call<ApiResponse<Activity>> call, Throwable t){
                 if(!isAdded()) return;
                 progressBar.setVisibility(View.GONE);
-                Activity cached = offlineBookingCache.getActivityById(activityId);
-                if(cached != null){
-                    displayVoucher(cached);
-                } else {
-                    tvError.setText(R.string.error_network);
-                    tvError.setVisibility(View.VISIBLE);
-                }
+                loadFromCache();
                 Log.e("VoucherDetail", "Failed to load detail", t);
             }
         });
+    }
+
+    private void loadFromCache(){
+        if (currentActivityId == null || currentActivityId.isEmpty()) return;
+        Activity cached = offlineBookingCache.getActivityById(currentActivityId);
+        if (cached != null){
+            displayVoucher(cached);
+        } else {
+            tvError.setText(R.string.error_network);
+            tvError.setVisibility(View.VISIBLE);
+        }
     }
 
     private void displayVoucher(Activity activity){
@@ -191,5 +237,11 @@ public class VoucherFragment extends Fragment {
 
         tvMembersCount.setText(String.valueOf(activity.getTotalSpots() - activity.getAvailableSpots()));
         tvMembersReserved.setText(quantitySelected);
+    }
+
+    private void updateOfflineBanner(boolean isOnline){
+        if (tvOfflineBanner != null){
+            tvOfflineBanner.setVisibility(isOnline ? View.GONE : View.VISIBLE);
+        }
     }
 }

@@ -24,6 +24,18 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
+        <!-- Add after the title LinearLayout -->
+        <TextView
+            android:id="@+id/tvOfflineBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/offline_banner"
+            android:textColor="@android:color/white"
+            android:background="@color/offline_banner_bg"
+            android:gravity="center"
+            android:padding="8dp"
+            android:visibility="gone" />
+
         <!-- Contenido del voucher -->
         <ScrollView
             android:layout_width="match_parent"

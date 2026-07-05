@@ -131,6 +131,8 @@
     <string name="offline_banner">Sin conexión — mostrando datos guardados.</string>
     <string name="offline_conexion_restaurada">Conexión restaurada</string>
     <string name="offline_sin_conexion">Sin conexión — mostrando datos guardados</string>
+    <string name="network_available">Conexión restaurada</string>
+    <string name="network_lost">Sin conexión</string>
     <string name="reserva_no_identificada">No se pudo identificar la reserva a cancelar</string>
 
     <!-- voucher -->
