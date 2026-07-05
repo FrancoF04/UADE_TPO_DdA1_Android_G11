@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -84,5 +86,21 @@ public final class DateTimeUtils {
             return matcher.group(1);
         }
         return "--";
+    }
+
+    public static String formatFriendly(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return "";
+        }
+        Instant instant = parseToInstant(raw);
+        if (instant == null) {
+            return raw;
+        }
+        try {
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+            return zdt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        } catch (Exception e) {
+            return raw;
+        }
     }
 }

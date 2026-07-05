@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AdapterView;
 
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
@@ -171,6 +172,16 @@ public class MisReservasFragment extends Fragment implements NetworkMonitor.OnNe
                 .navigate(R.id.action_CancelarReservaFragment, args);
     }
 
+    private void onReservationSelected(AdapterView<?> parent, View view, int position, long id) {
+        Reservation reservation = adapter.getItem(position);
+            if (reservation == null || reservation.getActivityId() == null) return;
+            Bundle args = new Bundle();
+            args.putString("activityId", reservation.getActivityId());
+            args.putString("date", reservation.getSelectedDate());
+            args.putString("quantity", String.valueOf(reservation.getQuantity()));
+            Navigation.findNavController(requireView()).navigate(R.id.action_reservas_to_detail, args);
+    }
+
     private void initViews(View view) {
         tvActividades = view.findViewById(R.id.tvActividades);
         tvEmpty = view.findViewById(R.id.tvEmpty);
@@ -180,14 +191,7 @@ public class MisReservasFragment extends Fragment implements NetworkMonitor.OnNe
         adapter = new ReservationAdapter(requireContext(), new ArrayList<>(), false, this::onCancelReservation);
         lvActividades.setAdapter(adapter);
 
-        lvActividades.setOnItemClickListener((parent, v, position, id) -> {
-            Reservation reservation = adapter.getItem(position);
-            if (reservation == null || reservation.getActivityId() == null) return;
-            Bundle args = new Bundle();
-            args.putString("activityId", reservation.getActivityId());
-            args.putBoolean("showReserveButton", false);
-            Navigation.findNavController(requireView()).navigate(R.id.action_reservas_to_detail, args);
-        });
+        lvActividades.setOnItemClickListener(this::onReservationSelected);
 
         tvActividades.setText(R.string.mis_actividades);
 

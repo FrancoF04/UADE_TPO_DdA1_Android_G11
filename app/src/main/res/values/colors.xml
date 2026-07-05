@@ -39,4 +39,5 @@
     <color name="placeholder_4">#F0F4C3</color>
     <color name="placeholder_5">#D1C4E9</color>
     <color name="logout_red">#C62828</color>
+    <color name="offline_banner_bg">#FF9800</color>
 </resources>

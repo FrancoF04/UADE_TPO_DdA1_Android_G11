@@ -29,9 +29,7 @@ android {
     buildTypes {
         debug {
             // Uncomment the line below to use local emulator instead of Railway:
-            //buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/\"")
-            //for android device conected use the following with your correct ip
-            //buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.23:3000/api/\"")
+            //buildConfigField("String", "API_BASE_URL", "\"http://192.168.0.230:3000/api/\"")
         }
         release {
             isMinifyEnabled = false

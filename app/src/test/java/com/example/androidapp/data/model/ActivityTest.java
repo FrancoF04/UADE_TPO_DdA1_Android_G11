@@ -28,7 +28,7 @@ public class ActivityTest {
                 "123", "City Tour", "Buenos Aires", "Turismo",
                 "Un recorrido por la ciudad", "http://img.jpg", gallery,
                 "3 horas", 5000, "ARS", 10, 20,
-                "2026-04-15", "Plaza de Mayo", guide, "Espanol",
+                null, Arrays.asList("2026-04-15"), new MeetingPoint(-34.6083, -58.3712, "Plaza de Mayo"), guide, "Espanol",
                 included, "Cancelacion gratuita 24h antes", true);
 
         String json = gson.toJson(activity);

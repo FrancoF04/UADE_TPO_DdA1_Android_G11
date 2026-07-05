@@ -13,7 +13,7 @@
             app:destination="@id/CancelarReservaFragment"/>
         <action
             android:id="@+id/action_reservas_to_detail"
-            app:destination="@id/activity_nav_graph" />
+            app:destination="@id/voucherFragment" />
         <action
             android:id="@+id/action_reservas_to_historial"
             app:destination="@id/historial_nav_graph" />
@@ -48,5 +48,22 @@
             app:argType="string"
             app:nullable="true" />
     </fragment>
-    
+
+    <fragment
+        android:id="@+id/voucherFragment"
+        android:name="com.example.androidapp.ui.reservation.VoucherFragment"
+        android:label="Voucher">
+        <argument
+            android:name="activityId"
+            app:argType="string"
+            app:nullable="false" />
+        <argument
+            android:name="date"
+            app:argType="string"
+            app:nullable="false" />
+        <argument
+            android:name="quantity"
+            app:argType="string"
+            app:nullable="false" />
+    </fragment>
 </navigation>
