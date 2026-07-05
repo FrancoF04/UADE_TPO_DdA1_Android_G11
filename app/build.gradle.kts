@@ -29,7 +29,9 @@ android {
     buildTypes {
         debug {
             // Uncomment the line below to use local emulator instead of Railway:
-            //buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.35:3000/api/\"")
+            //buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/\"")
+            //for android device conected use the following with your correct ip
+            //buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.23:3000/api/\"")
         }
         release {
             isMinifyEnabled = false
@@ -67,4 +69,11 @@ dependencies {
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.osmdroid.android)
+    // CameraX: captura de video frame a frame para el analizador de QR
+    implementation(libs.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    // ML Kit: reconocimiento de códigos de barras/QR sin servidor externo
+    implementation(libs.mlkit.barcode)
 }

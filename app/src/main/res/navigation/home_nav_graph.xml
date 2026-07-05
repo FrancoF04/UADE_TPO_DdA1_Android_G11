@@ -34,12 +34,21 @@
         <action
             android:id="@+id/action_home_to_filters"
             app:destination="@id/filtersFragment" />
+
+        <action
+            android:id="@+id/action_home_to_qr"
+            app:destination="@id/qrScanFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/filtersFragment"
         android:name="com.example.androidapp.ui.home.FiltersFragment"
         android:label="Filtros"/>
+
+    <fragment
+        android:id="@+id/qrScanFragment"
+        android:name="com.example.androidapp.ui.qr.QrScanFragment"
+        android:label="Lector QR" />
 
     <fragment
         android:id="@+id/searchFragment"

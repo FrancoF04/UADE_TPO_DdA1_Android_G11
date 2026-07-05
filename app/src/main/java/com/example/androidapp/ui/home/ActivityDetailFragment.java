@@ -65,6 +65,7 @@ public class ActivityDetailFragment extends Fragment {
 
     private boolean noveltyResetInProgress = false;
     public static final Set<String> viewedNovelties = Collections.synchronizedSet(new HashSet<>());
+    public static final Set<String> confirmedAttendances = Collections.synchronizedSet(new HashSet<>());
     private TextView tvName;
     private TextView tvDestination;
     private TextView tvCategory;
@@ -79,6 +80,9 @@ public class ActivityDetailFragment extends Fragment {
     private TextView tvCancellation;
     private TextView tvError;
     private ProgressBar progressBar;
+    private View layoutAttendance;
+    private View viewAttendanceCircle;
+    private TextView tvAttendanceStatus;
     private Button btnReserve;
     private ImageButton btnFavorite;
     private FrameLayout galleryCarousel;
@@ -112,6 +116,9 @@ public class ActivityDetailFragment extends Fragment {
         tvCancellation = view.findViewById(R.id.tvCancellation);
         tvError = view.findViewById(R.id.tvError);
         progressBar = view.findViewById(R.id.progressBar);
+        layoutAttendance = view.findViewById(R.id.layoutAttendance);
+        viewAttendanceCircle = view.findViewById(R.id.viewAttendanceCircle);
+        tvAttendanceStatus = view.findViewById(R.id.tvAttendanceStatus);
         btnReserve = view.findViewById(R.id.btnReserve);
         btnFavorite = view.findViewById(R.id.btnFavorite);
         galleryCarousel = view.findViewById(R.id.galleryCarousel);
@@ -124,6 +131,7 @@ public class ActivityDetailFragment extends Fragment {
                 || getArguments().getBoolean("showSpotsField", true);
         btnReserve.setVisibility(showReserve ? View.VISIBLE : View.GONE);
         tvSpots.setVisibility(showSpots ? View.VISIBLE : View.GONE);
+        layoutAttendance.setVisibility(!showReserve ? View.VISIBLE : View.GONE);
 
         btnReserve.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
@@ -140,9 +148,22 @@ public class ActivityDetailFragment extends Fragment {
         if (!currentActivityId.isEmpty()) {
             loadActivityDetail(currentActivityId);
             checkIfFavorite();
+            updateAttendanceUI();
         }
 
         btnFavorite.setOnClickListener(v -> toggleFavorite());
+    }
+
+    private void updateAttendanceUI() {
+        if (confirmedAttendances.contains(currentActivityId)) {
+            viewAttendanceCircle.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                    requireContext().getColor(android.R.color.holo_green_dark)));
+            tvAttendanceStatus.setText(R.string.attendance_confirmed);
+        } else {
+            viewAttendanceCircle.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                    requireContext().getColor(R.color.md_theme_outlineVariant)));
+            tvAttendanceStatus.setText(R.string.attendance_to_confirm);
+        }
     }
 
     private void checkIfFavorite() {
