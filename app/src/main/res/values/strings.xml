@@ -47,6 +47,7 @@
     <string name="home_activities_title">Actividades</string>
     <string name="home_empty">No hay actividades disponibles</string>
     <string name="home_search_button">Buscar</string>
+    <string name="home_qr_scanner_description">Escanear asistencia</string>
 
     <!-- Search -->
     <string name="search_title">Buscar Actividades</string>
@@ -140,4 +141,6 @@
     <string name="detail_date_time">Fecha y hora</string>
     <string name="detail_members_count">Cantidad de participantes</string>
     <string name="detail_members_reserved">Participantes reservados</string>
+    <string name="attendance_to_confirm">Asistencia a confirmar</string>
+    <string name="attendance_confirmed">Asistencia confirmada</string>
 </resources>

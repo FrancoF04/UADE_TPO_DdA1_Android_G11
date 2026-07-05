@@ -89,6 +89,7 @@ public class HistorialFragment extends Fragment {
             args.putString("bookingId", item.getBookingId());
             args.putString("activityName", item.getActivityName());
             args.putString("activityDate", item.getSelectedDate());
+            args.putString("activityDuration", item.getDuration());
             Navigation.findNavController(requireView()).navigate(R.id.action_historial_to_rating, args);
         });
         lvHistorial.setAdapter(adapter);

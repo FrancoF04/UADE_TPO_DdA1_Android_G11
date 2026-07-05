@@ -17,6 +17,8 @@ biometric = "1.2.0-alpha05"
 glide = "4.16.0"
 kotlinxSerialization = "1.7.3"
 osmdroid = "6.1.18"
+camerax = "1.4.1"
+mlkitBarcode = "17.3.0"
 
 
 [libraries]
@@ -40,6 +42,11 @@ biometric = { group = "androidx.biometric", name = "biometric", version.ref = "b
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 osmdroid-android = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
+camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
+camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+mlkit-barcode = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkitBarcode" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

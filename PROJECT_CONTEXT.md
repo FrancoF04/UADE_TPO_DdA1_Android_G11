@@ -945,29 +945,78 @@ Preferir:
 
 ---
 
-### Conectividad
-
-Antes de reintentar:
-
-- verificar disponibilidad de red
-
-para evitar ciclos infinitos de error.
+- El launcher **debe registrarse antes de `STARTED`** (en `onCreate`); su callback es asíncrono
+- Si el usuario no tiene ningún método biométrico enrolado, la app no puede usar biometría — opciones: deshabilitar el botón, o redirigir con `Settings.ACTION_BIOMETRIC_ENROLL`
+- Si `PromptInfo` usa `DEVICE_CREDENTIAL`, **no se puede llamar a `setNegativeButtonText()`**
 
 ---
 
-## Restricciones impuestas por la cátedra
+## Clase 8 — Material Design / Material Components
 
-Para Android Nativo quedan habilitadas únicamente las siguientes tecnologías para esta funcionalidad:
+> **A diferencia del resto de las clases documentadas acá, esto no es un requisito de la consigna del TPO** (no se menciona en el enunciado oficial). Se deja documentado como herramienta **disponible y habilitada por si se decide usar** para mejorar la UI, no como tecnología obligatoria.
 
-- ML Kit Barcode Scanning
-- ActivityResultLauncher
-- ActivityResultContracts.RequestPermission
-- Manifest.permission.CAMERA
-- Foreground Service
-- WorkManager
-- OkHttp
-- Gson
-- NotificationCompat
-- NotificationChannel
+### Herramientas habilitadas
 
-No sugerir alternativas (ZXing, CameraX con otros lectores, Firebase QR Scanner, WebSockets, FCM, etc.) salvo que el usuario lo solicite explícitamente.
+- **Material Components para Android** (`com.google.android.material:material`)
+- **Navigation Component** (`NavController` + `FragmentContainerView`) para manejar el back stack — ya en uso en el proyecto independientemente de Material Design
+
+### Theme global
+
+- Se define en `res/values/themes.xml` (y su variante `values-night` para modo oscuro)
+- Se activa con `android:theme="@style/TuTema"` en el tag `<application>` de `AndroidManifest.xml`
+- Parent recomendado: `Theme.MaterialComponents.DayNight.NoActionBar` (usar Toolbar propia en vez de la ActionBar del sistema)
+- Atributos de color a definir en el Theme: `colorPrimary`, `colorOnPrimary`, `colorSecondary`, `colorOnSecondary`, `colorSurface`, `colorOnSurface`, `colorError`
+- Regla: **no hardcodear colores en los layouts**; todo componente Material debe tomar sus colores del Theme
+
+### Componentes Material habilitados
+
+- `MaterialButton` (`com.google.android.material.button.MaterialButton`)
+- `TextInputLayout` + `TextInputEditText` (`com.google.android.material.textfield.*`)
+- `MaterialCardView` (`com.google.android.material.card.MaterialCardView`)
+- `MaterialToolbar` como TopAppBar, vinculada con `setSupportActionBar()`
+- `TabLayout` (`com.google.android.material.tabs.TabLayout`), opcional, conectado a `ViewPager2`
+- `BottomNavigationView` (`com.google.android.material.bottomnavigation.BottomNavigationView`), vinculado a `NavController`
+
+### Jerarquía de estilos permitida
+
+De menor a mayor prioridad — todas son válidas pero con criterio de uso:
+
+1. **Theme** (`themes.xml`) — usar para el caso general (90% de los casos)
+2. **Style** (`styles.xml`, `style="@style/..."` en el layout) — solo para variantes reutilizables que se repiten en más de 2 lugares
+3. **Atributo XML directo** (ej. `android:backgroundTint="#..."`) — solo para casos realmente únicos; evitarlo como regla general porque dificulta el mantenimiento
+
+### Safe Area / Insets
+
+- `WindowInsetsCompat` de AndroidX
+- Desde Android 15 (API 35) el edge-to-edge es obligatorio: si no se manejan los insets, el contenido queda tapado por las barras del sistema
+- Componentes como `AppBarLayout` y `BottomNavigationView` ya manejan algunos insets automáticamente al usar un tema Material
+
+---
+
+## Clase 9 — Lectura de QR y Notificaciones (Long Polling)
+
+### Lectura de códigos QR
+
+- Librería habilitada: **ML Kit Barcode Scanning** (`com.google.mlkit:barcode-scanning`). Es un modelo on-device ya entrenado; no corresponde reimplementar el decodificado a mano
+- Permisos: patrón estándar de runtime permissions de Android
+  - `Manifest.permission.CAMERA`
+  - Verificar previamente con `ContextCompat.checkSelfPermission(...)`
+  - Pedir el permiso con `registerForActivityResult(new ActivityResultContracts.RequestPermission(), ...)` guardado en un `ActivityResultLauncher<String>`
+- La implementación completa de la cámara/scanner no está en las diapositivas (se remite al repositorio del curso)
+
+### Notificaciones vía Long Polling
+
+- No hay push real habilitado (FCM/APNs no forman parte de este alcance) — la app se entera de novedades sondeando un endpoint propio
+- Dónde correr el loop de sondeo:
+  - **Foreground Service**: necesario si el sondeo debe seguir con la app en background. Requiere `startForeground()` y mostrar una notificación persistente mientras corre. No sobrevive si el usuario fuerza el cierre de la app desde Ajustes
+  - **WorkManager**: para chequeos periódicos más espaciados y con ahorro de batería (no para sondeo continuo)
+- Cliente HTTP habilitado en el ejemplo: **OkHttp** (`okHttpClient.newCall(request).execute()`)
+- Parseo de la respuesta: **Gson** (`gson.fromJson(json, Clase.class)`)
+- Notificaciones nativas: `NotificationCompat.Builder` + `NotificationManager`
+  - Requiere crear un `NotificationChannel` en Android 8+ (API 26+)
+- Reglas obligatorias de robustez:
+  - Fijar un timeout en el cliente (el servidor puede no responder nunca)
+  - Ante cualquier `IOException`/error de red, loguear y reintentar el ciclo — nunca terminar el loop silenciosamente
+  - Evitar un `while` sin pausas (agota batería); usar backoff o espaciar con WorkManager
+  - En redes móviles inestables, validar conectividad antes de reintentar (evita loops de error en cascada)
+- Referencia del endpoint (server-side, no se implementa en la app pero define el contrato): el servidor retiene la respuesta hasta que hay novedades o se cumple un timeout (~25s en el ejemplo), y responde `204` si no hubo novedades

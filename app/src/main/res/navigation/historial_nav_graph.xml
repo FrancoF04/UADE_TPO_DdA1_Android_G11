@@ -39,6 +39,11 @@
             app:argType="string"
             android:defaultValue="" />
 
+        <argument
+            android:name="activityDuration"
+            app:argType="string"
+            android:defaultValue="" />
+
     </fragment>
 
 </navigation>
