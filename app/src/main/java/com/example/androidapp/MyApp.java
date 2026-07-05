@@ -2,6 +2,8 @@ package com.example.androidapp;
 
 import android.app.Application;
 
+import com.example.androidapp.util.NotificationHelper;
+
 import dagger.hilt.android.HiltAndroidApp;
 import org.osmdroid.config.Configuration;
 
@@ -11,5 +13,6 @@ public class MyApp extends Application {
     public void onCreate() {
         super.onCreate();
         Configuration.getInstance().setUserAgentValue(getPackageName());
+        NotificationHelper.createChannels(this);
     }
 }
