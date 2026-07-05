@@ -2,15 +2,18 @@
 
 Este archivo provee instrucciones a Claude Code (claude.ai/code) para trabajar en este repositorio.
 
-## Contexto del Proyecto
+## Contexto del Proyecto — lectura obligatoria
 
-Antes de realizar cualquier cambio, leer [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md). Contiene los requerimientos académicos, tecnologías obligatorias y restricciones de la cátedra. Respetar todo lo definido ahí.
+Al empezar a trabajar en este repositorio, leer siempre estos dos archivos completos (no solo cuando el cambio parezca tocarlos directamente):
+
+- [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) — requerimientos académicos, tecnologías habilitadas por clase y restricciones de la cátedra. Aplica **solo al frontend**; el backend es libre y no está sujeto a estas restricciones ni es evaluado por la cátedra. Respetar todo lo definido ahí.
+- [`FRONTEND_REFERENCE.md`](FRONTEND_REFERENCE.md) — referencia completa y actualizada del backend real (endpoints, modelos, quirks). Es la única documentación del backend en este repo.
 
 ## Descripción General
 
 **android-app** — aplicación Android de un solo módulo escrita en **Java** (no Kotlin), usando Views tradicionales y layouts XML. Target API 36, minSdk 30.
 
-El backend ya está hecho y deployado. El trabajo es exclusivamente el **frontend Android en Java**. Ver [`FRONTEND_REFERENCE.md`](FRONTEND_REFERENCE.md) para la referencia completa del backend antes de tocar cualquier cosa relacionada a endpoints, modelos o respuestas del servidor.
+El backend ya está hecho y deployado. El trabajo es exclusivamente el **frontend Android en Java**.
 
 ## Sistema de Build
 
@@ -97,8 +100,8 @@ com.example.androidapp/
 
 ### Quirks conocidos del backend
 
-- `meetingPoint` puede llegar como **string** o como **objeto** `{ latitude, longitude, address }`. Siempre usar `@JsonAdapter(MeetingPointAdapter.class)` en el campo.
-- El campo `date`/`dates` en `Activity` puede ser string o array — manejado con `@JsonAdapter(StringListOrStringAdapter.class)`.
+- `meetingPoint`: verificado contra el código real del backend (`activityView.js` → `buildMeetingPoint`) — la API **siempre** serializa un objeto `{ latitude, longitude, address }`, nunca un string, para todas las actividades (incluso las que no tienen coordenadas propias, cae a un fallback por destino). `@JsonAdapter(MeetingPointAdapter.class)` sigue en el modelo como resguardo defensivo, pero la rama de "string" no se ejerce hoy contra la API real.
+- El campo `date`/`dates` en `Activity.java` usa `@SerializedName(value="date", alternate={"dates"})` — **ambas claves llegan simultáneamente** en la respuesta real (`date` es un string único, `dates` es el array completo de fechas de todos los schedules). Gson asigna el valor de cada clave coincidente a medida que la encuentra en el JSON, así que la que aparece **última** en el objeto termina pisando a la anterior en el mismo campo Java. Hoy funciona (queda el array completo) porque el backend serializa `date` antes que `dates` en `data.js` — es un comportamiento correcto pero frágil, depende del orden de claves del backend. Si algún día `GET /api/activities` deja de traer el array completo en `date`, revisar este orden antes que el adapter.
 - El token **no es JWT estándar** — es JSON en base64url. No validar localmente, confiar en el servidor. Si retorna 401 persistente, el server se reinició (datos en memoria).
 - El backend guarda datos **en memoria** — si Railway reinicia el server, los tokens y reservas se pierden.
 - **Ratings — respuesta anidada**: `GET /api/ratings/:bookingId` y `POST /api/ratings` devuelven `{ "data": { "rating": {...} } }`. Usar `RatingData` como tipo genérico de `ApiResponse` y llamar `.getData().getRating()`.
@@ -128,6 +131,8 @@ Todas gestionadas a través de `gradle/libs.versions.toml`:
 
 ## Estado de Funcionalidades (al cierre de main — mayo 2026)
 
+> **Qué significa "⚠️ Parcial"**: no es que el código Android esté incompleto — significa que el frontend está terminado y correcto, pero no está confirmado que el endpoint correspondiente funcione end-to-end contra el backend que esté corriendo *en este momento*. El backend tiene CI/CD que autodeploya a Railway, así que en general el deploy activo coincide con el código fuente (salvo que algún deploy haya fallado silenciosamente). El riesgo real y más probable es otro: el backend guarda todo **en memoria**, así que un reinicio de Railway (por redeploy, crash, o sleep del free tier) borra las reservas/favoritos previos necesarios para probar el flujo completo de punta a punta. Es una advertencia de "no verificado en la última prueba", no una dependencia obvia de "esto necesita al backend".
+
 | Funcionalidad | Estado | Notas |
 |---|---|---|
 | Login (usuario/contraseña) | ✅ Funciona | Auto-prompt biométrico post-login si está habilitado |
@@ -144,7 +149,7 @@ Todas gestionadas a través de `gradle/libs.versions.toml`:
 | Mis reservas | ✅ Funciona | Muestra reservas `confirmed`; muestra horas de cancelación |
 | Cancelar reserva | ⚠️ Parcial | UI funciona; depende del endpoint en Railway |
 | Historial | ✅ Funciona | Clickeable → detalle; botón "Calificar" por reserva |
-| Calificaciones | ✅ Funciona | Formulario + read-only + ventana 48hs |
+| Calificaciones | ✅ Funciona | Formulario + read-only + ventana 48hs (ver bug conocido sobre el cálculo de la ventana) |
 | Noticias | ✅ Funciona | `NewsFragment` + `NewsDetailFragment`; caché en storage interno (`NewsCache`) |
 | Favoritos | ⚠️ Parcial | `FavoritesFragment` existe; funcionalidad de add/remove por verificar |
 | Perfil | ✅ Funciona | Ver y editar datos; toggle biometría |
@@ -158,6 +163,7 @@ Todas gestionadas a través de `gradle/libs.versions.toml`:
 - **Historial vacío**: `GET /api/activities/history` retorna solo reservas `finalized`. Si Railway reinició y no hay reservas finalizadas en memoria, el historial aparece vacío aunque funcione correctamente.
 - **Botones en ListView items**: cualquier `Button` visible dentro de un ítem de `ListView` debe tener `android:focusable="false"` para que el `OnItemClickListener` de la fila funcione. Sin esto, el botón captura el touch y la fila no es presionable.
 - **Favoritos UI**: `FavoritesFragment` existe pero la integración completa (agregar/quitar desde detalle de actividad) puede estar incompleta.
+- **Ventana de calificación mal calculada (front y back)**: el enunciado del TPO (punto 6.10) pide habilitar la calificación "dentro de las 48 horas posteriores a la **finalización** de la actividad" (`selectedDate + duración`). Hoy tanto `RatingFragment.isWithin48Hours()` (frontend) como `ratings.routes.js` → `isWithinRatingWindow()` (backend, verificado en `Backend/src/routes/ratings.routes.js`) calculan la ventana desde `selectedDate` (el **inicio** de la actividad), sin sumar la duración. Afecta más a actividades largas (ej. "Tren a las Nubes en Salta", 15hs). Bug conocido y diferido a pedido del usuario — si se corrige, hacerlo en ambos lados a la vez para no desincronizarlos.
 
 ## Convenciones del proyecto
 
