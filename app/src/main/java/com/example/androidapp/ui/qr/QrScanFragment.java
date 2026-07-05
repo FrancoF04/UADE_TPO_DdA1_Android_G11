@@ -93,13 +93,13 @@ public class QrScanFragment extends Fragment {
 
 
 
-        // ML Kit: configurado solo para QR, descarta otros formatos y es más rápido
+        // ML Kit: configurado solo para QR
         BarcodeScannerOptions opciones = new BarcodeScannerOptions.Builder()
                 .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
                 .build();
         barcodeScanner = BarcodeScanning.getClient(opciones);
 
-        // Un solo hilo de análisis es suficiente; más hilos no aumentan la velocidad de lectura
+
         cameraExecutor = Executors.newSingleThreadExecutor();
 
     }
@@ -116,7 +116,6 @@ public class QrScanFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        //Enlazar elementos previewView y tvResultado
         previewView = view.findViewById(R.id.previewView);
         tvResultado = view.findViewById(R.id.tvResultado);
 
@@ -124,8 +123,6 @@ public class QrScanFragment extends Fragment {
     }
 
 
-
-    //Funciones
 
     //Pedir permiso para la camara
     private void pedirPermisoCamara() {
@@ -201,6 +198,7 @@ public class QrScanFragment extends Fragment {
     }
 
     //Formatear JSON del qr y mostrar respuesta positiva o negativa
+    //Validaciones de acuerdo a si es un QR valido, si se reservo la actividad y si se escanea en el dia de la actividad
     private void procesarResultado(String rawValue) {
         String mensaje;
         try {
@@ -230,9 +228,8 @@ public class QrScanFragment extends Fragment {
         });
     }
 
-    /**
-     * @return 1 si es válida, 0 si tiene reserva pero no es hoy, -1 si no tiene reserva
-     */
+
+    //return 1 si es válida, 0 si tiene reserva pero no es hoy, -1 si no tiene reserva
     private int validarReserva(String activityId) {
         OfflineBundle bundle = offlineBookingCache.read();
         if (bundle == null || bundle.getBookings() == null) return -1;
