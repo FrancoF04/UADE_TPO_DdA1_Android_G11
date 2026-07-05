@@ -669,6 +669,23 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 - Se dispara una única vez por reserva `confirmed`, cuando faltan 24hs o menos para `selectedDate` (y no se disparó antes — el backend guarda un flag `reminderSentAt` en el propio booking, en memoria).
 - El campo `type` es un discriminador pensado para reusarse: otros tipos de evento (ej. cancelación/reprogramación de la Feature 12.30) pueden agregarse a futuro sin cambiar el contrato del endpoint ni el cliente existente — cada consumidor del lado Android simplemente ignora los `type` que no reconoce.
 
+**`GET /api/bookings/sync/poll`** (Feature 12.30 — avisos de cancelación/reprogramación): mismo contrato de Long Polling que `/api/notifications/poll`, pero clon de `POST /api/bookings/sync` — devuelve `{ since, serverTime, changes }` en vez de `{ events }`. Requiere auth. Query param opcional `since` (ISO string; si se omite, devuelve todos los cambios existentes). `changes[].changeType` puede ser `cancelled`, `finalized` o `updated` (una reprogramación de horario también cae en `updated` — comparar `selectedDate`/`selectedScheduleId` contra lo que tenga cacheado el cliente para detectarla).
+
+> ⚠️ Nota de implementación: `getSyncChangesSince` (usada tanto por `/sync` como por `/sync/poll`) no filtra por usuario — devuelve cambios de reservas de **todos** los usuarios del sistema, no solo las del que llama. Es un comportamiento preexistente del endpoint `/sync` original, no introducido por `/sync/poll`; queda así a propósito (proyecto académico, no es necesario resolverlo).
+
+### Operador — `/api/operator` (alias: `/operator`)
+
+Endpoints de simulación para la Feature 12.30 (avisos de cancelación/reprogramación "por la operadora"). **Sin autenticación** — no existe un rol admin real en el backend, son una herramienta de testing/demo para poder disparar estos cambios manualmente (ej. desde curl/Postman o una mini-app aparte) mientras corre el server.
+
+| Método | Path | Auth | Body | Respuesta |
+|--------|------|------|------|-----------|
+| POST | `/bookings/:id/cancel` | No | — | `{ booking }` |
+| POST | `/bookings/:id/reschedule` | No | `{ selectedScheduleId }` | `{ booking }` |
+
+- Cancelar: marca la reserva como `cancelled` (equivalente a lo que hace el usuario con `DELETE /api/bookings/:id`, pero sin las validaciones de plazo de cancelación — el operador puede cancelar en cualquier momento).
+- Reprogramar: mueve la reserva a otro `selectedScheduleId` **ya existente** de la misma actividad (no crea horarios nuevos) y resetea `reminderSentAt` para que el recordatorio de 24hs se recalcule contra la nueva fecha.
+- Ambos cambios quedan reflejados en `booking.updatedAt`, por lo que `GET /api/bookings/sync/poll` los detecta automáticamente sin necesitar ningún mecanismo adicional.
+
 ---
 
 ## Datos pre-cargados
