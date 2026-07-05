@@ -26,6 +26,10 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.androidapp.R;
+import com.example.androidapp.data.local.OfflineBookingCache;
+import com.example.androidapp.data.model.OfflineBundle;
+import com.example.androidapp.data.model.Reservation;
+import com.example.androidapp.util.DateTimeUtils;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
@@ -40,10 +44,18 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class QrScanFragment extends Fragment {
 
     //TAG para debugging
     private static final String TAG = "QrScanFragment";
+
+    @Inject
+    OfflineBookingCache offlineBookingCache;
 
     //launcher
     private ActivityResultLauncher<String> requestPermissionLauncher;
@@ -195,8 +207,16 @@ public class QrScanFragment extends Fragment {
             JSONObject json = new JSONObject(rawValue);
             if (json.has("activityId")) {
                 String activityId = json.getString("activityId");
-                com.example.androidapp.ui.home.ActivityDetailFragment.confirmedAttendances.add(activityId);
-                mensaje = "Asistencia confirmada para la actividad.";
+                
+                int validacion = validarReserva(activityId);
+                if (validacion == 1) {
+                    com.example.androidapp.ui.home.ActivityDetailFragment.confirmedAttendances.add(activityId);
+                    mensaje = "Asistencia confirmada para la actividad.";
+                } else if (validacion == 0) {
+                    mensaje = "Error: Tienes una reserva pero no es para el día de hoy.";
+                } else {
+                    mensaje = "Error: No tienes una reserva para esta actividad.";
+                }
             } else {
                 mensaje = "Error: QR inválido (activityId faltante)";
             }
@@ -208,6 +228,25 @@ public class QrScanFragment extends Fragment {
             tvResultado.setText(mensajeFinal);
             Toast.makeText(requireContext(), mensajeFinal, Toast.LENGTH_SHORT).show();
         });
+    }
+
+    /**
+     * @return 1 si es válida, 0 si tiene reserva pero no es hoy, -1 si no tiene reserva
+     */
+    private int validarReserva(String activityId) {
+        OfflineBundle bundle = offlineBookingCache.read();
+        if (bundle == null || bundle.getBookings() == null) return -1;
+        
+        boolean tieneReservaOtroDia = false;
+        for (Reservation r : bundle.getBookings()) {
+            if (activityId.equals(r.getActivityId())) {
+                if (DateTimeUtils.isToday(r.getSelectedDate())) {
+                    return 1;
+                }
+                tieneReservaOtroDia = true;
+            }
+        }
+        return tieneReservaOtroDia ? 0 : -1;
     }
 
     //liberar recursos al destruir fragment

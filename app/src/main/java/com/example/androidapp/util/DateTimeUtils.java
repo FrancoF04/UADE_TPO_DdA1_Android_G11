@@ -52,6 +52,16 @@ public final class DateTimeUtils {
         return !activityDate.isBefore(today);
     }
 
+    public static boolean isToday(String raw) {
+        if (raw == null || raw.trim().isEmpty()) return false;
+        Instant instant = parseToInstant(raw);
+        if (instant == null) return false;
+        ZoneId argZone = ZoneId.of("America/Argentina/Buenos_Aires");
+        LocalDate activityDate = instant.atZone(argZone).toLocalDate();
+        LocalDate today = LocalDate.now(argZone);
+        return activityDate.isEqual(today);
+    }
+
     public static String extractDateKey(String rawDate) {
         if (rawDate == null) {
             return null;
