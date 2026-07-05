@@ -133,4 +133,6 @@
     <string name="offline_conexion_restaurada">Conexión restaurada</string>
     <string name="offline_sin_conexion">Sin conexión — mostrando datos guardados</string>
     <string name="reserva_no_identificada">No se pudo identificar la reserva a cancelar</string>
+    <string name="attendance_to_confirm">Asistencia a confirmar</string>
+    <string name="attendance_confirmed">Asistencia confirmada</string>
 </resources>

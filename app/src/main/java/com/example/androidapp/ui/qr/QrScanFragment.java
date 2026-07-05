@@ -192,11 +192,16 @@ public class QrScanFragment extends Fragment {
     private void procesarResultado(String rawValue) {
         String mensaje;
         try {
-            // org.json.JSONObject está incluido en el SDK de Android, sin dependencia extra
             JSONObject json = new JSONObject(rawValue);
-            mensaje = "JSON detectado:\n" + json.toString(2);
+            if (json.has("activityId")) {
+                String activityId = json.getString("activityId");
+                com.example.androidapp.ui.home.ActivityDetailFragment.confirmedAttendances.add(activityId);
+                mensaje = "Asistencia confirmada para la actividad.";
+            } else {
+                mensaje = "Error: QR inválido (activityId faltante)";
+            }
         } catch (JSONException e) {
-            mensaje = "Texto: " + rawValue;
+            mensaje = "Error: QR inválido. " + e.getMessage();
         }
         String mensajeFinal = mensaje;
         requireActivity().runOnUiThread(() -> {
