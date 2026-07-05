@@ -677,14 +677,17 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
 
 Endpoints de simulación para la Feature 12.30 (avisos de cancelación/reprogramación "por la operadora"). **Sin autenticación** — no existe un rol admin real en el backend, son una herramienta de testing/demo para poder disparar estos cambios manualmente (ej. desde curl/Postman o una mini-app aparte) mientras corre el server.
 
+Operan sobre un **schedule completo de una actividad** (no sobre una reserva puntual), fiel al enunciado ("se cancela/reprograma la actividad") — afectan a todas las reservas `confirmed` que compartan ese `selectedScheduleId`, no a una sola.
+
 | Método | Path | Auth | Body | Respuesta |
 |--------|------|------|------|-----------|
-| POST | `/bookings/:id/cancel` | No | — | `{ booking }` |
-| POST | `/bookings/:id/reschedule` | No | `{ selectedScheduleId }` | `{ booking }` |
+| POST | `/activities/:activityId/schedules/:scheduleId/cancel` | No | — | `{ affectedBookings: [...] }` |
+| POST | `/activities/:activityId/schedules/:scheduleId/reschedule` | No | `{ toScheduleId }` | `{ affectedBookings: [...] }` |
 
-- Cancelar: marca la reserva como `cancelled` (equivalente a lo que hace el usuario con `DELETE /api/bookings/:id`, pero sin las validaciones de plazo de cancelación — el operador puede cancelar en cualquier momento).
-- Reprogramar: mueve la reserva a otro `selectedScheduleId` **ya existente** de la misma actividad (no crea horarios nuevos) y resetea `reminderSentAt` para que el recordatorio de 24hs se recalcule contra la nueva fecha.
-- Ambos cambios quedan reflejados en `booking.updatedAt`, por lo que `GET /api/bookings/sync/poll` los detecta automáticamente sin necesitar ningún mecanismo adicional.
+- Cancelar: marca como `cancelled` todas las reservas confirmadas de ese `scheduleId` (equivalente a lo que hace el usuario con `DELETE /api/bookings/:id`, pero sin las validaciones de plazo — el operador puede cancelar en cualquier momento, y afecta a todos los que reservaron ese horario, no solo a uno).
+- Reprogramar: mueve todas esas reservas a otro `toScheduleId` **ya existente** de la misma actividad (no crea horarios nuevos) y resetea `reminderSentAt` de cada una para que el recordatorio de 24hs se recalcule contra la nueva fecha.
+- `affectedBookings` puede ser un array vacío (`[]`) si no había reservas confirmadas para ese schedule — no es un error, es un 200 normal. 404 solo si la actividad (o el schedule destino, en el reschedule) no existen.
+- Ambos cambios quedan reflejados en `booking.updatedAt` de cada reserva afectada, por lo que `GET /api/bookings/sync/poll` los detecta automáticamente sin necesitar ningún mecanismo adicional.
 
 ---
 
