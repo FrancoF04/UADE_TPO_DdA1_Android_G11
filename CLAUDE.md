@@ -149,7 +149,7 @@ Todas gestionadas a través de `gradle/libs.versions.toml`:
 | Mis reservas | ✅ Funciona | Muestra reservas `confirmed`; muestra horas de cancelación |
 | Cancelar reserva | ⚠️ Parcial | UI funciona; depende del endpoint en Railway |
 | Historial | ✅ Funciona | Clickeable → detalle; botón "Calificar" por reserva |
-| Calificaciones | ✅ Funciona | Formulario + read-only + ventana 48hs (ver bug conocido sobre el cálculo de la ventana) |
+| Calificaciones | ✅ Funciona | Formulario + read-only + ventana de 48hs desde la finalización (`selectedDate + duración`), calculada igual en front y back |
 | Noticias | ✅ Funciona | `NewsFragment` + `NewsDetailFragment`; caché en storage interno (`NewsCache`) |
 | Favoritos | ⚠️ Parcial | `FavoritesFragment` existe; funcionalidad de add/remove por verificar |
 | Perfil | ✅ Funciona | Ver y editar datos; toggle biometría |
@@ -163,7 +163,6 @@ Todas gestionadas a través de `gradle/libs.versions.toml`:
 - **Historial vacío**: `GET /api/activities/history` retorna solo reservas `finalized`. Si Railway reinició y no hay reservas finalizadas en memoria, el historial aparece vacío aunque funcione correctamente.
 - **Botones en ListView items**: cualquier `Button` visible dentro de un ítem de `ListView` debe tener `android:focusable="false"` para que el `OnItemClickListener` de la fila funcione. Sin esto, el botón captura el touch y la fila no es presionable.
 - **Favoritos UI**: `FavoritesFragment` existe pero la integración completa (agregar/quitar desde detalle de actividad) puede estar incompleta.
-- **Ventana de calificación mal calculada (front y back)**: el enunciado del TPO (punto 6.10) pide habilitar la calificación "dentro de las 48 horas posteriores a la **finalización** de la actividad" (`selectedDate + duración`). Hoy tanto `RatingFragment.isWithin48Hours()` (frontend) como `ratings.routes.js` → `isWithinRatingWindow()` (backend, verificado en `Backend/src/routes/ratings.routes.js`) calculan la ventana desde `selectedDate` (el **inicio** de la actividad), sin sumar la duración. Afecta más a actividades largas (ej. "Tren a las Nubes en Salta", 15hs). Bug conocido y diferido a pedido del usuario — si se corrige, hacerlo en ambos lados a la vez para no desincronizarlos.
 
 ## Convenciones del proyecto
 
@@ -176,6 +175,7 @@ Todas gestionadas a través de `gradle/libs.versions.toml`:
 - **Imágenes**: usar siempre `ImageLoader.load(imageView, url)` — centraliza Glide, maneja URLs relativas y absolutas, y aplica placeholder automáticamente
 - **Detalle de actividad reutilizable**: `ActivityDetailFragment` acepta args `showReserveButton` (default `true`) y `showSpotsField` (default `true`). Pasar `false` desde historial o mis reservas
 - **Comparación de fechas**: usar siempre `DateTimeUtils.isFutureOrNow(String)` o `Instant` UTC directamente. Nunca `LocalDate.now()` contra ISO con hora
+- **Ventana de calificación**: `RatingFragment` necesita tanto `activityDate` como `activityDuration` (nav args desde `HistorialFragment`) para calcular el deadline de 48hs desde la finalización real de la actividad. Si se agrega otro punto de entrada a `RatingFragment`, pasar ambos argumentos — el cálculo replica el parseo de duración del backend (`parseDurationMs` en `data.js`)
 - **Botones en ListView**: agregar `android:focusable="false"` a todo `Button` dentro de un `item_*.xml`
 - **Session expired**: si un request falla con 401 irrecuperable, `AuthRefreshInterceptor` dispara `SessionEventBus` → `MainActivity` escucha y navega al login. No manejar 401 manualmente en los fragments
 - **Parseo de errores**: usar `ApiErrorParser.getMessage(response)` para extraer el string de error del body en lugar de hardcodear mensajes
