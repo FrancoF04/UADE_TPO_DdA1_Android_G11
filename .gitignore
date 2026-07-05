@@ -32,3 +32,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Copia local de referencia del backend (no forma parte de este repo)
+/Backend/
