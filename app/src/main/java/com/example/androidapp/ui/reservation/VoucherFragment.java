@@ -1,8 +1,45 @@
+package com.example.androidapp.ui.reservation;
+
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager.widget.ViewPager;
+
+import com.example.androidapp.R;
+import com.example.androidapp.data.local.OfflineBookingCache;
+import com.example.androidapp.data.model.Activity;
+import com.example.androidapp.data.model.ApiResponse;
+import com.example.androidapp.data.remote.ActivityApi;
+import com.example.androidapp.ui.home.MapFragment;
+import com.example.androidapp.ui.home.GalleryPagerAdapter;
+import com.example.androidapp.util.DateTimeUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+@AndroidEntryPoint
 public class VoucherFragment extends Fragment {
     @Inject
-    UserApi userApi;
-    @Inject
     ActivityApi activityApi;
+
+    @Inject
+    OfflineBookingCache offlineBookingCache;
 
     // UI elements
     private FrameLayout galleryCarousel;
@@ -52,51 +89,34 @@ public class VoucherFragment extends Fragment {
         progressBar = view.findViewById(R.id.progressBar);
         tvError = view.findViewById(R.id.tvError);
 
-        currentActivityId = getArguments().getInt("activityId");
-        dateSelected = getArguments().getString("date");
-        quantitySelected = getArguments().getString("quantity");
+        Bundle args = getArguments();
+        if (args != null) {
+            currentActivityId = args.getString("activityId");
+            dateSelected = args.getString("date");
+            quantitySelected = args.getString("quantity");
+        }
 
-        if (!currentActivityId.isEmpty()) {
+        if (currentActivityId != null && !currentActivityId.isEmpty()) {
             loadVoucherDetails(currentActivityId);
+        } else {
+            tvError.setText(R.string.error_generic);
+            tvError.setVisibility(View.VISIBLE);
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        networkMonitor.register(this);
-        cargarReservas();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        networkMonitor.unregister(this);
-    }
-    
     private void loadVoucherDetails(String activityId) {
         progressBar.setVisibility(View.VISIBLE);
 
-        api.getActivityById(activityId).enqueque(new Callback<apiResponse<Activity>>(){
+        activityApi.getActivityById(activityId).enqueue(new Callback<ApiResponse<Activity>>(){
             @Override
             public void onResponse(Call<ApiResponse<Activity>> call, Response<ApiResponse<Activity>> response){
                 if (!isAdded()) return;
                 progressBar.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null
-                    && response.body().issuccess() && response.body().getData() != null){
-                        Activity activity = response.body.getData();
+                    && response.body().isSuccess() && response.body().getData() != null){
+                        Activity activity = response.body().getData();
                         displayVoucher(activity);
-
-                    // Si el detalle ya trae flags, disparamos el reset (la guardia evitará duplicados)
-                    if (activity.getPriceChanged() || activity.getSpotsChanged()) {
-                        Log.i(TAG, "Novedad detectada en Detail API, reseteando...");
-                        viewedNovelties.add(activity.getId());
-                        resetNoveltyFlags(activity.getId());
-                    } else {
-                        // Limpiamos si ya no hay novedad
-                        viewedNovelties.remove(activity.getId());
-                    }    
                 } else {
                     tvError.setText(R.string.error_generic);
                     tvError.setVisibility(View.VISIBLE);
@@ -107,7 +127,7 @@ public class VoucherFragment extends Fragment {
             public void onFailure(Call<ApiResponse<Activity>> call, Throwable t){
                 if(!isAdded()) return;
                 progressBar.setVisibility(View.GONE);
-                Activity cached = offlineBooking.getActivityById(activityId);
+                Activity cached = offlineBookingCache.getActivityById(activityId);
                 if(cached != null){
                     displayVoucher(cached);
                 } else {
@@ -120,11 +140,33 @@ public class VoucherFragment extends Fragment {
     }
 
     private void displayVoucher(Activity activity){
+        // Configurar carrusel de fotos
+        List<String> allPhotos = new ArrayList<>();
+        if (activity.getCoverUrl() != null && !activity.getCoverUrl().isEmpty()) {
+            allPhotos.add(activity.getCoverUrl());
+        }
+        List<String> galleryUrls = activity.getGalleryUrls();
+        if (galleryUrls != null) {
+            allPhotos.addAll(galleryUrls);
+        }
+        int total = allPhotos.size();
+        tvGalleryCounter.setVisibility(total > 1 ? View.VISIBLE : View.GONE);
+        if (total > 1) {
+            tvGalleryCounter.setText("1 / " + total);
+        }
+        galleryViewPager.setAdapter(new GalleryPagerAdapter(allPhotos));
+        galleryViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                tvGalleryCounter.setText((position + 1) + " / " + total);
+            }
+        });
+
         tvName.setText(activity.getName());
         tvDestination.setText(activity.getDestination());
         tvLanguage.setText(getString(R.string.detail_language_value, activity.getLanguage()));
-        
-        tvDateSelected.setText(dateSelected);
+
+        tvDateSelected.setText(DateTimeUtils.formatFriendly(dateSelected));
         tvDuration.setText(getString(R.string.detail_duration, activity.getDuration()));
 
         if (activity.getMeetingPoint() != null) {
@@ -147,7 +189,7 @@ public class VoucherFragment extends Fragment {
             tvGuide.setText(guideText);
         }
 
-        tvMembersCount.setText(activity.getTotalSpots() - activity.getAvailableSpots());
+        tvMembersCount.setText(String.valueOf(activity.getTotalSpots() - activity.getAvailableSpots()));
         tvMembersReserved.setText(quantitySelected);
     }
 }

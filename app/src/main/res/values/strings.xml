@@ -136,6 +136,6 @@
     <!-- voucher -->
     <string name="voucher_title">E-Voucher</string>
     <string name="detail_date_time">Fecha y hora</string>
-    <String name="detail_members_count">Cantidad de participantes</string>
-    <Sring name="detail_members_reserved">Participantes reservados</string>
+    <string name="detail_members_count">Cantidad de participantes</string>
+    <string name="detail_members_reserved">Participantes reservados</string>
 </resources>
