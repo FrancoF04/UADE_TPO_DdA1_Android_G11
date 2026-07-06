@@ -19,7 +19,6 @@ import com.example.androidapp.R;
 import com.example.androidapp.data.model.NotificationItem;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 public final class NotificationHelper {
@@ -41,7 +40,7 @@ public final class NotificationHelper {
         if (manager == null) return;
 
         NotificationChannel reminders = new NotificationChannel(
-                CHANNEL_REMINDERS, "Recordatorios de actividades", NotificationManager.IMPORTANCE_DEFAULT);
+                CHANNEL_REMINDERS, "Recordatorios de actividades", NotificationManager.IMPORTANCE_HIGH);
         NotificationChannel serviceStatus = new NotificationChannel(
                 CHANNEL_SERVICE_STATUS, "Estado de sincronización", NotificationManager.IMPORTANCE_MIN);
         NotificationChannel alerts = new NotificationChannel(
@@ -96,6 +95,7 @@ public final class NotificationHelper {
                 .setSmallIcon(R.drawable.ic_reservas)
                 .setContentIntent(contentPendingIntent)
                 .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .addAction(0, "Ver Voucher", actionPendingIntent)
                 .build();
 
@@ -143,7 +143,7 @@ public final class NotificationHelper {
         try {
             Instant instant = Instant.parse(iso);
             return DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-                    .withZone(ZoneId.systemDefault())
+                    .withZone(DateTimeUtils.ARGENTINA_ZONE)
                     .format(instant);
         } catch (Exception e) {
             return iso;

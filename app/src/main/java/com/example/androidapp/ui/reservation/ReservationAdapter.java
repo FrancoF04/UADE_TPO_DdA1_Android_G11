@@ -12,12 +12,12 @@ import android.widget.Toast;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.Reservation;
+import com.example.androidapp.util.DateTimeUtils;
 import com.example.androidapp.util.ImageLoader;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -96,7 +96,7 @@ public class ReservationAdapter extends BaseAdapter {
                 if (inst == null) {
                     throw new IllegalArgumentException();
                 }
-                ZonedDateTime zdt = ZonedDateTime.ofInstant(inst, ZoneId.systemDefault());
+                ZonedDateTime zdt = ZonedDateTime.ofInstant(inst, DateTimeUtils.ARGENTINA_ZONE);
                 DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                 scheduleText = fmt.format(zdt);
             } catch (Exception ignored) {
@@ -182,7 +182,7 @@ public class ReservationAdapter extends BaseAdapter {
         }
 
         try {
-            return LocalDateTime.parse(raw).atZone(ZoneId.systemDefault()).toInstant();
+            return LocalDateTime.parse(raw).atZone(DateTimeUtils.ARGENTINA_ZONE).toInstant();
         } catch (RuntimeException ignored) {
             return null;
         }

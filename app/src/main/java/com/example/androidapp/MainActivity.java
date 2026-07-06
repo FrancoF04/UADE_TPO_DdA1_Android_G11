@@ -141,6 +141,15 @@ public class MainActivity extends AppCompatActivity
         args.putString("activityId", activityId);
         args.putString("date", intent.getStringExtra(NotificationHelper.EXTRA_VOUCHER_DATE));
         args.putString("quantity", intent.getStringExtra(NotificationHelper.EXTRA_VOUCHER_QUANTITY));
+
+        // voucherFragment vive dentro de mis_reservas_nav_graph, un grafo hermano del
+        // grafo donde puede estar la Activity al recibir el deep link (ej. home_nav_graph).
+        // Navigation no puede saltar directo a un destino anidado en un grafo hermano sin
+        // una acción que los conecte, así que primero entramos al grafo contenedor.
+        if (navController.getCurrentDestination() != null
+                && navController.getCurrentDestination().getId() != R.id.reservasFragment) {
+            navController.navigate(R.id.mis_reservas_nav_graph);
+        }
         navController.navigate(R.id.voucherFragment, args);
 
         // Evita renavegar al voucher si la Activity se recrea (ej. rotación de pantalla)

@@ -24,9 +24,9 @@ import com.example.androidapp.data.model.Rating;
 import com.example.androidapp.data.model.RatingData;
 import com.example.androidapp.data.model.RatingRequest;
 import com.example.androidapp.data.remote.RatingsApi;
+import com.example.androidapp.util.DateTimeUtils;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -268,7 +268,7 @@ public class RatingFragment extends Fragment {
         if (isoDate == null || isoDate.isEmpty()) return null;
         try {
             Instant inst = Instant.parse(isoDate);
-            ZonedDateTime zdt = ZonedDateTime.ofInstant(inst, ZoneId.systemDefault());
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(inst, DateTimeUtils.ARGENTINA_ZONE);
             return zdt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         } catch (Exception e) {
             return null;

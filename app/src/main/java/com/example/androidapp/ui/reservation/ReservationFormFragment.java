@@ -299,8 +299,6 @@ public class ReservationFormFragment extends Fragment {
             return;
         }
 
-        Pattern datePattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})");
-        Pattern timePattern = Pattern.compile("(\\d{1,2}:\\d{2})");
         Pattern numberPattern = Pattern.compile("\\b(\\d+)\\b");
 
         for (String raw : rawDates) {
@@ -310,17 +308,8 @@ public class ReservationFormFragment extends Fragment {
                 continue;
             }
 
-            // fecha como llave (fallback a raw completo si no hay yyyy-mm-dd)
-            String key = raw;
-            Matcher m = datePattern.matcher(raw);
-            if (m.find()) {
-                key = m.group(1);
-            }
-
-            // extraer horario HH:MM si existe
-            String timePart = "--";
-            Matcher tm = timePattern.matcher(raw);
-            if (tm.find()) timePart = tm.group(1);
+            String key = DateTimeUtils.extractDateKey(raw);
+            String timePart = DateTimeUtils.extractTimePart(raw);
 
             // buscar primer número después de la fecha que pueda representar cupos
             Integer spots = null;

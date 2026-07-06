@@ -13,6 +13,9 @@ import java.util.regex.Pattern;
 public final class DateTimeUtils {
     private static final Pattern DATE_PATTERN = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})");
     private static final Pattern TIME_PATTERN = Pattern.compile("(\\d{1,2}:\\d{2})");
+    public static final ZoneId ARGENTINA_ZONE = ZoneId.of("America/Argentina/Buenos_Aires");
+    private static final DateTimeFormatter DATE_KEY_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter TIME_PART_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private DateTimeUtils() {
     }
@@ -33,12 +36,12 @@ public final class DateTimeUtils {
         }
 
         try {
-            return LocalDateTime.parse(raw).atZone(ZoneId.systemDefault()).toInstant();
+            return LocalDateTime.parse(raw).atZone(ARGENTINA_ZONE).toInstant();
         } catch (RuntimeException ignored) {
         }
 
         try {
-            return LocalDate.parse(raw).atStartOfDay(ZoneId.systemDefault()).toInstant();
+            return LocalDate.parse(raw).atStartOfDay(ARGENTINA_ZONE).toInstant();
         } catch (RuntimeException ignored) {
             return null;
         }
@@ -48,9 +51,8 @@ public final class DateTimeUtils {
         if (raw == null || raw.trim().isEmpty()) return false;
         Instant instant = parseToInstant(raw);
         if (instant == null) return false;
-        ZoneId argZone = ZoneId.of("America/Argentina/Buenos_Aires");
-        LocalDate activityDate = instant.atZone(argZone).toLocalDate();
-        LocalDate today = LocalDate.now(argZone);
+        LocalDate activityDate = instant.atZone(ARGENTINA_ZONE).toLocalDate();
+        LocalDate today = LocalDate.now(ARGENTINA_ZONE);
         return !activityDate.isBefore(today);
     }
 
@@ -58,15 +60,19 @@ public final class DateTimeUtils {
         if (raw == null || raw.trim().isEmpty()) return false;
         Instant instant = parseToInstant(raw);
         if (instant == null) return false;
-        ZoneId argZone = ZoneId.of("America/Argentina/Buenos_Aires");
-        LocalDate activityDate = instant.atZone(argZone).toLocalDate();
-        LocalDate today = LocalDate.now(argZone);
+        LocalDate activityDate = instant.atZone(ARGENTINA_ZONE).toLocalDate();
+        LocalDate today = LocalDate.now(ARGENTINA_ZONE);
         return activityDate.isEqual(today);
     }
 
     public static String extractDateKey(String rawDate) {
         if (rawDate == null) {
             return null;
+        }
+
+        Instant instant = parseToInstant(rawDate);
+        if (instant != null) {
+            return instant.atZone(ARGENTINA_ZONE).format(DATE_KEY_FORMATTER);
         }
 
         Matcher matcher = DATE_PATTERN.matcher(rawDate);
@@ -79,6 +85,11 @@ public final class DateTimeUtils {
     public static String extractTimePart(String rawDate) {
         if (rawDate == null) {
             return "--";
+        }
+
+        Instant instant = parseToInstant(rawDate);
+        if (instant != null) {
+            return instant.atZone(ARGENTINA_ZONE).format(TIME_PART_FORMATTER);
         }
 
         Matcher matcher = TIME_PATTERN.matcher(rawDate);
@@ -97,7 +108,7 @@ public final class DateTimeUtils {
             return raw;
         }
         try {
-            ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ARGENTINA_ZONE);
             return zdt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
         } catch (Exception e) {
             return raw;
