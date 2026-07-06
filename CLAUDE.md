@@ -88,7 +88,7 @@ com.example.androidapp/
 │   │   DateTimeUtils, ImageLoader, FilterQueryBuilder, ApiErrorParser,
 │   │   BiometricHelper, BiometricCanAuthMapper, BiometricStatus,
 │   │   SessionEventBus, SessionExpiredListener, OtpResendCooldown, NetworkMonitor,
-│   │   NotificationPollingService, NotificationHelper, NotificationActionReceiver
+│   │   NotificationPollingService, NotificationHelper
 ├── MainActivity.java
 └── MyApp.java
 ```
@@ -161,7 +161,7 @@ Todas gestionadas a través de `gradle/libs.versions.toml`:
 | Mapa / Punto de encuentro | ✅ Funciona | osmdroid en `ActivityDetailFragment`; solo si hay coordenadas |
 | Modo sin conexión | ⚠️ Parcial | `NewsCache` en storage interno; `/api/bookings/offline-bundle` disponible pero no integrado en UI |
 | Imágenes | ✅ Funciona | `ImageLoader.load()` con Glide en todas las listas y detalle |
-| Recordatorio 24hs (Feature 12.29) | ⚠️ Parcial | Long polling + Foreground Service funcionando; botón "Ver Voucher" es no-op (Toast) hasta que exista la pantalla de voucher (Feature 11) |
+| Recordatorio 24hs (Feature 12.29) | ✅ Funciona | Long polling + Foreground Service; botón "Ver Voucher" navega directo al voucher de esa reserva (deep link vía `MainActivity`) |
 
 ## Bugs conocidos / cosas a revisar
 
@@ -183,6 +183,7 @@ Todas gestionadas a través de `gradle/libs.versions.toml`:
 - **Comparación de fechas**: usar siempre `DateTimeUtils.isFutureOrNow(String)` o `Instant` UTC directamente. Nunca `LocalDate.now()` contra ISO con hora
 - **Ventana de calificación**: `RatingFragment` necesita tanto `activityDate` como `activityDuration` (nav args desde `HistorialFragment`) para calcular el deadline de 48hs desde la finalización real de la actividad. Si se agrega otro punto de entrada a `RatingFragment`, pasar ambos argumentos — el cálculo replica el parseo de duración del backend (`parseDurationMs` en `data.js`)
 - **Botones en ListView**: agregar `android:focusable="false"` a todo `Button` dentro de un `item_*.xml`
-- **Notificaciones (Long Polling)**: `NotificationPollingService` (Foreground Service, `util/`) sondea `GET /api/notifications/poll` reusando `AuthRefreshInterceptor` vía un `OkHttpClient`/`Retrofit` separado calificados con `@LongPolling` (`di/LongPolling.java`) — necesitan un read timeout largo (~35s) que no debe aplicarse al resto de las Api. El service se arranca de forma idempotente desde `MainActivity` (en el listener de navegación existente y en `onResume()`) y se detiene en exactamente dos lugares: `MainActivity.onSessionExpired()` y `ProfileFragment.finishLogout()`. Requiere el permiso runtime `POST_NOTIFICATIONS` (API 33+, patrón `ActivityResultContracts.RequestPermission()` ya usado en el proyecto). El botón "Ver Voucher" de la notificación de recordatorio apunta a `NotificationActionReceiver`, que hoy solo muestra un Toast — es la plomería lista para cuando exista la pantalla de voucher (Feature 11)
+- **Notificaciones (Long Polling)**: `NotificationPollingService` (Foreground Service, `util/`) sondea `GET /api/notifications/poll` reusando `AuthRefreshInterceptor` vía un `OkHttpClient`/`Retrofit` separado calificados con `@LongPolling` (`di/LongPolling.java`) — necesitan un read timeout largo (~35s) que no debe aplicarse al resto de las Api. El service se arranca de forma idempotente desde `MainActivity` (en el listener de navegación existente y en `onResume()`) y se detiene en exactamente dos lugares: `MainActivity.onSessionExpired()` y `ProfileFragment.finishLogout()`. Requiere el permiso runtime `POST_NOTIFICATIONS` (API 33+, patrón `ActivityResultContracts.RequestPermission()` ya usado en el proyecto).
+- **Botón "Ver Voucher" (deep link)**: la acción de la notificación de recordatorio arma un `PendingIntent.getActivity` hacia `MainActivity` con extras `NotificationHelper.EXTRA_VOUCHER_*` (`activityId`, `date`, `quantity`). `MainActivity` tiene `android:launchMode="singleTop"` + `onNewIntent()` para no duplicar instancias, y navega a `R.id.voucherFragment` (dentro de `mis_reservas_nav_graph`) solo si hay `accessToken` válido — si el token expiró, la app cae en el login normal (ya sucede solo vía la lógica existente de `onCreate`) y el deep link se descarta sin más (no se retoma después de loguearse, decisión consultada con el usuario). El `PendingIntent` del cuerpo de la notificación (tap fuera del botón) y el de la acción usan **request codes distintos** sobre el mismo `notificationId` — comparten componente (`MainActivity`) y con el mismo request code el sistema los trata como el mismo `PendingIntent`, pisándose los extras entre sí.
 - **Session expired**: si un request falla con 401 irrecuperable, `AuthRefreshInterceptor` dispara `SessionEventBus` → `MainActivity` escucha y navega al login. No manejar 401 manualmente en los fragments
 - **Parseo de errores**: usar `ApiErrorParser.getMessage(response)` para extraer el string de error del body en lugar de hardcodear mensajes
