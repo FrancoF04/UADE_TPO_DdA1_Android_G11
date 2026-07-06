@@ -28,6 +28,10 @@ public final class NotificationHelper {
     public static final String CHANNEL_SERVICE_STATUS = "service_status_channel";
     public static final int SERVICE_NOTIFICATION_ID = 1001;
 
+    public static final String EXTRA_VOUCHER_ACTIVITY_ID = "voucherActivityId";
+    public static final String EXTRA_VOUCHER_DATE = "voucherDate";
+    public static final String EXTRA_VOUCHER_QUANTITY = "voucherQuantity";
+
     private NotificationHelper() {
     }
 
@@ -62,15 +66,24 @@ public final class NotificationHelper {
         }
 
         int notificationId = event.getBookingId().hashCode();
+        // Request codes distintos: dos PendingIntent al mismo componente con el mismo request
+        // code son "el mismo" para el sistema (se pisan los extras entre sí, FLAG_UPDATE_CURRENT).
+        int contentRequestCode = notificationId;
+        int actionRequestCode = notificationId + 1;
 
-        Intent actionIntent = new Intent(context, NotificationActionReceiver.class);
-        PendingIntent actionPendingIntent = PendingIntent.getBroadcast(
-                context, notificationId, actionIntent,
+        Intent actionIntent = new Intent(context, MainActivity.class);
+        actionIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        actionIntent.putExtra(EXTRA_VOUCHER_ACTIVITY_ID, event.getActivityId());
+        actionIntent.putExtra(EXTRA_VOUCHER_DATE, event.getSelectedDate());
+        actionIntent.putExtra(EXTRA_VOUCHER_QUANTITY, String.valueOf(event.getQuantity() != null ? event.getQuantity() : 1));
+        PendingIntent actionPendingIntent = PendingIntent.getActivity(
+                context, actionRequestCode, actionIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         Intent contentIntent = new Intent(context, MainActivity.class);
+        contentIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent contentPendingIntent = PendingIntent.getActivity(
-                context, notificationId, contentIntent,
+                context, contentRequestCode, contentIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         Notification notification = new NotificationCompat.Builder(context, CHANNEL_REMINDERS)

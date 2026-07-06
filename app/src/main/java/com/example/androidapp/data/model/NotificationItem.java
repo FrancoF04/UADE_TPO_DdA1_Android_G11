@@ -19,6 +19,9 @@ public class NotificationItem {
     @SerializedName("selectedDate")
     private String selectedDate;
 
+    @SerializedName("quantity")
+    private Integer quantity;
+
     @SerializedName("voucherCode")
     private String voucherCode;
 
@@ -27,5 +30,6 @@ public class NotificationItem {
     public String getActivityId() { return activityId; }
     public String getActivityName() { return activityName; }
     public String getSelectedDate() { return selectedDate; }
+    public Integer getQuantity() { return quantity; }
     public String getVoucherCode() { return voucherCode; }
 }
