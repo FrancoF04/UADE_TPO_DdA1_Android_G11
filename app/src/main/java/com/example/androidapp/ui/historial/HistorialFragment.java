@@ -21,10 +21,10 @@ import com.example.androidapp.data.model.Activity;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.HistorialItem;
 import com.example.androidapp.data.remote.ActivityApi;
+import com.example.androidapp.util.DateTimeUtils;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -141,7 +141,7 @@ public class HistorialFragment extends Fragment {
                     if (filterDesde != null || filterHasta != null) {
                         try {
                             LocalDate fechaItem = Instant.parse(item.getSelectedDate())
-                                    .atZone(ZoneId.systemDefault())
+                                    .atZone(DateTimeUtils.ARGENTINA_ZONE)
                                     .toLocalDate();
                             if (filterDesde != null && fechaItem.isBefore(filterDesde)) return false;
                             if (filterHasta != null && fechaItem.isAfter(filterHasta)) return false;

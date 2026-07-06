@@ -11,10 +11,10 @@ import android.widget.TextView;
 
 import com.example.androidapp.R;
 import com.example.androidapp.data.model.HistorialItem;
+import com.example.androidapp.util.DateTimeUtils;
 import com.example.androidapp.util.ImageLoader;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -93,7 +93,7 @@ public class HistorialAdapter extends BaseAdapter {
         if (isoDate == null) return "";
         try {
             Instant inst = Instant.parse(isoDate);
-            ZonedDateTime zdt = ZonedDateTime.ofInstant(inst, ZoneId.systemDefault());
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(inst, DateTimeUtils.ARGENTINA_ZONE);
             return zdt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
         } catch (Exception e) {
             return isoDate;
