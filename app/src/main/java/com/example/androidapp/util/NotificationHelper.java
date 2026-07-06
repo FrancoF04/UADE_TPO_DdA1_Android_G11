@@ -26,6 +26,7 @@ public final class NotificationHelper {
 
     public static final String CHANNEL_REMINDERS = "reminders_channel";
     public static final String CHANNEL_SERVICE_STATUS = "service_status_channel";
+    public static final String CHANNEL_ALERTS = "alerts_channel";
     public static final int SERVICE_NOTIFICATION_ID = 1001;
 
     private NotificationHelper() {
@@ -39,9 +40,12 @@ public final class NotificationHelper {
                 CHANNEL_REMINDERS, "Recordatorios de actividades", NotificationManager.IMPORTANCE_DEFAULT);
         NotificationChannel serviceStatus = new NotificationChannel(
                 CHANNEL_SERVICE_STATUS, "Estado de sincronización", NotificationManager.IMPORTANCE_MIN);
+        NotificationChannel alerts = new NotificationChannel(
+                CHANNEL_ALERTS, "Avisos de reservas", NotificationManager.IMPORTANCE_HIGH);
 
         manager.createNotificationChannel(reminders);
         manager.createNotificationChannel(serviceStatus);
+        manager.createNotificationChannel(alerts);
     }
 
     public static Notification buildServiceStatusNotification(Context context) {
@@ -80,6 +84,43 @@ public final class NotificationHelper {
                 .setContentIntent(contentPendingIntent)
                 .setAutoCancel(true)
                 .addAction(0, "Ver Voucher", actionPendingIntent)
+                .build();
+
+        NotificationManagerCompat.from(context).notify(notificationId, notification);
+    }
+
+    // Feature 12.30: aviso inmediato cuando la operadora cancela o reprograma una actividad.
+    public static void showBookingChangeNotification(Context context, String activityName,
+                                                     boolean cancelled, String newDateIso,
+                                                     String bookingId) {
+        if (Build.VERSION.SDK_INT >= 33
+                && ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        int notificationId = ("change-" + bookingId).hashCode();
+
+        Intent contentIntent = new Intent(context, MainActivity.class);
+        PendingIntent contentPendingIntent = PendingIntent.getActivity(
+                context, notificationId, contentIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        String name = (activityName != null && !activityName.isEmpty())
+                ? activityName : "Una de tus actividades";
+        String title = cancelled ? "Tu actividad fue cancelada" : "Tu actividad fue reprogramada";
+        String text = cancelled
+                ? name + " fue cancelada por la operadora"
+                : name + " se reprogramó para el " + formatFriendlyDate(newDateIso);
+
+        Notification notification = new NotificationCompat.Builder(context, CHANNEL_ALERTS)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
+                .setSmallIcon(R.drawable.ic_reservas)
+                .setContentIntent(contentPendingIntent)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build();
 
         NotificationManagerCompat.from(context).notify(notificationId, notification);
