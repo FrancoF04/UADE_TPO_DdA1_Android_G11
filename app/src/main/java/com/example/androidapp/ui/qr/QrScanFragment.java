@@ -201,49 +201,72 @@ public class QrScanFragment extends Fragment {
     //Validaciones de acuerdo a si es un QR valido, si se reservo la actividad y si se escanea en el dia de la actividad
     private void procesarResultado(String rawValue) {
         String mensaje;
+        int colorFondo;
         try {
             JSONObject json = new JSONObject(rawValue);
-            if (json.has("activityId")) {
-                String activityId = json.getString("activityId");
-                
-                int validacion = validarReserva(activityId);
+            String activityId = json.optString("activityId", "");
+            String qrDate = json.optString("selectedDate", "");
+
+            if (!activityId.isEmpty() && !qrDate.isEmpty()) {
+                int validacion = validarReserva(activityId, qrDate);
                 if (validacion == 1) {
                     com.example.androidapp.ui.home.ActivityDetailFragment.confirmedAttendances.add(activityId);
                     mensaje = "Asistencia confirmada para la actividad.";
-                } else if (validacion == 0) {
-                    mensaje = "Error: Tienes una reserva pero no es para el día de hoy.";
+                    colorFondo = 0xFF4CAF50; // Verde
                 } else {
-                    mensaje = "Error: No tienes una reserva para esta actividad.";
+                    colorFondo = 0xFFF44336; // Rojo
+                    if (validacion == 0) {
+                        mensaje = "Error: El código QR no corresponde al día de hoy.";
+                    } else if (validacion == 2) {
+                        mensaje = "Error: Tu reserva para esta actividad no es para el día de hoy.";
+                    } else {
+                        mensaje = "Error: No tienes una reserva para esta actividad.";
+                    }
                 }
             } else {
-                mensaje = "Error: QR inválido (activityId faltante)";
+                colorFondo = 0xFFF44336; // Rojo
+                if (activityId.isEmpty()) {
+                    mensaje = "Error: QR inválido (activityId faltante)";
+                } else {
+                    mensaje = "Error: QR inválido (selectedDate faltante)";
+                }
             }
         } catch (JSONException e) {
             mensaje = "Error: QR inválido. " + e.getMessage();
+            colorFondo = 0xFFF44336; // Rojo
         }
+
         String mensajeFinal = mensaje;
+        int colorFinal = colorFondo;
         requireActivity().runOnUiThread(() -> {
             tvResultado.setText(mensajeFinal);
-            Toast.makeText(requireContext(), mensajeFinal, Toast.LENGTH_SHORT).show();
+            tvResultado.setBackgroundColor(colorFinal);
         });
     }
 
 
-    //return 1 si es válida, 0 si tiene reserva pero no es hoy, -1 si no tiene reserva
-    private int validarReserva(String activityId) {
+    // 1: OK, 0: QR no es hoy, 2: Reserva no es hoy, -1: No hay reserva
+    private int validarReserva(String activityId, String qrDate) {
+        // Condición 1: La fecha del QR debe ser hoy
+        if (!DateTimeUtils.isToday(qrDate)) {
+            return 0;
+        }
+
         OfflineBundle bundle = offlineBookingCache.read();
         if (bundle == null || bundle.getBookings() == null) return -1;
         
-        boolean tieneReservaOtroDia = false;
+        boolean tieneReservaDeActividad = false;
         for (Reservation r : bundle.getBookings()) {
+            // Condición 2: El activityId debe coincidir
             if (activityId.equals(r.getActivityId())) {
+                tieneReservaDeActividad = true;
+                // Condición 3: La fecha de la reserva debe ser hoy
                 if (DateTimeUtils.isToday(r.getSelectedDate())) {
                     return 1;
                 }
-                tieneReservaOtroDia = true;
             }
         }
-        return tieneReservaOtroDia ? 0 : -1;
+        return tieneReservaDeActividad ? 2 : -1;
     }
 
     //liberar recursos al destruir fragment
