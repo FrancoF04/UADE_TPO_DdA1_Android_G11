@@ -14,6 +14,7 @@ import com.example.androidapp.data.remote.RatingsApi;
 import com.example.androidapp.data.remote.FavoritesApi;
 import com.example.androidapp.data.remote.NewsApi;
 import com.example.androidapp.data.remote.NotificationsApi;
+import com.example.androidapp.data.remote.SyncApi;
 import com.google.gson.Gson;
 
 import java.util.concurrent.TimeUnit;
@@ -138,5 +139,11 @@ public class NetworkModule {
     @Singleton
     public NotificationsApi provideNotificationsApiService(@LongPolling Retrofit retrofit) {
         return retrofit.create(NotificationsApi.class);
+    }
+
+    @Provides
+    @Singleton
+    public SyncApi provideSyncApiService(@LongPolling Retrofit retrofit) {
+        return retrofit.create(SyncApi.class);
     }
 }
