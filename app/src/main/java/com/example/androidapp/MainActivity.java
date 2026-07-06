@@ -22,6 +22,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.util.NetworkMonitor;
+import com.example.androidapp.util.NotificationHelper;
 import com.example.androidapp.util.NotificationPollingService;
 import com.example.androidapp.util.SessionEventBus;
 import com.example.androidapp.util.SessionExpiredListener;
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity
         } else if (tokenManager.isAccessTokenValid()) {
             graph.setStartDestination(R.id.home_nav_graph);
             navController.setGraph(graph);
+            handleVoucherDeepLink(getIntent());
         } else if (tokenManager.isRefreshTokenValid() && tokenManager.isBiometricEnabled()) {
             graph.setStartDestination(R.id.auth_nav_graph);
             Bundle args = new Bundle();
@@ -119,6 +121,30 @@ public class MainActivity extends AppCompatActivity
         networkMonitor.register(this);
         updateOfflineBanner(networkMonitor.isConnected());
         maybeStartNotificationPolling();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (tokenManager.isAccessTokenValid()) {
+            handleVoucherDeepLink(intent);
+        }
+    }
+
+    private void handleVoucherDeepLink(Intent intent) {
+        if (intent == null) return;
+        String activityId = intent.getStringExtra(NotificationHelper.EXTRA_VOUCHER_ACTIVITY_ID);
+        if (activityId == null) return;
+
+        Bundle args = new Bundle();
+        args.putString("activityId", activityId);
+        args.putString("date", intent.getStringExtra(NotificationHelper.EXTRA_VOUCHER_DATE));
+        args.putString("quantity", intent.getStringExtra(NotificationHelper.EXTRA_VOUCHER_QUANTITY));
+        navController.navigate(R.id.voucherFragment, args);
+
+        // Evita renavegar al voucher si la Activity se recrea (ej. rotación de pantalla)
+        intent.removeExtra(NotificationHelper.EXTRA_VOUCHER_ACTIVITY_ID);
     }
 
     private void maybeStartNotificationPolling() {

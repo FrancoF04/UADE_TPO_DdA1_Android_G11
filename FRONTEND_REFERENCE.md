@@ -662,6 +662,7 @@ El body requiere `activityId` + (`selectedDate`/`date`/`fecha` **o** `selectedSc
   "activityId": "a1",
   "activityName": "Walking Tour por San Telmo",
   "selectedDate": "2026-04-10T10:00:00.000Z",
+  "quantity": 2,
   "voucherCode": "VCH-..."
 }
 ```
