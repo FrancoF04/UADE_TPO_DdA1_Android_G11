@@ -15,6 +15,7 @@ import com.example.androidapp.data.local.TokenManager;
 import com.example.androidapp.data.model.ApiResponse;
 import com.example.androidapp.data.model.BookingChange;
 import com.example.androidapp.data.model.NotificationItem;
+import com.example.androidapp.data.model.NotificationPollResponse;
 import com.example.androidapp.data.model.OfflineBundle;
 import com.example.androidapp.data.model.Reservation;
 import com.example.androidapp.data.model.SyncPollResponse;
@@ -52,7 +53,7 @@ public class NotificationPollingService extends Service {
     private final AtomicBoolean polling = new AtomicBoolean(false);
     private Thread pollThread;
     private Thread syncThread;
-    private volatile Call<ApiResponse<List<NotificationItem>>> currentCall;
+    private volatile Call<ApiResponse<NotificationPollResponse>> currentCall;
     private volatile Call<ApiResponse<SyncPollResponse>> currentSyncCall;
 
     @Override
@@ -80,12 +81,13 @@ public class NotificationPollingService extends Service {
             }
 
             try {
-                Call<ApiResponse<List<NotificationItem>>> call = notificationsApi.poll();
+                Call<ApiResponse<NotificationPollResponse>> call = notificationsApi.poll();
                 currentCall = call;
-                Response<ApiResponse<List<NotificationItem>>> response = call.execute();
+                Response<ApiResponse<NotificationPollResponse>> response = call.execute();
 
-                if (response.code() == 200 && response.body() != null && response.body().isSuccess()) {
-                    List<NotificationItem> events = response.body().getData();
+                if (response.code() == 200 && response.body() != null && response.body().isSuccess()
+                        && response.body().getData() != null) {
+                    List<NotificationItem> events = response.body().getData().getEvents();
                     if (events != null) {
                         for (NotificationItem event : events) {
                             NotificationHelper.showReminderNotification(this, event);
