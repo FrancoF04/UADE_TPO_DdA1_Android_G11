@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
@@ -196,10 +197,16 @@ public class MainActivity extends AppCompatActivity
     public void onSessionExpired() {
         stopService(new Intent(this, NotificationPollingService.class));
         runOnUiThread(() -> {
-            Bundle args = new Bundle();
-            args.putBoolean("forceUserPass", true);
-            navController.popBackStack(R.id.loginFragment, false);
-            navController.navigate(R.id.loginFragment, args);
+            try {
+                Bundle args = new Bundle();
+                args.putBoolean("forceUserPass", true);
+                navController.popBackStack(R.id.loginFragment, false);
+                navController.navigate(R.id.loginFragment, args);
+            } catch (Exception e) {
+                // Si por el estado de navegación no se puede saltar directo al login,
+                // no dejamos que reviente la app: se registra y la sesión queda cerrada.
+                Log.e("MainActivity", "No se pudo navegar al login tras expirar la sesión", e);
+            }
         });
     }
 
