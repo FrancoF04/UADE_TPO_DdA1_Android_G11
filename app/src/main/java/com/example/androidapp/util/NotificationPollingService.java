@@ -98,6 +98,11 @@ public class NotificationPollingService extends Service {
             } catch (IOException e) {
                 Log.e(TAG, "Error de red en long polling", e);
                 waitBeforeRetry();
+            } catch (Exception e) {
+                // Un hilo de fondo nunca debe tirar la app: cualquier error inesperado
+                // (parseo, NPE, etc.) se loguea y reintenta en vez de propagarse.
+                Log.e(TAG, "Error inesperado en long polling", e);
+                waitBeforeRetry();
             }
         }
     }
@@ -158,6 +163,9 @@ public class NotificationPollingService extends Service {
                 // 204 -> sin novedades; el server ya retuvo la respuesta ~25s, reintentar enseguida
             } catch (IOException e) {
                 Log.e(TAG, "Error de red en sync polling", e);
+                waitBeforeRetry();
+            } catch (Exception e) {
+                Log.e(TAG, "Error inesperado en sync polling", e);
                 waitBeforeRetry();
             }
         }
