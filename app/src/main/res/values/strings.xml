@@ -96,6 +96,8 @@
     <string name="error_generic">Ocurrio un error. Intenta de nuevo.</string>
     <string name="error_network">Error de conexion. Verifica tu internet.</string>
     <string name="error_field_required">Completa todos los campos</string>
+    <string name="error_invalid_email">Ingresa un email válido</string>
+    <string name="error_invalid_phone">Ingresa un teléfono válido</string>
     <string name="favorites_error_add">Error al agregar a favoritos</string>
     <string name="favorites_error_remove">Error al eliminar de favoritos</string>
 

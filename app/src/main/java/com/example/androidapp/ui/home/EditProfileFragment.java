@@ -2,6 +2,7 @@ package com.example.androidapp.ui.home;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -100,8 +101,21 @@ public class EditProfileFragment extends Fragment {
         String email = etEmail.getText().toString().trim();
         String phoneNumber = etPhoneNumber.getText().toString().trim();
 
-        if (email.isEmpty() || fullName.isEmpty()) {
+        if (email.isEmpty() || fullName.isEmpty() || phoneNumber.isEmpty()) {
             tvError.setText(R.string.error_field_required);
+            tvError.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            tvError.setText(R.string.error_invalid_email);
+            tvError.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        // Validación simple de teléfono: entre 7 y 15 dígitos y solo números
+        if (phoneNumber.length() < 7 || phoneNumber.length() > 15 || !phoneNumber.matches("\\d+")) {
+            tvError.setText(R.string.error_invalid_phone);
             tvError.setVisibility(View.VISIBLE);
             return;
         }
