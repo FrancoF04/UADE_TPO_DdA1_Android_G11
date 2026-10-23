@@ -35,3 +35,18 @@ google-services.json
 
 # Copia local de referencia del backend (no forma parte de este repo)
 /Backend/
+
+# Variables de entorno locales (usar .env.example como plantilla)
+.env
+.env.*
+!.env.example
+
+# Documentación interna del backend / contexto de trabajo con IA (no publicar)
+CLAUDE.md
+.claude/
+FRONTEND_REFERENCE.md
+docs/superpowers/
+*.patch
+
+# Editor
+.vscode/

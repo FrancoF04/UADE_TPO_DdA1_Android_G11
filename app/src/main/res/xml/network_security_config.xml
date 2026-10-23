@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- HTTP en texto plano solo para desarrollo local (emulador). Producción debe usar HTTPS.
+         Para probar contra un backend en tu red local, agregá aquí la IP de tu PC. -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">10.0.2.2</domain>
-        <domain includeSubdomains="true">192.168.0.230</domain>
-        <domain includeSubdomains="true">172.23.15.208</domain>
-        <domain includeSubdomains="true">192.168.1.35</domain>
-        <domain includeSubdomains="true">192.168.1.23</domain>
-        <domain includeSubdomains="true">10.100.25.213</domain>
+        <domain includeSubdomains="true">localhost</domain>
     </domain-config>
 </network-security-config>

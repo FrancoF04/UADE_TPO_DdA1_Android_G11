@@ -1,7 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.hilt)
 }
+
+// La URL del backend se lee de un archivo `.env` en la raíz (ignorado por git).
+// Ver `.env.example`. Si no existe, se usa el emulador apuntando a localhost.
+val envFile = rootProject.file(".env")
+val env = Properties().apply {
+    if (envFile.exists()) envFile.inputStream().use { load(it) }
+}
+val apiBaseUrl: String = (env.getProperty("API_BASE_URL") ?: "http://10.0.2.2:3000/api/")
+    .trim()
+    .let { if (it.endsWith("/")) it else "$it/" }
 
 android {
     namespace = "com.example.androidapp"
@@ -23,14 +35,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "API_BASE_URL", "\"https://uadetpodda1backend-production.up.railway.app/api/\"")
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {
-        debug {
-            // Uncomment the line below to use local emulator instead of Railway:
-            //buildConfigField("String", "API_BASE_URL", "\"http://192.168.0.230:3000/api/\"")
-        }
         release {
             isMinifyEnabled = false
             proguardFiles(
